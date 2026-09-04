@@ -160,7 +160,7 @@ private fun CalendarGrid(
                 CalendarDay(
                     date = date,
                     isWorkDay = isWorkDay(date),
-                    isStartDate = date == month.atDay(1)
+                    isStartDate = date == startDate
                 )
             }
         }
