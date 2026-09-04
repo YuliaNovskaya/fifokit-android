@@ -29,6 +29,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.layout.Arrangement
 
 @Composable
 fun RosterCalendarScreen(
@@ -94,6 +95,11 @@ fun RosterCalendarScreen(
             isWorkDay = viewModel::isWorkDay,
             modifier = Modifier.weight(1f)
         )
+        Spacer(modifier = Modifier.height(12.dp))
+
+        CalendarLegend()
+
+        Spacer(modifier = Modifier.height(12.dp))
 
         Button(
             modifier = Modifier.fillMaxWidth(),
@@ -200,5 +206,31 @@ private fun CalendarDay(
                 style = MaterialTheme.typography.labelSmall
             )
         }
+    }
+}
+
+@Composable
+private fun CalendarLegend() {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(16.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = "WORK",
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.primary
+        )
+
+        Text(
+            text = "OFF",
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+
+        Text(
+            text = "Border = start date",
+            style = MaterialTheme.typography.labelMedium
+        )
     }
 }
