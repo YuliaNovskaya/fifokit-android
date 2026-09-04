@@ -23,28 +23,57 @@ import java.time.LocalDate
 import java.time.YearMonth
 import java.time.format.TextStyle
 import java.util.Locale
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 
 @Composable
 fun RosterCalendarScreen(
     viewModel: RosterSetupViewModel,
     onBack: () -> Unit
 ) {
-    val month = YearMonth.from(viewModel.startDate)
+    var month by remember {
+        mutableStateOf(YearMonth.from(viewModel.startDate))
+    }
 
     Column(
         modifier = Modifier
             .fillMaxSize()
             .padding(16.dp)
     ) {
-        Text(
-            text = "${
-                month.month.getDisplayName(
-                    TextStyle.FULL,
-                    Locale.getDefault()
-                )
-            } ${month.year}",
-            style = MaterialTheme.typography.headlineMedium
-        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            TextButton(
+                onClick = {
+                    month = month.minusMonths(1)
+                }
+            ) {
+                Text("<")
+            }
+
+            Text(
+                text = "${
+                    month.month.getDisplayName(
+                        TextStyle.FULL,
+                        Locale.getDefault()
+                    )
+                } ${month.year}",
+                modifier = Modifier.weight(1f),
+                style = MaterialTheme.typography.headlineMedium
+            )
+
+            TextButton(
+                onClick = {
+                    month = month.plusMonths(1)
+                }
+            ) {
+                Text(">")
+            }
+        }
 
         Text(
             text = "${viewModel.selectedPattern.label} roster",
