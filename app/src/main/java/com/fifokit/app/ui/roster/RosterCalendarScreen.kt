@@ -28,6 +28,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.foundation.BorderStroke
 
 @Composable
 fun RosterCalendarScreen(
@@ -89,6 +90,7 @@ fun RosterCalendarScreen(
 
         CalendarGrid(
             month = month,
+            startDate = viewModel.startDate,
             isWorkDay = viewModel::isWorkDay,
             modifier = Modifier.weight(1f)
         )
@@ -120,9 +122,11 @@ private fun WeekdayHeader() {
 @Composable
 private fun CalendarGrid(
     month: YearMonth,
+    startDate: LocalDate,
     isWorkDay: (LocalDate) -> Boolean,
     modifier: Modifier = Modifier
-) {
+)
+{
     val firstDayOffset = month.atDay(1).dayOfWeek.value - 1
 
     val cells = buildList<LocalDate?> {
@@ -149,7 +153,8 @@ private fun CalendarGrid(
             } else {
                 CalendarDay(
                     date = date,
-                    isWorkDay = isWorkDay(date)
+                    isWorkDay = isWorkDay(date),
+                    isStartDate = date == month.atDay(1)
                 )
             }
         }
@@ -159,7 +164,8 @@ private fun CalendarGrid(
 @Composable
 private fun CalendarDay(
     date: LocalDate,
-    isWorkDay: Boolean
+    isWorkDay: Boolean,
+    isStartDate: Boolean
 ) {
     Surface(
         modifier = Modifier
@@ -170,6 +176,14 @@ private fun CalendarDay(
             MaterialTheme.colorScheme.primaryContainer
         } else {
             MaterialTheme.colorScheme.surfaceVariant
+        },
+        border = if (isStartDate) {
+            BorderStroke(
+                width = 2.dp,
+                color = MaterialTheme.colorScheme.primary
+            )
+        } else {
+            null
         }
     ) {
         Column(
@@ -182,7 +196,7 @@ private fun CalendarDay(
             )
 
             Text(
-                text = if (isWorkDay) "W" else "O",
+                text = if (isWorkDay) "WORK" else "OFF",
                 style = MaterialTheme.typography.labelSmall
             )
         }
