@@ -1,75 +1,161 @@
 package com.fifokit.app.ui.roster
 
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import java.time.format.DateTimeFormatter
+import java.time.LocalDate
+import java.time.YearMonth
+import java.time.format.TextStyle
+import java.util.Locale
 
 @Composable
 fun RosterCalendarScreen(
     viewModel: RosterSetupViewModel,
     onBack: () -> Unit
 ) {
-    val dates = (0L..41L).map { offset ->
-        viewModel.startDate.plusDays(offset)
-    }
+    val month = YearMonth.from(viewModel.startDate)
 
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(24.dp)
+            .padding(16.dp)
     ) {
         Text(
-            text = "${viewModel.selectedPattern.label} Roster",
+            text = "${
+                month.month.getDisplayName(
+                    TextStyle.FULL,
+                    Locale.getDefault()
+                )
+            } ${month.year}",
             style = MaterialTheme.typography.headlineMedium
         )
 
         Text(
-            text = "Starting ${viewModel.startDate.format(DateTimeFormatter.ofPattern("dd MMM yyyy"))}",
-            modifier = Modifier.padding(top = 8.dp, bottom = 16.dp)
+            text = "${viewModel.selectedPattern.label} roster",
+            style = MaterialTheme.typography.bodyMedium,
+            modifier = Modifier.padding(top = 4.dp)
         )
 
-        LazyColumn(
-            modifier = Modifier.weight(1f),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            items(dates) { date ->
+        Spacer(modifier = Modifier.height(20.dp))
 
-                val isWorkDay = viewModel.isWorkDay(date)
+        WeekdayHeader()
 
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Text(
-                        date.format(
-                            DateTimeFormatter.ofPattern("EEE, dd MMM")
-                        )
-                    )
+        Spacer(modifier = Modifier.height(8.dp))
 
-                    Text(
-                        if (isWorkDay) "Work" else "Off"
-                    )
-                }
-            }
-        }
+        CalendarGrid(
+            month = month,
+            isWorkDay = viewModel::isWorkDay,
+            modifier = Modifier.weight(1f)
+        )
 
         Button(
             modifier = Modifier.fillMaxWidth(),
             onClick = onBack
         ) {
             Text("Edit roster")
+        }
+    }
+}
+
+@Composable
+private fun WeekdayHeader() {
+    Row(
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        listOf("M", "T", "W", "T", "F", "S", "S").forEach { day ->
+            Text(
+                text = day,
+                modifier = Modifier.weight(1f),
+                style = MaterialTheme.typography.labelMedium
+            )
+        }
+    }
+}
+
+@Composable
+private fun CalendarGrid(
+    month: YearMonth,
+    isWorkDay: (LocalDate) -> Boolean,
+    modifier: Modifier = Modifier
+) {
+    val firstDayOffset = month.atDay(1).dayOfWeek.value - 1
+
+    val cells = buildList<LocalDate?> {
+        repeat(firstDayOffset) {
+            add(null)
+        }
+
+        for (day in 1..month.lengthOfMonth()) {
+            add(month.atDay(day))
+        }
+    }
+
+    LazyVerticalGrid(
+        columns = GridCells.Fixed(7),
+        modifier = modifier.fillMaxWidth()
+    ) {
+        items(cells) { date ->
+            if (date == null) {
+                Spacer(
+                    modifier = Modifier
+                        .aspectRatio(1f)
+                        .padding(2.dp)
+                )
+            } else {
+                CalendarDay(
+                    date = date,
+                    isWorkDay = isWorkDay(date)
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun CalendarDay(
+    date: LocalDate,
+    isWorkDay: Boolean
+) {
+    Surface(
+        modifier = Modifier
+            .aspectRatio(1f)
+            .padding(2.dp),
+        shape = MaterialTheme.shapes.small,
+        color = if (isWorkDay) {
+            MaterialTheme.colorScheme.primaryContainer
+        } else {
+            MaterialTheme.colorScheme.surfaceVariant
+        }
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier.padding(4.dp)
+        ) {
+            Text(
+                text = date.dayOfMonth.toString(),
+                style = MaterialTheme.typography.bodyMedium
+            )
+
+            Text(
+                text = if (isWorkDay) "W" else "O",
+                style = MaterialTheme.typography.labelSmall
+            )
         }
     }
 }
