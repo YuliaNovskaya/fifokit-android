@@ -38,6 +38,8 @@ fun RosterSetupScreen(
     startDate: LocalDate = LocalDate.now(),
     onRosterSelected: (RosterPattern) -> Unit = {},
     onStartDateSelected: (LocalDate) -> Unit = {},
+    showResetRoster: Boolean = false,
+    onResetRoster: () -> Unit = {},
     onGenerateRoster: () -> Unit = {}
 ) {
     var showDatePicker by remember { mutableStateOf(false) }
@@ -99,6 +101,16 @@ fun RosterSetupScreen(
             onClick = onGenerateRoster
         ) {
             Text("Generate roster")
+        }
+        if (showResetRoster) {
+            Spacer(modifier = Modifier.height(12.dp))
+
+            TextButton(
+                modifier = Modifier.fillMaxWidth(),
+                onClick = onResetRoster
+            ) {
+                Text("Reset roster")
+            }
         }
     }
 

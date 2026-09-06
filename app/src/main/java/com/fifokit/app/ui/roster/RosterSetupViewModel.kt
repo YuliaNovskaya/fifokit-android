@@ -25,6 +25,8 @@ fun RosterSetupRoute(
         startDate = viewModel.startDate,
         onRosterSelected = viewModel::selectPattern,
         onStartDateSelected = viewModel::selectStartDate,
+        showResetRoster = viewModel.hasSavedRoster == true,
+        onResetRoster = viewModel::clearRoster,
         onGenerateRoster = {
             viewModel.saveCurrentRoster()
             onGenerateRoster()
@@ -49,6 +51,16 @@ class RosterSetupViewModel(
 
     init {
         restoreRoster()
+    }
+
+    fun clearRoster() {
+        viewModelScope.launch {
+            rosterPreferences.clearRoster()
+
+            selectedPattern = RosterPattern.TWO_ONE
+            startDate = LocalDate.now()
+            hasSavedRoster = false
+        }
     }
 
     fun selectPattern(pattern: RosterPattern) {
