@@ -14,15 +14,19 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.fifokit.app.ui.roster.RosterCalendarScreen
 import com.fifokit.app.ui.roster.RosterSetupRoute
 import com.fifokit.app.ui.roster.RosterSetupViewModel
+import androidx.activity.compose.BackHandler
 
 @Composable
 fun FIFOKITApp() {
 
     val rosterSetupViewModel: RosterSetupViewModel = viewModel()
 
-    var showCalendar by remember {
-        mutableStateOf(false)
+    var screenOverride by remember {
+        mutableStateOf<Boolean?>(null)
     }
+
+    val showCalendar =
+        screenOverride ?: rosterSetupViewModel.hasSavedRoster
 
     Surface(
         modifier = Modifier
@@ -30,20 +34,34 @@ fun FIFOKITApp() {
             .safeDrawingPadding(),
         color = MaterialTheme.colorScheme.background
     ) {
-        if (showCalendar) {
-            RosterCalendarScreen(
-                viewModel = rosterSetupViewModel,
-                onBack = {
-                    showCalendar = false
+        when (showCalendar) {
+
+            true -> {
+
+                BackHandler {
+                    screenOverride = false
                 }
-            )
-        } else {
-            RosterSetupRoute(
-                viewModel = rosterSetupViewModel,
-                onGenerateRoster = {
-                    showCalendar = true
-                }
-            )
+
+                RosterCalendarScreen(
+                    viewModel = rosterSetupViewModel,
+                    onBack = {
+                        screenOverride = false
+                    }
+                )
+            }
+
+            false -> {
+                RosterSetupRoute(
+                    viewModel = rosterSetupViewModel,
+                    onGenerateRoster = {
+                        screenOverride = true
+                    }
+                )
+            }
+
+            null -> {
+                // Waiting for saved roster state to load
+            }
         }
     }
 }

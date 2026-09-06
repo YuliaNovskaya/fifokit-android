@@ -1,12 +1,17 @@
 package com.fifokit.app.ui.roster
 
+import android.app.Application
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.lifecycle.ViewModel
+import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.viewModelScope
+import com.fifokit.app.data.RosterPreferences
 import com.fifokit.app.domain.model.RosterPattern
 import com.fifokit.app.domain.roster.RosterCalculator
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import java.time.LocalDate
 
 @Composable
@@ -19,17 +24,31 @@ fun RosterSetupRoute(
         startDate = viewModel.startDate,
         onRosterSelected = viewModel::selectPattern,
         onStartDateSelected = viewModel::selectStartDate,
-        onGenerateRoster = onGenerateRoster
+        onGenerateRoster = {
+            viewModel.saveCurrentRoster()
+            onGenerateRoster()
+        }
     )
 }
 
-class RosterSetupViewModel : ViewModel() {
+class RosterSetupViewModel(
+    application: Application
+) : AndroidViewModel(application) {
+
+    private val rosterPreferences = RosterPreferences(application)
 
     var selectedPattern by mutableStateOf(RosterPattern.TWO_ONE)
         private set
 
     var startDate by mutableStateOf(LocalDate.now())
         private set
+
+    var hasSavedRoster by mutableStateOf<Boolean?>(null)
+        private set
+
+    init {
+        restoreRoster()
+    }
 
     fun selectPattern(pattern: RosterPattern) {
         selectedPattern = pattern
@@ -46,5 +65,40 @@ class RosterSetupViewModel : ViewModel() {
             pattern = selectedPattern
         )
     }
-}
 
+    fun saveCurrentRoster() {
+        viewModelScope.launch {
+            rosterPreferences.saveRoster(
+                pattern = selectedPattern.name,
+                startDate = startDate.toString()
+            )
+
+            hasSavedRoster = true
+        }
+    }
+
+    private fun restoreRoster() {
+        viewModelScope.launch {
+            val savedRoster = rosterPreferences.savedRoster.first()
+
+            if (savedRoster == null) {
+                hasSavedRoster = false
+                return@launch
+            }
+
+            runCatching {
+                RosterPattern.valueOf(savedRoster.pattern)
+            }.getOrNull()?.let {
+                selectedPattern = it
+            }
+
+            runCatching {
+                LocalDate.parse(savedRoster.startDate)
+            }.getOrNull()?.let {
+                startDate = it
+            }
+
+            hasSavedRoster = true
+        }
+    }
+}

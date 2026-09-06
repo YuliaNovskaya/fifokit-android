@@ -58,4 +58,5 @@ dependencies {
     debugImplementation(libs.androidx.ui.test.manifest)
     testImplementation(libs.junit)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
+    implementation("androidx.datastore:datastore-preferences:1.2.1")
 }
