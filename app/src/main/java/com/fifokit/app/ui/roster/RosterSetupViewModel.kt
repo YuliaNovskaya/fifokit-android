@@ -13,6 +13,7 @@ import com.fifokit.app.domain.roster.RosterCalculator
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import java.time.LocalDate
+import java.time.temporal.ChronoUnit
 
 @Composable
 fun RosterSetupRoute(
@@ -63,6 +64,32 @@ class RosterSetupViewModel(
             date = date,
             startDate = startDate,
             pattern = selectedPattern
+        )
+    }
+    fun isTodayWorkDay(): Boolean {
+        return isWorkDay(LocalDate.now())
+    }
+
+    fun nextRosterChangeDate(
+        fromDate: LocalDate = LocalDate.now()
+    ): LocalDate {
+        val currentStatus = isWorkDay(fromDate)
+
+        var date = fromDate.plusDays(1)
+
+        while (isWorkDay(date) == currentStatus) {
+            date = date.plusDays(1)
+        }
+
+        return date
+    }
+
+    fun daysUntilRosterChange(
+        fromDate: LocalDate = LocalDate.now()
+    ): Long {
+        return ChronoUnit.DAYS.between(
+            fromDate,
+            nextRosterChangeDate(fromDate)
         )
     }
 

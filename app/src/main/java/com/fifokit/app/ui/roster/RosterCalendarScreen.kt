@@ -30,6 +30,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
+import java.time.format.DateTimeFormatter
 
 @Composable
 fun RosterCalendarScreen(
@@ -37,7 +38,7 @@ fun RosterCalendarScreen(
     onBack: () -> Unit
 ) {
     var month by remember {
-        mutableStateOf(YearMonth.from(viewModel.startDate))
+        mutableStateOf(YearMonth.now())
     }
 
     Column(
@@ -82,6 +83,10 @@ fun RosterCalendarScreen(
             style = MaterialTheme.typography.bodyMedium,
             modifier = Modifier.padding(top = 4.dp)
         )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        RosterTodaySummary(viewModel)
 
         Spacer(modifier = Modifier.height(20.dp))
 
@@ -232,5 +237,47 @@ private fun CalendarLegend() {
             text = "Border = start date",
             style = MaterialTheme.typography.labelMedium
         )
+    }
+}
+
+@Composable
+private fun RosterTodaySummary(
+    viewModel: RosterSetupViewModel
+) {
+    val todayIsWork = viewModel.isTodayWorkDay()
+    val nextChangeDate = viewModel.nextRosterChangeDate()
+    val daysRemaining = viewModel.daysUntilRosterChange()
+
+    val nextStatus = if (todayIsWork) "OFF" else "WORK"
+
+    val formatter = DateTimeFormatter.ofPattern(
+        "EEE, d MMM",
+        Locale.getDefault()
+    )
+
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.medium,
+        color = MaterialTheme.colorScheme.surfaceVariant
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp)
+        ) {
+            Text(
+                text = "Today: ${if (todayIsWork) "WORK" else "OFF"}",
+                style = MaterialTheme.typography.titleMedium
+            )
+
+            Spacer(modifier = Modifier.height(4.dp))
+
+            Text(
+                text = "$nextStatus starts ${
+                    nextChangeDate.format(formatter)
+                } · $daysRemaining ${
+                    if (daysRemaining == 1L) "day" else "days"
+                }",
+                style = MaterialTheme.typography.bodyMedium
+            )
+        }
     }
 }
