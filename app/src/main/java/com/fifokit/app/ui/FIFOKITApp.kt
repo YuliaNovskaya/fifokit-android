@@ -15,6 +15,7 @@ import com.fifokit.app.ui.roster.RosterCalendarScreen
 import com.fifokit.app.ui.roster.RosterSetupRoute
 import com.fifokit.app.ui.roster.RosterSetupViewModel
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.layout.Box
 
 @Composable
 fun FIFOKITApp() {
@@ -29,38 +30,43 @@ fun FIFOKITApp() {
         screenOverride ?: rosterSetupViewModel.hasSavedRoster
 
     Surface(
-        modifier = Modifier
-            .fillMaxSize()
-            .safeDrawingPadding(),
+        modifier = Modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.background
     ) {
-        when (showCalendar) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .safeDrawingPadding()
+        ) {
 
-            true -> {
+            when (showCalendar) {
 
-                BackHandler {
-                    screenOverride = false
-                }
+                true -> {
 
-                RosterCalendarScreen(
-                    viewModel = rosterSetupViewModel,
-                    onBack = {
+                    BackHandler {
                         screenOverride = false
                     }
-                )
-            }
 
-            false -> {
-                RosterSetupRoute(
-                    viewModel = rosterSetupViewModel,
-                    onGenerateRoster = {
-                        screenOverride = true
-                    }
-                )
-            }
+                    RosterCalendarScreen(
+                        viewModel = rosterSetupViewModel,
+                        onBack = {
+                            screenOverride = false
+                        }
+                    )
+                }
 
-            null -> {
-                // Waiting for saved roster state to load
+                false -> {
+                    RosterSetupRoute(
+                        viewModel = rosterSetupViewModel,
+                        onGenerateRoster = {
+                            screenOverride = true
+                        }
+                    )
+                }
+
+                null -> {
+                    // Waiting for saved roster state to load
+                }
             }
         }
     }

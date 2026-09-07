@@ -59,4 +59,5 @@ dependencies {
     testImplementation(libs.junit)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation("androidx.datastore:datastore-preferences:1.2.1")
+    implementation("androidx.work:work-runtime-ktx:2.11.2")
 }

@@ -14,6 +14,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.temporal.ChronoUnit
+import com.fifokit.app.notifications.RosterReminderScheduler
 
 @Composable
 fun RosterSetupRoute(
@@ -56,7 +57,7 @@ class RosterSetupViewModel(
     fun clearRoster() {
         viewModelScope.launch {
             rosterPreferences.clearRoster()
-
+            RosterReminderScheduler.cancel(getApplication())
             selectedPattern = RosterPattern.TWO_ONE
             startDate = LocalDate.now()
             hasSavedRoster = false
@@ -111,6 +112,8 @@ class RosterSetupViewModel(
                 pattern = selectedPattern.name,
                 startDate = startDate.toString()
             )
+
+            RosterReminderScheduler.schedule(getApplication())
 
             hasSavedRoster = true
         }

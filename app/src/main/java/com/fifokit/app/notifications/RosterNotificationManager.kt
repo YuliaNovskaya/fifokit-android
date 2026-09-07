@@ -4,6 +4,12 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
 import android.os.Build
+import android.Manifest
+import android.annotation.SuppressLint
+import android.content.pm.PackageManager
+import androidx.core.app.NotificationCompat
+import androidx.core.app.NotificationManagerCompat
+import androidx.core.content.ContextCompat
 
 object RosterNotificationManager {
 
@@ -14,7 +20,7 @@ object RosterNotificationManager {
             val channel = NotificationChannel(
                 CHANNEL_ID,
                 "Roster reminders",
-                NotificationManager.IMPORTANCE_DEFAULT
+                NotificationManager.IMPORTANCE_HIGH
             ).apply {
                 description = "Reminders before your work and off periods change"
             }
