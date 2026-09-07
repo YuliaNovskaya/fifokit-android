@@ -46,6 +46,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
+import com.google.firebase.analytics.FirebaseAnalytics
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -55,11 +56,17 @@ fun RosterCalendarScreen(
     onSettings: () -> Unit
 ) {
     val context = LocalContext.current
-
+    val analytics = remember(context) {
+        FirebaseAnalytics.getInstance(context)
+    }
     val notificationPermissionLauncher =
         rememberLauncherForActivityResult(
             contract = ActivityResultContracts.RequestPermission(),
-            onResult = { }
+            onResult = { granted ->
+                if (granted) {
+                    analytics.logEvent("notification_enabled", null)
+                }
+            }
         )
 
     LaunchedEffect(Unit) {
