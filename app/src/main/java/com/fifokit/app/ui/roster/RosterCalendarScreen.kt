@@ -31,12 +31,33 @@ import androidx.compose.runtime.setValue
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import java.time.format.DateTimeFormatter
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.platform.LocalContext
+import androidx.core.content.ContextCompat
+import com.fifokit.app.notifications.RosterNotificationManager
 
 @Composable
 fun RosterCalendarScreen(
     viewModel: RosterSetupViewModel,
     onBack: () -> Unit
 ) {
+    val context = LocalContext.current
+
+    val notificationPermissionLauncher =
+        rememberLauncherForActivityResult(
+            contract = ActivityResultContracts.RequestPermission(),
+            onResult = { }
+        )
+
+    LaunchedEffect(Unit) {
+        RosterNotificationManager.createChannel(context)
+    }
     var month by remember {
         mutableStateOf(YearMonth.now())
     }
@@ -88,7 +109,28 @@ fun RosterCalendarScreen(
 
         RosterTodaySummary(viewModel)
 
-        Spacer(modifier = Modifier.height(20.dp))
+        Spacer(modifier = Modifier.height(12.dp))
+
+        if (
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+            ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.POST_NOTIFICATIONS
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            OutlinedButton(
+                modifier = Modifier.fillMaxWidth(),
+                onClick = {
+                    notificationPermissionLauncher.launch(
+                        Manifest.permission.POST_NOTIFICATIONS
+                    )
+                }
+            ) {
+                Text("Enable notifications")
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+        }
 
         WeekdayHeader()
 
