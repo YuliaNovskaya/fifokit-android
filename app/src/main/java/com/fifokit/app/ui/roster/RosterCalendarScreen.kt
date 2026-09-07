@@ -43,12 +43,16 @@ import androidx.core.content.ContextCompat
 import com.fifokit.app.notifications.RosterNotificationManager
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.ExperimentalMaterial3Api
 
-
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RosterCalendarScreen(
     viewModel: RosterSetupViewModel,
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    onSettings: () -> Unit
 ) {
     val context = LocalContext.current
 
@@ -65,103 +69,122 @@ fun RosterCalendarScreen(
         mutableStateOf(YearMonth.now())
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp)
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            TextButton(
-                onClick = {
-                    month = month.minusMonths(1)
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = {
+                    Text("Roster Calendar")
+                },
+                actions = {
+                    TextButton(
+                        onClick = onSettings
+                    ) {
+                        Text("Settings")
+                    }
+
+                    TextButton(
+                        onClick = onBack
+                    ) {
+                        Text("Edit")
+                    }
                 }
+            )
+        }
+    ) { innerPadding ->
+
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+                .padding(horizontal = 16.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Text("<")
+                TextButton(
+                    onClick = {
+                        month = month.minusMonths(1)
+                    }
+                ) {
+                    Text("<")
+                }
+
+                Text(
+                    text = "${
+                        month.month.getDisplayName(
+                            TextStyle.FULL,
+                            Locale.getDefault()
+                        )
+                    } ${month.year}",
+                    modifier = Modifier.weight(1f),
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.SemiBold,
+                    textAlign = TextAlign.Center
+                )
+
+                TextButton(
+                    onClick = {
+                        month = month.plusMonths(1)
+                    }
+                ) {
+                    Text(">")
+                }
             }
 
             Text(
-                text = "${
-                    month.month.getDisplayName(
-                        TextStyle.FULL,
-                        Locale.getDefault()
-                    )
-                } ${month.year}",
-                modifier = Modifier.weight(1f),
-                style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.SemiBold,
+                text = "${viewModel.selectedPattern.label} roster",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 2.dp),
                 textAlign = TextAlign.Center
             )
 
-            TextButton(
-                onClick = {
-                    month = month.plusMonths(1)
-                }
-            ) {
-                Text(">")
-            }
-        }
-
-        Text(
-            text = "${viewModel.selectedPattern.label} roster",
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 2.dp),
-            textAlign = TextAlign.Center
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        RosterTodaySummary(viewModel)
-
-        Spacer(modifier = Modifier.height(12.dp))
-
-        if (
-            Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
-            ContextCompat.checkSelfPermission(
-                context,
-                Manifest.permission.POST_NOTIFICATIONS
-            ) != PackageManager.PERMISSION_GRANTED
-        ) {
-            OutlinedButton(
-                modifier = Modifier.fillMaxWidth(),
-                onClick = {
-                    notificationPermissionLauncher.launch(
-                        Manifest.permission.POST_NOTIFICATIONS
-                    )
-                }
-            ) {
-                Text("Enable notifications")
-            }
-
             Spacer(modifier = Modifier.height(16.dp))
-        }
 
-        WeekdayHeader()
+            RosterTodaySummary(viewModel)
 
-        Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
-        CalendarGrid(
-            month = month,
-            startDate = viewModel.startDate,
-            isWorkDay = viewModel::isWorkDay,
-            modifier = Modifier.weight(1f)
-        )
-        Spacer(modifier = Modifier.height(12.dp))
+            if (
+                Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+                ContextCompat.checkSelfPermission(
+                    context,
+                    Manifest.permission.POST_NOTIFICATIONS
+                ) != PackageManager.PERMISSION_GRANTED
+            ) {
+                OutlinedButton(
+                    modifier = Modifier.fillMaxWidth(),
+                    onClick = {
+                        notificationPermissionLauncher.launch(
+                            Manifest.permission.POST_NOTIFICATIONS
+                        )
+                    }
+                ) {
+                    Text("Enable notifications")
+                }
 
-        CalendarLegend()
+                Spacer(modifier = Modifier.height(16.dp))
+            }
 
-        Spacer(modifier = Modifier.height(12.dp))
+            WeekdayHeader()
 
-        Button(
-            modifier = Modifier.fillMaxWidth(),
-            onClick = onBack
-        ) {
-            Text("Edit roster")
+            Spacer(modifier = Modifier.height(8.dp))
+
+            CalendarGrid(
+                month = month,
+                startDate = viewModel.startDate,
+                isWorkDay = viewModel::isWorkDay,
+                modifier = Modifier.weight(1f)
+            )
+            Spacer(modifier = Modifier.height(12.dp))
+
+            CalendarLegend()
+
+            Spacer(modifier = Modifier.height(12.dp))
+
         }
     }
 }

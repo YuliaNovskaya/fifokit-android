@@ -14,8 +14,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.fifokit.app.ui.roster.RosterCalendarScreen
 import com.fifokit.app.ui.roster.RosterSetupRoute
 import com.fifokit.app.ui.roster.RosterSetupViewModel
-import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Box
+import com.fifokit.app.ui.settings.NotificationSettingsScreen
 
 @Composable
 fun FIFOKITApp() {
@@ -27,8 +27,11 @@ fun FIFOKITApp() {
     }
 
     val showCalendar =
-        screenOverride ?: rosterSetupViewModel.hasSavedRoster
+        screenOverride ?: (rosterSetupViewModel.hasSavedRoster == true)
 
+    var showSettings by remember {
+        mutableStateOf(false)
+    }
     Surface(
         modifier = Modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.background
@@ -39,34 +42,29 @@ fun FIFOKITApp() {
                 .safeDrawingPadding()
         ) {
 
-            when (showCalendar) {
-
-                true -> {
-
-                    BackHandler {
-                        screenOverride = false
+            if (showSettings) {
+                NotificationSettingsScreen(
+                    onBack = {
+                        showSettings = false
                     }
-
-                    RosterCalendarScreen(
-                        viewModel = rosterSetupViewModel,
-                        onBack = {
-                            screenOverride = false
-                        }
-                    )
-                }
-
-                false -> {
-                    RosterSetupRoute(
-                        viewModel = rosterSetupViewModel,
-                        onGenerateRoster = {
-                            screenOverride = true
-                        }
-                    )
-                }
-
-                null -> {
-                    // Waiting for saved roster state to load
-                }
+                )
+            } else if (showCalendar) {
+                RosterCalendarScreen(
+                    viewModel = rosterSetupViewModel,
+                    onBack = {
+                        screenOverride = false
+                    },
+                    onSettings = {
+                        showSettings = true
+                    }
+                )
+            } else {
+                RosterSetupRoute(
+                    viewModel = rosterSetupViewModel,
+                    onGenerateRoster = {
+                        screenOverride = true
+                    }
+                )
             }
         }
     }
