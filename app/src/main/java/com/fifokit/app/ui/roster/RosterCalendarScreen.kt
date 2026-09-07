@@ -41,6 +41,9 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.ContextCompat
 import com.fifokit.app.notifications.RosterNotificationManager
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+
 
 @Composable
 fun RosterCalendarScreen(
@@ -87,7 +90,9 @@ fun RosterCalendarScreen(
                     )
                 } ${month.year}",
                 modifier = Modifier.weight(1f),
-                style = MaterialTheme.typography.headlineMedium
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.SemiBold,
+                textAlign = TextAlign.Center
             )
 
             TextButton(
@@ -102,7 +107,11 @@ fun RosterCalendarScreen(
         Text(
             text = "${viewModel.selectedPattern.label} roster",
             style = MaterialTheme.typography.bodyMedium,
-            modifier = Modifier.padding(top = 4.dp)
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 2.dp),
+            textAlign = TextAlign.Center
         )
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -166,7 +175,9 @@ private fun WeekdayHeader() {
             Text(
                 text = day,
                 modifier = Modifier.weight(1f),
-                style = MaterialTheme.typography.labelMedium
+                style = MaterialTheme.typography.labelMedium,
+                fontWeight = FontWeight.SemiBold,
+                textAlign = TextAlign.Center
             )
         }
     }
@@ -207,7 +218,8 @@ private fun CalendarGrid(
                 CalendarDay(
                     date = date,
                     isWorkDay = isWorkDay(date),
-                    isStartDate = date == startDate
+                    isStartDate = date == startDate,
+                    isToday = date == LocalDate.now()
                 )
             }
         }
@@ -218,7 +230,8 @@ private fun CalendarGrid(
 private fun CalendarDay(
     date: LocalDate,
     isWorkDay: Boolean,
-    isStartDate: Boolean
+    isStartDate: Boolean,
+    isToday: Boolean
 ) {
     Surface(
         modifier = Modifier
@@ -228,25 +241,34 @@ private fun CalendarDay(
         color = if (isWorkDay) {
             MaterialTheme.colorScheme.primaryContainer
         } else {
-            MaterialTheme.colorScheme.surfaceVariant
+            MaterialTheme.colorScheme.surfaceContainerHigh
         },
-        border = if (isStartDate) {
-            BorderStroke(
-                width = 2.dp,
+        border = when {
+            isToday -> BorderStroke(
+                width = 3.dp,
                 color = MaterialTheme.colorScheme.primary
             )
-        } else {
-            null
+
+            isStartDate -> BorderStroke(
+                width = 1.dp,
+                color = MaterialTheme.colorScheme.outline
+            )
+
+            else -> null
         }
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
             modifier = Modifier.padding(4.dp)
         ) {
             Text(
                 text = date.dayOfMonth.toString(),
-                style = MaterialTheme.typography.bodyMedium
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.Medium
             )
+
+            Spacer(modifier = Modifier.height(2.dp))
 
             Text(
                 text = if (isWorkDay) "WORK" else "OFF",
@@ -258,26 +280,47 @@ private fun CalendarDay(
 
 @Composable
 private fun CalendarLegend() {
-    Row(
+    Column(
         modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(16.dp),
-        verticalAlignment = Alignment.CenterVertically
+        verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        Text(
-            text = "WORK",
-            style = MaterialTheme.typography.labelMedium,
-            color = MaterialTheme.colorScheme.primary
-        )
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Surface(
+                shape = MaterialTheme.shapes.small,
+                color = MaterialTheme.colorScheme.primaryContainer
+            ) {
+                Text(
+                    text = "WORK",
+                    modifier = Modifier.padding(
+                        horizontal = 10.dp,
+                        vertical = 5.dp
+                    ),
+                    style = MaterialTheme.typography.labelMedium
+                )
+            }
+
+            Surface(
+                shape = MaterialTheme.shapes.small,
+                color = MaterialTheme.colorScheme.surfaceContainerHigh
+            ) {
+                Text(
+                    text = "OFF",
+                    modifier = Modifier.padding(
+                        horizontal = 10.dp,
+                        vertical = 5.dp
+                    ),
+                    style = MaterialTheme.typography.labelMedium
+                )
+            }
+        }
 
         Text(
-            text = "OFF",
-            style = MaterialTheme.typography.labelMedium,
+            text = "Thick border = today · Thin border = roster start",
+            style = MaterialTheme.typography.labelSmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-
-        Text(
-            text = "Border = start date",
-            style = MaterialTheme.typography.labelMedium
         )
     }
 }
