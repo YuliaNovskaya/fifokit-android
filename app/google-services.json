@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "457823685553",
+    "project_id": "fifokit-e92c7",
+    "storage_bucket": "fifokit-e92c7.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:457823685553:android:ef8672c8612d665c2a0b90",
+        "android_client_info": {
+          "package_name": "com.fifokit.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC3b0UU6vgWgP4Tgj6vBh6cwcLz4ZgQjOE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
