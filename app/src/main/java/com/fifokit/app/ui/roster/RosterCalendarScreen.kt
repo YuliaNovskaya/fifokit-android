@@ -47,6 +47,11 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import com.google.firebase.analytics.FirebaseAnalytics
+import com.fifokit.app.domain.roster.PublicHolidayProvider
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.fillMaxHeight
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -184,6 +189,12 @@ fun RosterCalendarScreen(
                 month = month,
                 startDate = viewModel.startDate,
                 isWorkDay = viewModel::isWorkDay,
+                isPublicHoliday = { date ->
+                    PublicHolidayProvider.isPublicHoliday(
+                        date,
+                        viewModel.selectedStates
+                    )
+                },
                 modifier = Modifier.weight(1f)
             )
             Spacer(modifier = Modifier.height(12.dp))
@@ -218,6 +229,7 @@ private fun CalendarGrid(
     month: YearMonth,
     startDate: LocalDate,
     isWorkDay: (LocalDate) -> Boolean,
+    isPublicHoliday: (LocalDate) -> Boolean,
     modifier: Modifier = Modifier
 )
 {
@@ -249,7 +261,7 @@ private fun CalendarGrid(
                     date = date,
                     isWorkDay = isWorkDay(date),
                     isStartDate = date == startDate,
-                    isToday = date == LocalDate.now()
+                    isPublicHoliday = isPublicHoliday(date)
                 )
             }
         }
@@ -261,18 +273,20 @@ private fun CalendarDay(
     date: LocalDate,
     isWorkDay: Boolean,
     isStartDate: Boolean,
-    isToday: Boolean
+    isPublicHoliday: Boolean
 ) {
+    val isToday = date == LocalDate.now()
+    val workOffColor = if (isWorkDay) {
+        MaterialTheme.colorScheme.primaryContainer
+    } else {
+        MaterialTheme.colorScheme.surfaceContainerHigh
+    }
     Surface(
         modifier = Modifier
             .aspectRatio(1f)
             .padding(2.dp),
         shape = MaterialTheme.shapes.small,
-        color = if (isWorkDay) {
-            MaterialTheme.colorScheme.primaryContainer
-        } else {
-            MaterialTheme.colorScheme.surfaceContainerHigh
-        },
+        color = workOffColor,
         border = when {
             isToday -> BorderStroke(
                 width = 3.dp,
@@ -287,23 +301,61 @@ private fun CalendarDay(
             else -> null
         }
     ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center,
-            modifier = Modifier.padding(4.dp)
+        Box(
+            modifier = Modifier.fillMaxSize()
         ) {
-            Text(
-                text = date.dayOfMonth.toString(),
-                style = MaterialTheme.typography.titleSmall,
-                fontWeight = FontWeight.Medium
-            )
 
-            Spacer(modifier = Modifier.height(2.dp))
+            if (isPublicHoliday) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .fillMaxHeight(0.5f)
+                        .align(Alignment.TopCenter)
+                        .background(MaterialTheme.colorScheme.tertiaryContainer)
+                )
+            }
 
-            Text(
-                text = if (isWorkDay) "WORK" else "OFF",
-                style = MaterialTheme.typography.labelSmall
-            )
+            Column(
+                modifier = Modifier.fillMaxSize()
+            ) {
+
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxWidth(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            text = date.dayOfMonth.toString(),
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.Medium
+                        )
+
+                        if (isPublicHoliday) {
+                            Text(
+                                text = "PH",
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
+                }
+
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxWidth(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = if (isWorkDay) "WORK" else "OFF",
+                        style = MaterialTheme.typography.labelSmall
+                    )
+                }
+            }
         }
     }
 }
@@ -338,6 +390,19 @@ private fun CalendarLegend() {
             ) {
                 Text(
                     text = "OFF",
+                    modifier = Modifier.padding(
+                        horizontal = 10.dp,
+                        vertical = 5.dp
+                    ),
+                    style = MaterialTheme.typography.labelMedium
+                )
+            }
+            Surface(
+                shape = MaterialTheme.shapes.small,
+                color = MaterialTheme.colorScheme.tertiaryContainer
+            ) {
+                Text(
+                    text = "PH",
                     modifier = Modifier.padding(
                         horizontal = 10.dp,
                         vertical = 5.dp

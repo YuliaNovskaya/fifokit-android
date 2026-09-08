@@ -1,5 +1,6 @@
 package com.fifokit.app.ui
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.material3.MaterialTheme
@@ -14,7 +15,6 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.fifokit.app.ui.roster.RosterCalendarScreen
 import com.fifokit.app.ui.roster.RosterSetupRoute
 import com.fifokit.app.ui.roster.RosterSetupViewModel
-import androidx.compose.foundation.layout.Box
 import com.fifokit.app.ui.settings.SettingsScreen
 
 @Composable
@@ -46,7 +46,9 @@ fun FIFOKITApp() {
                 SettingsScreen(
                     onBack = {
                         showSettings = false
-                    }
+                    },
+                    selectedStates = rosterSetupViewModel.selectedStates,
+                    onStateToggle = rosterSetupViewModel::toggleState
                 )
             } else if (showCalendar) {
                 RosterCalendarScreen(

@@ -18,11 +18,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.core.app.NotificationManagerCompat
+import androidx.compose.foundation.layout.Row
+import com.fifokit.app.domain.roster.AustralianState
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Row
+import androidx.compose.material3.Button
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    selectedStates: Set<AustralianState> = setOf(AustralianState.WA),
+    onStateToggle: (AustralianState) -> Unit = {}
 ) {
     val context = LocalContext.current
     val notificationsEnabled =
@@ -77,6 +84,43 @@ fun SettingsScreen(
                 }
             ) {
                 Text("Open notification settings")
+            }
+
+            Spacer(modifier = Modifier.height(32.dp))
+
+            Text("Public holidays")
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Text("Show public holidays for:")
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            AustralianState.entries.chunked(4).forEach { states ->
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    states.forEach { state ->
+                        if (state in selectedStates) {
+                            Button(
+                                modifier = Modifier.weight(1f),
+                                onClick = { onStateToggle(state) }
+                            ) {
+                                Text(state.code)
+                            }
+                        } else {
+                            OutlinedButton(
+                                modifier = Modifier.weight(1f),
+                                onClick = { onStateToggle(state) }
+                            ) {
+                                Text(state.code)
+                            }
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
             }
         }
     }

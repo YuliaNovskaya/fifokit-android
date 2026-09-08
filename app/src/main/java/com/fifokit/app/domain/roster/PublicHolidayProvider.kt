@@ -38,6 +38,35 @@ object PublicHolidayProvider {
         name = name
     )
 
+    fun holidaysFor(
+        year: Int,
+        states: Set<AustralianState>
+    ): List<PublicHoliday> {
+        return states
+            .flatMap { state ->
+                holidaysFor(year, state)
+            }
+            .distinctBy { holiday ->
+                holiday.date to holiday.name
+            }
+            .sortedBy { it.date }
+    }
+
+    fun holidaysOn(
+        date: LocalDate,
+        states: Set<AustralianState>
+    ): List<PublicHoliday> {
+        return holidaysFor(date.year, states)
+            .filter { it.date == date }
+    }
+
+    fun isPublicHoliday(
+        date: LocalDate,
+        states: Set<AustralianState>
+    ): Boolean {
+        return holidaysOn(date, states).isNotEmpty()
+    }
+
     private fun holidays2026(state: AustralianState): List<PublicHoliday> {
 
         val common = listOf(
