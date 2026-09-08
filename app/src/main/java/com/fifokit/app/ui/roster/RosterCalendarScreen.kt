@@ -52,6 +52,8 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.fillMaxHeight
+import com.fifokit.app.domain.roster.RosterPhrases
+import androidx.compose.foundation.layout.BoxWithConstraints
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -194,10 +196,14 @@ fun RosterCalendarScreen(
                         date,
                         viewModel.selectedStates
                     )
-                },
-                modifier = Modifier.weight(1f)
+                }
             )
-            Spacer(modifier = Modifier.height(12.dp))
+
+            Spacer(modifier = Modifier.weight(1f))
+
+            TodayPhrase(viewModel)
+
+            Spacer(modifier = Modifier.weight(1f))
 
             CalendarLegend()
 
@@ -245,24 +251,34 @@ private fun CalendarGrid(
         }
     }
 
-    LazyVerticalGrid(
-        columns = GridCells.Fixed(7),
+    val rowCount = (cells.size + 6) / 7
+
+    BoxWithConstraints(
         modifier = modifier.fillMaxWidth()
     ) {
-        items(cells) { date ->
-            if (date == null) {
-                Spacer(
-                    modifier = Modifier
-                        .aspectRatio(1f)
-                        .padding(2.dp)
-                )
-            } else {
-                CalendarDay(
-                    date = date,
-                    isWorkDay = isWorkDay(date),
-                    isStartDate = date == startDate,
-                    isPublicHoliday = isPublicHoliday(date)
-                )
+        val cellSize = maxWidth / 7
+
+        LazyVerticalGrid(
+            columns = GridCells.Fixed(7),
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(cellSize * rowCount)
+        ) {
+            items(cells) { date ->
+                if (date == null) {
+                    Spacer(
+                        modifier = Modifier
+                            .aspectRatio(1f)
+                            .padding(2.dp)
+                    )
+                } else {
+                    CalendarDay(
+                        date = date,
+                        isWorkDay = isWorkDay(date),
+                        isStartDate = date == startDate,
+                        isPublicHoliday = isPublicHoliday(date)
+                    )
+                }
             }
         }
     }
@@ -459,5 +475,39 @@ private fun RosterTodaySummary(
                 style = MaterialTheme.typography.bodyMedium
             )
         }
+    }
+}
+
+@Composable
+private fun TodayPhrase(
+    viewModel: RosterSetupViewModel
+) {
+    val today = LocalDate.now()
+
+    val phrase = RosterPhrases.phraseFor(
+        date = today,
+        isWorkDay = viewModel.isWorkDay(today)
+    )
+
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.medium,
+        color = MaterialTheme.colorScheme.surface,
+        border = BorderStroke(
+            width = 1.dp,
+            color = MaterialTheme.colorScheme.primary
+        )
+    ) {
+        Text(
+            text = phrase,
+            modifier = Modifier.padding(
+                horizontal = 18.dp,
+                vertical = 14.dp
+            ),
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.SemiBold,
+            color = MaterialTheme.colorScheme.primary,
+            textAlign = TextAlign.Center
+        )
     }
 }
