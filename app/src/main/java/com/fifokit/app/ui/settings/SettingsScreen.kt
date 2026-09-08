@@ -21,7 +21,7 @@ import androidx.core.app.NotificationManagerCompat
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun NotificationSettingsScreen(
+fun SettingsScreen(
     onBack: () -> Unit
 ) {
     val context = LocalContext.current
@@ -32,7 +32,7 @@ fun NotificationSettingsScreen(
         topBar = {
             TopAppBar(
                 title = {
-                    Text("Notification settings")
+                    Text("Settings")
                 },
                 navigationIcon = {
                     androidx.compose.material3.TextButton(

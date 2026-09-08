@@ -15,7 +15,7 @@ import com.fifokit.app.ui.roster.RosterCalendarScreen
 import com.fifokit.app.ui.roster.RosterSetupRoute
 import com.fifokit.app.ui.roster.RosterSetupViewModel
 import androidx.compose.foundation.layout.Box
-import com.fifokit.app.ui.settings.NotificationSettingsScreen
+import com.fifokit.app.ui.settings.SettingsScreen
 
 @Composable
 fun FIFOKITApp() {
@@ -43,7 +43,7 @@ fun FIFOKITApp() {
         ) {
 
             if (showSettings) {
-                NotificationSettingsScreen(
+                SettingsScreen(
                     onBack = {
                         showSettings = false
                     }

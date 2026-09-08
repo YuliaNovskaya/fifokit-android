@@ -15,6 +15,7 @@ import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.temporal.ChronoUnit
 import com.fifokit.app.notifications.RosterReminderScheduler
+import com.fifokit.app.domain.roster.AustralianState
 
 @Composable
 fun RosterSetupRoute(
@@ -39,6 +40,17 @@ class RosterSetupViewModel(
     application: Application
 ) : AndroidViewModel(application) {
 
+    var selectedStates by mutableStateOf(setOf(AustralianState.WA))
+        private set
+
+    fun toggleState(state: AustralianState) {
+        selectedStates =
+            if (state in selectedStates) {
+                selectedStates - state
+            } else {
+                selectedStates + state
+            }
+    }
     private val rosterPreferences = RosterPreferences(application)
 
     var selectedPattern by mutableStateOf(RosterPattern.TWO_ONE)
