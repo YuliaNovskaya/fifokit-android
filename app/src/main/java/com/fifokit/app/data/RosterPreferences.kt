@@ -6,6 +6,7 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import androidx.datastore.preferences.core.stringSetPreferencesKey
 
 private val Context.dataStore by preferencesDataStore(
     name = "roster_preferences"
@@ -23,6 +24,7 @@ class RosterPreferences(
     private object Keys {
         val PATTERN = stringPreferencesKey("pattern")
         val START_DATE = stringPreferencesKey("start_date")
+        val SELECTED_STATES = stringSetPreferencesKey("selected_states")
     }
 
     val savedRoster: Flow<SavedRoster?> =
@@ -40,6 +42,11 @@ class RosterPreferences(
             }
         }
 
+    val selectedStates: Flow<Set<String>> =
+        context.dataStore.data.map { preferences ->
+            preferences[Keys.SELECTED_STATES] ?: setOf("WA")
+        }
+
     suspend fun saveRoster(
         pattern: String,
         startDate: String
@@ -50,9 +57,18 @@ class RosterPreferences(
         }
     }
 
+    suspend fun saveSelectedStates(
+        states: Set<String>
+    ) {
+        context.dataStore.edit { preferences ->
+            preferences[Keys.SELECTED_STATES] = states
+        }
+    }
+
     suspend fun clearRoster() {
         context.dataStore.edit { preferences ->
-            preferences.clear()
+            preferences.remove(Keys.PATTERN)
+            preferences.remove(Keys.START_DATE)
         }
     }
 }

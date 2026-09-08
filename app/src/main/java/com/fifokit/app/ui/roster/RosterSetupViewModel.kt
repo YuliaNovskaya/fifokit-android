@@ -50,6 +50,12 @@ class RosterSetupViewModel(
             } else {
                 selectedStates + state
             }
+
+        viewModelScope.launch {
+            rosterPreferences.saveSelectedStates(
+                selectedStates.map { it.name }.toSet()
+            )
+        }
     }
     private val rosterPreferences = RosterPreferences(application)
 
@@ -64,6 +70,7 @@ class RosterSetupViewModel(
 
     init {
         restoreRoster()
+        restoreSelectedStates()
     }
 
     fun clearRoster() {
@@ -153,6 +160,19 @@ class RosterSetupViewModel(
             }
 
             hasSavedRoster = true
+        }
+    }
+    private fun restoreSelectedStates() {
+        viewModelScope.launch {
+            val savedStates = rosterPreferences.selectedStates.first()
+
+            selectedStates = savedStates
+                .mapNotNull { stateName ->
+                    runCatching {
+                        AustralianState.valueOf(stateName)
+                    }.getOrNull()
+                }
+                .toSet()
         }
     }
 }
