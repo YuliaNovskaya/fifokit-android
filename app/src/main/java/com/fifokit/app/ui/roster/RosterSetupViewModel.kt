@@ -26,8 +26,14 @@ fun RosterSetupRoute(
 ) {
     RosterSetupScreen(
         selectedRoster = viewModel.selectedPattern,
+        isCustomRoster = viewModel.isCustomRoster,
+        customWorkDays = viewModel.customWorkDays,
+        customOffDays = viewModel.customOffDays,
         startDate = viewModel.startDate,
         onRosterSelected = viewModel::selectPattern,
+        onCustomRosterSelected = viewModel::selectCustomRoster,
+        onCustomWorkDaysChanged = viewModel::updateCustomWorkDays,
+        onCustomOffDaysChanged = viewModel::updateCustomOffDays,
         onStartDateSelected = viewModel::selectStartDate,
         showResetRoster = viewModel.hasSavedRoster == true,
         onResetRoster = viewModel::clearRoster,
@@ -171,7 +177,10 @@ class RosterSetupViewModel(
 
             rosterPreferences.saveRoster(
                 pattern = selectedPattern.name,
-                startDate = startDate.toString()
+                startDate = startDate.toString(),
+                isCustomRoster = isCustomRoster,
+                customWorkDays = customWorkDays,
+                customOffDays = customOffDays
             )
 
             RosterReminderScheduler.schedule(getApplication())
@@ -206,6 +215,10 @@ class RosterSetupViewModel(
             }.getOrNull()?.let {
                 selectedPattern = it
             }
+
+            isCustomRoster = savedRoster.isCustomRoster
+            customWorkDays = savedRoster.customWorkDays
+            customOffDays = savedRoster.customOffDays
 
             runCatching {
                 LocalDate.parse(savedRoster.startDate)

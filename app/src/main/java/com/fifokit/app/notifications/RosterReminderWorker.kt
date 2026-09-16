@@ -40,17 +40,37 @@ class RosterReminderWorker(
         val today = LocalDate.now()
         val tomorrow = today.plusDays(1)
 
-        val todayIsWork = RosterCalculator.isWorkDay(
-            date = today,
-            startDate = startDate,
-            pattern = pattern
-        )
+        val todayIsWork =
+            if (savedRoster.isCustomRoster) {
+                RosterCalculator.isWorkDay(
+                    date = today,
+                    startDate = startDate,
+                    workDays = savedRoster.customWorkDays,
+                    offDays = savedRoster.customOffDays
+                )
+            } else {
+                RosterCalculator.isWorkDay(
+                    date = today,
+                    startDate = startDate,
+                    pattern = pattern
+                )
+            }
 
-        val tomorrowIsWork = RosterCalculator.isWorkDay(
-            date = tomorrow,
-            startDate = startDate,
-            pattern = pattern
-        )
+        val tomorrowIsWork =
+            if (savedRoster.isCustomRoster) {
+                RosterCalculator.isWorkDay(
+                    date = tomorrow,
+                    startDate = startDate,
+                    workDays = savedRoster.customWorkDays,
+                    offDays = savedRoster.customOffDays
+                )
+            } else {
+                RosterCalculator.isWorkDay(
+                    date = tomorrow,
+                    startDate = startDate,
+                    pattern = pattern
+                )
+            }
 
         if (todayIsWork == tomorrowIsWork) {
             return Result.success()

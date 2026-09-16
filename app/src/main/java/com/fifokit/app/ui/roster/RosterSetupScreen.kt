@@ -35,8 +35,14 @@ import com.fifokit.app.domain.model.RosterPattern
 fun RosterSetupScreen(
     modifier: Modifier = Modifier,
     selectedRoster: RosterPattern = RosterPattern.TWO_ONE,
+    isCustomRoster: Boolean = false,
+    customWorkDays: Int = 14,
+    customOffDays: Int = 7,
     startDate: LocalDate = LocalDate.now(),
     onRosterSelected: (RosterPattern) -> Unit = {},
+    onCustomRosterSelected: () -> Unit = {},
+    onCustomWorkDaysChanged: (Int) -> Unit = {},
+    onCustomOffDaysChanged: (Int) -> Unit = {},
     onStartDateSelected: (LocalDate) -> Unit = {},
     showResetRoster: Boolean = false,
     onResetRoster: () -> Unit = {},
@@ -59,7 +65,7 @@ fun RosterSetupScreen(
         ) {
             RosterPattern.entries.forEach { pattern ->
 
-                if (pattern == selectedRoster) {
+                if (!isCustomRoster && pattern == selectedRoster) {
                     Button(
                         modifier = Modifier.weight(1f),
                         onClick = { onRosterSelected(pattern) }
@@ -73,6 +79,99 @@ fun RosterSetupScreen(
                     ) {
                         Text(pattern.label)
                     }
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        if (isCustomRoster) {
+            Button(
+                modifier = Modifier.fillMaxWidth(),
+                onClick = onCustomRosterSelected
+            ) {
+                Text("Custom")
+            }
+        } else {
+            OutlinedButton(
+                modifier = Modifier.fillMaxWidth(),
+                onClick = onCustomRosterSelected
+            ) {
+                Text("Custom")
+            }
+        }
+
+        if (isCustomRoster) {
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Text("Work days")
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                OutlinedButton(
+                    modifier = Modifier.weight(1f),
+                    onClick = {
+                        onCustomWorkDaysChanged(customWorkDays - 1)
+                    }
+                ) {
+                    Text("-")
+                }
+
+                Button(
+                    modifier = Modifier.weight(2f),
+                    onClick = {}
+                ) {
+                    Text(customWorkDays.toString())
+                }
+
+                OutlinedButton(
+                    modifier = Modifier.weight(1f),
+                    onClick = {
+                        onCustomWorkDaysChanged(customWorkDays + 1)
+                    }
+                ) {
+                    Text("+")
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Text("Off days")
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                OutlinedButton(
+                    modifier = Modifier.weight(1f),
+                    onClick = {
+                        onCustomOffDaysChanged(customOffDays - 1)
+                    }
+                ) {
+                    Text("-")
+                }
+
+                Button(
+                    modifier = Modifier.weight(2f),
+                    onClick = {}
+                ) {
+                    Text(customOffDays.toString())
+                }
+
+                OutlinedButton(
+                    modifier = Modifier.weight(1f),
+                    onClick = {
+                        onCustomOffDaysChanged(customOffDays + 1)
+                    }
+                ) {
+                    Text("+")
                 }
             }
         }

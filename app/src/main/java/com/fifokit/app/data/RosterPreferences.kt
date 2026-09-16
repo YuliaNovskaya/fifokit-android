@@ -1,12 +1,14 @@
 package com.fifokit.app.data
 
 import android.content.Context
+import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
+import androidx.datastore.preferences.core.stringSetPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
-import androidx.datastore.preferences.core.stringSetPreferencesKey
 
 private val Context.dataStore by preferencesDataStore(
     name = "roster_preferences"
@@ -14,7 +16,10 @@ private val Context.dataStore by preferencesDataStore(
 
 data class SavedRoster(
     val pattern: String,
-    val startDate: String
+    val startDate: String,
+    val isCustomRoster: Boolean,
+    val customWorkDays: Int,
+    val customOffDays: Int
 )
 
 class RosterPreferences(
@@ -25,6 +30,10 @@ class RosterPreferences(
         val PATTERN = stringPreferencesKey("pattern")
         val START_DATE = stringPreferencesKey("start_date")
         val SELECTED_STATES = stringSetPreferencesKey("selected_states")
+
+        val IS_CUSTOM_ROSTER = booleanPreferencesKey("is_custom_roster")
+        val CUSTOM_WORK_DAYS = intPreferencesKey("custom_work_days")
+        val CUSTOM_OFF_DAYS = intPreferencesKey("custom_off_days")
     }
 
     val savedRoster: Flow<SavedRoster?> =
@@ -35,7 +44,10 @@ class RosterPreferences(
             if (pattern != null && startDate != null) {
                 SavedRoster(
                     pattern = pattern,
-                    startDate = startDate
+                    startDate = startDate,
+                    isCustomRoster = preferences[Keys.IS_CUSTOM_ROSTER] ?: false,
+                    customWorkDays = preferences[Keys.CUSTOM_WORK_DAYS] ?: 14,
+                    customOffDays = preferences[Keys.CUSTOM_OFF_DAYS] ?: 7
                 )
             } else {
                 null
@@ -49,11 +61,17 @@ class RosterPreferences(
 
     suspend fun saveRoster(
         pattern: String,
-        startDate: String
+        startDate: String,
+        isCustomRoster: Boolean = false,
+        customWorkDays: Int = 14,
+        customOffDays: Int = 7
     ) {
         context.dataStore.edit { preferences ->
             preferences[Keys.PATTERN] = pattern
             preferences[Keys.START_DATE] = startDate
+            preferences[Keys.IS_CUSTOM_ROSTER] = isCustomRoster
+            preferences[Keys.CUSTOM_WORK_DAYS] = customWorkDays
+            preferences[Keys.CUSTOM_OFF_DAYS] = customOffDays
         }
     }
 
@@ -69,6 +87,9 @@ class RosterPreferences(
         context.dataStore.edit { preferences ->
             preferences.remove(Keys.PATTERN)
             preferences.remove(Keys.START_DATE)
+            preferences.remove(Keys.IS_CUSTOM_ROSTER)
+            preferences.remove(Keys.CUSTOM_WORK_DAYS)
+            preferences.remove(Keys.CUSTOM_OFF_DAYS)
         }
     }
 }
