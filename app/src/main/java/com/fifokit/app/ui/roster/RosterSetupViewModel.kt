@@ -16,6 +16,8 @@ import java.time.LocalDate
 import java.time.temporal.ChronoUnit
 import com.fifokit.app.notifications.RosterReminderScheduler
 import com.fifokit.app.domain.roster.AustralianState
+import android.os.Bundle
+import com.google.firebase.analytics.FirebaseAnalytics
 
 @Composable
 fun RosterSetupRoute(
@@ -59,6 +61,7 @@ class RosterSetupViewModel(
     }
     private val rosterPreferences = RosterPreferences(application)
 
+    private val analytics = FirebaseAnalytics.getInstance(application)
     var selectedPattern by mutableStateOf(RosterPattern.TWO_ONE)
         private set
 
@@ -80,6 +83,7 @@ class RosterSetupViewModel(
             selectedPattern = RosterPattern.TWO_ONE
             startDate = LocalDate.now()
             hasSavedRoster = false
+            analytics.logEvent("roster_reset", null)
         }
     }
 
@@ -127,6 +131,9 @@ class RosterSetupViewModel(
 
     fun saveCurrentRoster() {
         viewModelScope.launch {
+
+            val isNewRoster = rosterPreferences.savedRoster.first() == null
+
             rosterPreferences.saveRoster(
                 pattern = selectedPattern.name,
                 startDate = startDate.toString()
@@ -135,6 +142,18 @@ class RosterSetupViewModel(
             RosterReminderScheduler.schedule(getApplication())
 
             hasSavedRoster = true
+
+            val eventName =
+                if (isNewRoster) "roster_created"
+                else "roster_updated"
+
+            analytics.logEvent(
+                eventName,
+                Bundle().apply {
+                    putString("pattern", selectedPattern.name)
+                    putLong("state_count", selectedStates.size.toLong())
+                }
+            )
         }
     }
 

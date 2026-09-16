@@ -72,12 +72,15 @@ fun RosterCalendarScreen(
             onResult = { granted ->
                 if (granted) {
                     analytics.logEvent("notification_enabled", null)
+                } else {
+                    analytics.logEvent("notification_denied", null)
                 }
             }
         )
 
     LaunchedEffect(Unit) {
         RosterNotificationManager.createChannel(context)
+        analytics.logEvent("calendar_viewed", null)
     }
     var month by remember {
         mutableStateOf(YearMonth.now())

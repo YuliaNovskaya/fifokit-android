@@ -30,8 +30,6 @@ import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 import androidx.compose.material3.ExperimentalMaterial3Api
 import com.fifokit.app.domain.model.RosterPattern
-import androidx.compose.ui.platform.LocalContext
-import com.google.firebase.analytics.FirebaseAnalytics
 
 @Composable
 fun RosterSetupScreen(
@@ -45,10 +43,7 @@ fun RosterSetupScreen(
     onGenerateRoster: () -> Unit = {}
 ) {
     var showDatePicker by remember { mutableStateOf(false) }
-    val context = LocalContext.current
-    val analytics = remember(context) {
-        FirebaseAnalytics.getInstance(context)
-    }
+
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -104,7 +99,6 @@ fun RosterSetupScreen(
         Button(
             modifier = Modifier.fillMaxWidth(),
             onClick = {
-                analytics.logEvent("roster_created", null)
                 onGenerateRoster()
             }
         ) {
