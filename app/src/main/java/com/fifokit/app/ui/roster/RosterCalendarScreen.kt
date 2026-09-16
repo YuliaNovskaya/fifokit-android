@@ -55,6 +55,10 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import com.fifokit.app.domain.roster.RosterPhrases
 import androidx.compose.foundation.layout.BoxWithConstraints
 
+private enum class CalendarViewMode {
+    MONTH,
+    YEAR
+}
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RosterCalendarScreen(
@@ -84,6 +88,10 @@ fun RosterCalendarScreen(
     }
     var month by remember {
         mutableStateOf(YearMonth.now())
+    }
+
+    var calendarViewMode by remember {
+        mutableStateOf(CalendarViewMode.MONTH)
     }
 
     Scaffold(
@@ -117,23 +125,80 @@ fun RosterCalendarScreen(
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                if (calendarViewMode == CalendarViewMode.MONTH) {
+                    Button(
+                        modifier = Modifier.weight(1f),
+                        onClick = {
+                            calendarViewMode = CalendarViewMode.MONTH
+                        }
+                    ) {
+                        Text("Month")
+                    }
+                } else {
+                    OutlinedButton(
+                        modifier = Modifier.weight(1f),
+                        onClick = {
+                            calendarViewMode = CalendarViewMode.MONTH
+                        }
+                    ) {
+                        Text("Month")
+                    }
+                }
+
+                if (calendarViewMode == CalendarViewMode.YEAR) {
+                    Button(
+                        modifier = Modifier.weight(1f),
+                        onClick = {
+                            calendarViewMode = CalendarViewMode.YEAR
+                        }
+                    ) {
+                        Text("Year")
+                    }
+                } else {
+                    OutlinedButton(
+                        modifier = Modifier.weight(1f),
+                        onClick = {
+                            calendarViewMode = CalendarViewMode.YEAR
+                        }
+                    ) {
+                        Text("Year")
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 TextButton(
                     onClick = {
-                        month = month.minusMonths(1)
+                        month =
+                            if (calendarViewMode == CalendarViewMode.MONTH) {
+                                month.minusMonths(1)
+                            } else {
+                                month.minusYears(1)
+                            }
                     }
                 ) {
                     Text("<")
                 }
 
                 Text(
-                    text = "${
-                        month.month.getDisplayName(
-                            TextStyle.FULL,
-                            Locale.getDefault()
-                        )
-                    } ${month.year}",
+                    text =
+                        if (calendarViewMode == CalendarViewMode.MONTH) {
+                            "${
+                                month.month.getDisplayName(
+                                    TextStyle.FULL,
+                                    Locale.getDefault()
+                                )
+                            } ${month.year}"
+                        } else {
+                            month.year.toString()
+                        },
                     modifier = Modifier.weight(1f),
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.SemiBold,
@@ -142,7 +207,12 @@ fun RosterCalendarScreen(
 
                 TextButton(
                     onClick = {
-                        month = month.plusMonths(1)
+                        month =
+                            if (calendarViewMode == CalendarViewMode.MONTH) {
+                                month.plusMonths(1)
+                            } else {
+                                month.plusYears(1)
+                            }
                     }
                 ) {
                     Text(">")
@@ -150,7 +220,12 @@ fun RosterCalendarScreen(
             }
 
             Text(
-                text = "${viewModel.selectedPattern.label} roster",
+                text =
+                    if (viewModel.isCustomRoster) {
+                        "${viewModel.customWorkDays}/${viewModel.customOffDays} custom roster"
+                    } else {
+                        "${viewModel.selectedPattern.label} roster"
+                    },
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier
@@ -186,29 +261,51 @@ fun RosterCalendarScreen(
                 Spacer(modifier = Modifier.height(16.dp))
             }
 
-            WeekdayHeader()
+            if (calendarViewMode == CalendarViewMode.MONTH) {
 
-            Spacer(modifier = Modifier.height(8.dp))
+                WeekdayHeader()
 
-            CalendarGrid(
-                month = month,
-                startDate = viewModel.startDate,
-                isWorkDay = viewModel::isWorkDay,
-                isPublicHoliday = { date ->
-                    PublicHolidayProvider.isPublicHoliday(
-                        date,
-                        viewModel.selectedStates
-                    )
-                }
-            )
+                Spacer(modifier = Modifier.height(8.dp))
 
-            Spacer(modifier = Modifier.weight(1f))
+                CalendarGrid(
+                    month = month,
+                    startDate = viewModel.startDate,
+                    isWorkDay = viewModel::isWorkDay,
+                    isPublicHoliday = { date ->
+                        PublicHolidayProvider.isPublicHoliday(
+                            date,
+                            viewModel.selectedStates
+                        )
+                    }
+                )
 
-            TodayPhrase(viewModel)
+                Spacer(modifier = Modifier.weight(1f))
 
-            Spacer(modifier = Modifier.weight(1f))
+                TodayPhrase(viewModel)
 
-            CalendarLegend()
+                Spacer(modifier = Modifier.weight(1f))
+
+                CalendarLegend()
+
+            } else {
+
+                YearCalendarGrid(
+                    year = month.year,
+                    startDate = viewModel.startDate,
+                    isWorkDay = viewModel::isWorkDay,
+                    isPublicHoliday = { date ->
+                        PublicHolidayProvider.isPublicHoliday(
+                            date,
+                            viewModel.selectedStates
+                        )
+                    },
+                    modifier = Modifier.weight(1f)
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                CalendarLegend()
+            }
 
             Spacer(modifier = Modifier.height(12.dp))
 
@@ -512,5 +609,180 @@ private fun TodayPhrase(
             color = MaterialTheme.colorScheme.primary,
             textAlign = TextAlign.Center
         )
+    }
+}
+
+@Composable
+private fun YearCalendarGrid(
+    year: Int,
+    startDate: LocalDate,
+    isWorkDay: (LocalDate) -> Boolean,
+    isPublicHoliday: (LocalDate) -> Boolean,
+    modifier: Modifier = Modifier
+) {
+    val months = (1..12).map { monthNumber ->
+        YearMonth.of(year, monthNumber)
+    }
+
+    LazyVerticalGrid(
+        columns = GridCells.Fixed(2),
+        modifier = modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        items(months) { yearMonth ->
+            MiniMonthCalendar(
+                month = yearMonth,
+                startDate = startDate,
+                isWorkDay = isWorkDay,
+                isPublicHoliday = isPublicHoliday
+            )
+        }
+    }
+}
+
+@Composable
+private fun MiniMonthCalendar(
+    month: YearMonth,
+    startDate: LocalDate,
+    isWorkDay: (LocalDate) -> Boolean,
+    isPublicHoliday: (LocalDate) -> Boolean
+) {
+    val firstDayOffset = month.atDay(1).dayOfWeek.value - 1
+
+    val cells = buildList<LocalDate?> {
+        repeat(firstDayOffset) {
+            add(null)
+        }
+
+        for (day in 1..month.lengthOfMonth()) {
+            add(month.atDay(day))
+        }
+
+        while (size < 42) {
+            add(null)
+        }
+    }
+
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.medium,
+        color = MaterialTheme.colorScheme.surfaceVariant
+    ) {
+        Column(
+            modifier = Modifier.padding(8.dp)
+        ) {
+            Text(
+                text = month.month.getDisplayName(
+                    TextStyle.SHORT,
+                    Locale.getDefault()
+                ),
+                modifier = Modifier.fillMaxWidth(),
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.SemiBold,
+                textAlign = TextAlign.Center
+            )
+
+            Spacer(modifier = Modifier.height(4.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                listOf("M", "T", "W", "T", "F", "S", "S")
+                    .forEach { day ->
+                        Text(
+                            text = day,
+                            modifier = Modifier.weight(1f),
+                            style = MaterialTheme.typography.labelSmall,
+                            textAlign = TextAlign.Center
+                        )
+                    }
+            }
+
+            cells.chunked(7).forEach { week ->
+                Row(
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    week.forEach { date ->
+                        if (date == null) {
+                            Spacer(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .aspectRatio(1f)
+                            )
+                        } else {
+                            MiniCalendarDay(
+                                modifier = Modifier.weight(1f),
+                                date = date,
+                                isWorkDay = isWorkDay(date),
+                                isStartDate = date == startDate,
+                                isPublicHoliday = isPublicHoliday(date)
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun MiniCalendarDay(
+    modifier: Modifier,
+    date: LocalDate,
+    isWorkDay: Boolean,
+    isStartDate: Boolean,
+    isPublicHoliday: Boolean
+) {
+    val isToday = date == LocalDate.now()
+
+    val workOffColor =
+        if (isWorkDay) {
+            MaterialTheme.colorScheme.primaryContainer
+        } else {
+            MaterialTheme.colorScheme.surfaceContainerHigh
+        }
+
+    Surface(
+        modifier = modifier
+            .aspectRatio(1f)
+            .padding(1.dp),
+        shape = MaterialTheme.shapes.small,
+        color = workOffColor,
+        border = when {
+            isToday -> BorderStroke(
+                2.dp,
+                MaterialTheme.colorScheme.primary
+            )
+
+            isStartDate -> BorderStroke(
+                1.dp,
+                MaterialTheme.colorScheme.outline
+            )
+
+            else -> null
+        }
+    ) {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            if (isPublicHoliday) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .fillMaxHeight(0.5f)
+                        .align(Alignment.TopCenter)
+                        .background(
+                            MaterialTheme.colorScheme.tertiaryContainer
+                        )
+                )
+            }
+
+            Text(
+                text = date.dayOfMonth.toString(),
+                style = MaterialTheme.typography.labelSmall
+            )
+        }
     }
 }
