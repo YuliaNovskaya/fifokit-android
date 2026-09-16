@@ -9,6 +9,7 @@ import androidx.datastore.preferences.core.stringSetPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import androidx.datastore.preferences.core.longPreferencesKey
 
 private val Context.dataStore by preferencesDataStore(
     name = "roster_preferences"
@@ -57,6 +58,12 @@ class RosterPreferences(
         val REMINDER_MINUTE =
             intPreferencesKey("reminder_minute")
 
+        val ACTIVE_ROSTER_ID =
+            longPreferencesKey("active_roster_id")
+
+        val LEGACY_ROSTER_MIGRATED =
+            booleanPreferencesKey("legacy_roster_migrated")
+
     }
 
     val savedRoster: Flow<SavedRoster?> =
@@ -93,6 +100,15 @@ class RosterPreferences(
                 hour = preferences[Keys.REMINDER_HOUR] ?: 19,
                 minute = preferences[Keys.REMINDER_MINUTE] ?: 0
             )
+        }
+    val activeRosterId: Flow<Long?> =
+        context.dataStore.data.map { preferences ->
+            preferences[Keys.ACTIVE_ROSTER_ID]
+        }
+
+    val legacyRosterMigrated: Flow<Boolean> =
+        context.dataStore.data.map { preferences ->
+            preferences[Keys.LEGACY_ROSTER_MIGRATED] ?: false
         }
     suspend fun saveRoster(
         pattern: String,
@@ -132,6 +148,21 @@ class RosterPreferences(
         }
     }
 
+    suspend fun setActiveRosterId(id: Long?) {
+        context.dataStore.edit { preferences ->
+            if (id == null) {
+                preferences.remove(Keys.ACTIVE_ROSTER_ID)
+            } else {
+                preferences[Keys.ACTIVE_ROSTER_ID] = id
+            }
+        }
+    }
+
+    suspend fun markLegacyRosterMigrated() {
+        context.dataStore.edit { preferences ->
+            preferences[Keys.LEGACY_ROSTER_MIGRATED] = true
+        }
+    }
     suspend fun clearRoster() {
         context.dataStore.edit { preferences ->
             preferences.remove(Keys.PATTERN)

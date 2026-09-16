@@ -19,6 +19,9 @@ import com.fifokit.app.domain.roster.AustralianState
 import android.os.Bundle
 import com.google.firebase.analytics.FirebaseAnalytics
 import com.fifokit.app.data.ReminderSettings
+import com.fifokit.app.data.RosterMigration
+import com.fifokit.app.data.RosterRepository
+import com.fifokit.app.data.local.RosterDatabase
 
 @Composable
 fun RosterSetupRoute(
@@ -68,6 +71,20 @@ class RosterSetupViewModel(
     }
     private val rosterPreferences = RosterPreferences(application)
 
+    private val rosterDatabase =
+        RosterDatabase.getInstance(application)
+
+    private val rosterRepository =
+        RosterRepository(rosterDatabase.rosterDao())
+
+    private val rosterMigration =
+        RosterMigration(
+            rosterRepository = rosterRepository,
+            rosterPreferences = rosterPreferences
+        )
+
+    private var activeRosterId: Long? = null
+
     private val analytics = FirebaseAnalytics.getInstance(application)
     var selectedPattern by mutableStateOf(RosterPattern.TWO_ONE)
         private set
@@ -102,21 +119,33 @@ class RosterSetupViewModel(
         private set
 
     init {
-        restoreRoster()
+        initialiseRoster()
         restoreSelectedStates()
         restoreReminderSettings()
     }
 
     fun clearRoster() {
         viewModelScope.launch {
+
+            activeRosterId?.let { id ->
+                rosterRepository.deleteRoster(id)
+            }
+
+            rosterPreferences.setActiveRosterId(null)
+
+            // Remove the temporary legacy copy too.
             rosterPreferences.clearRoster()
+
             RosterReminderScheduler.cancel(getApplication())
+
+            activeRosterId = null
             selectedPattern = RosterPattern.TWO_ONE
             isCustomRoster = false
             customWorkDays = 14
             customOffDays = 7
             startDate = LocalDate.now()
             hasSavedRoster = false
+
             analytics.logEvent("roster_reset", null)
         }
     }
@@ -210,55 +239,112 @@ class RosterSetupViewModel(
     fun saveCurrentRoster() {
         viewModelScope.launch {
 
-            val isNewRoster = rosterPreferences.savedRoster.first() == null
+            val existingRoster =
+                activeRosterId?.let { id ->
+                    rosterRepository.getRosterById(id)
+                }
 
-            rosterPreferences.saveRoster(
-                pattern = selectedPattern.name,
-                startDate = startDate.toString(),
-                isCustomRoster = isCustomRoster,
-                customWorkDays = customWorkDays,
-                customOffDays = customOffDays
-            )
+            val isNewRoster = existingRoster == null
+
+            if (existingRoster == null) {
+
+                val newRosterId =
+                    rosterRepository.createRoster(
+                        name = "My Roster",
+                        pattern = selectedPattern.name,
+                        startDate = startDate.toString(),
+                        isCustomRoster = isCustomRoster,
+                        customWorkDays = customWorkDays,
+                        customOffDays = customOffDays
+                    )
+
+                activeRosterId = newRosterId
+                rosterPreferences.setActiveRosterId(newRosterId)
+
+            } else {
+
+                rosterRepository.updateRoster(
+                    existingRoster.copy(
+                        pattern = selectedPattern.name,
+                        startDate = startDate.toString(),
+                        isCustomRoster = isCustomRoster,
+                        customWorkDays = customWorkDays,
+                        customOffDays = customOffDays
+                    )
+                )
+            }
 
             RosterReminderScheduler.schedule(getApplication())
 
             hasSavedRoster = true
 
             val eventName =
-                if (isNewRoster) "roster_created"
-                else "roster_updated"
+                if (isNewRoster) {
+                    "roster_created"
+                } else {
+                    "roster_updated"
+                }
 
             analytics.logEvent(
                 eventName,
                 Bundle().apply {
                     putString("pattern", selectedPattern.name)
-                    putLong("state_count", selectedStates.size.toLong())
+                    putLong(
+                        "state_count",
+                        selectedStates.size.toLong()
+                    )
                 }
             )
         }
     }
 
-    private fun restoreRoster() {
+    private fun initialiseRoster() {
         viewModelScope.launch {
-            val savedRoster = rosterPreferences.savedRoster.first()
 
-            if (savedRoster == null) {
+            rosterMigration.migrateLegacyRosterIfNeeded()
+
+            var rosterId =
+                rosterPreferences.activeRosterId.first()
+
+            var roster =
+                rosterId?.let { id ->
+                    rosterRepository.getRosterById(id)
+                }
+
+            // Safety fallback if an active ID was lost but
+            // Room still contains a roster.
+            if (roster == null) {
+                roster =
+                    rosterRepository
+                        .getAllRosters()
+                        .firstOrNull()
+
+                if (roster != null) {
+                    rosterId = roster.id
+                    rosterPreferences.setActiveRosterId(roster.id)
+                }
+            }
+
+            if (roster == null) {
+                activeRosterId = null
                 hasSavedRoster = false
                 return@launch
             }
 
+            activeRosterId = rosterId
+
             runCatching {
-                RosterPattern.valueOf(savedRoster.pattern)
+                RosterPattern.valueOf(roster.pattern)
             }.getOrNull()?.let {
                 selectedPattern = it
             }
 
-            isCustomRoster = savedRoster.isCustomRoster
-            customWorkDays = savedRoster.customWorkDays
-            customOffDays = savedRoster.customOffDays
+            isCustomRoster = roster.isCustomRoster
+            customWorkDays = roster.customWorkDays
+            customOffDays = roster.customOffDays
 
             runCatching {
-                LocalDate.parse(savedRoster.startDate)
+                LocalDate.parse(roster.startDate)
             }.getOrNull()?.let {
                 startDate = it
             }
@@ -266,6 +352,7 @@ class RosterSetupViewModel(
             hasSavedRoster = true
         }
     }
+
     private fun restoreSelectedStates() {
         viewModelScope.launch {
             val savedStates = rosterPreferences.selectedStates.first()
@@ -303,8 +390,13 @@ class RosterSetupViewModel(
 
             rosterPreferences.saveReminderSettings(settings)
 
+            val rosterId =
+                activeRosterId
+                    ?: rosterPreferences.activeRosterId.first()
+
             val rosterExists =
-                rosterPreferences.savedRoster.first() != null
+                rosterId != null &&
+                        rosterRepository.getRosterById(rosterId) != null
 
             if (
                 settings.enabled &&

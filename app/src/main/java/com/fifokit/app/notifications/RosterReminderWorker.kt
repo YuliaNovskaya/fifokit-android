@@ -10,7 +10,10 @@ import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
+import com.fifokit.app.data.RosterMigration
 import com.fifokit.app.data.RosterPreferences
+import com.fifokit.app.data.RosterRepository
+import com.fifokit.app.data.local.RosterDatabase
 import com.fifokit.app.domain.model.RosterPattern
 import com.fifokit.app.domain.roster.RosterCalculator
 import kotlinx.coroutines.flow.first
@@ -24,35 +27,56 @@ class RosterReminderWorker(
     @SuppressLint("MissingPermission")
     override suspend fun doWork(): Result {
 
-        val preferences = RosterPreferences(applicationContext)
+        val preferences =
+            RosterPreferences(applicationContext)
 
-        val savedRoster = preferences.savedRoster.first()
-            ?: return Result.success()
+        val database =
+            RosterDatabase.getInstance(applicationContext)
 
-        val reminderSettings = preferences.reminderSettings.first()
+        val repository =
+            RosterRepository(database.rosterDao())
+
+        val migration =
+            RosterMigration(
+                rosterRepository = repository,
+                rosterPreferences = preferences
+            )
+
+        migration.migrateLegacyRosterIfNeeded()
+
+        val activeRosterId =
+            preferences.activeRosterId.first()
+                ?: return Result.success()
+
+        val roster =
+            repository.getRosterById(activeRosterId)
+                ?: return Result.success()
+
+        val reminderSettings =
+            preferences.reminderSettings.first()
 
         if (!reminderSettings.enabled) {
             return Result.success()
         }
 
         val pattern = runCatching {
-            RosterPattern.valueOf(savedRoster.pattern)
+            RosterPattern.valueOf(roster.pattern)
         }.getOrNull() ?: return Result.success()
 
         val startDate = runCatching {
-            LocalDate.parse(savedRoster.startDate)
+            LocalDate.parse(roster.startDate)
         }.getOrNull() ?: return Result.success()
 
         val today = LocalDate.now()
         val tomorrow = today.plusDays(1)
 
         val todayIsWork =
-            if (savedRoster.isCustomRoster) {
+            if (roster.isCustomRoster) {
                 RosterCalculator.isWorkDay(
                     date = today,
                     startDate = startDate,
-                    workDays = savedRoster.customWorkDays,
-                    offDays = savedRoster.customOffDays
+                    workDays = roster.customWorkDays,
+                    offDays = roster.customOffDays
                 )
             } else {
                 RosterCalculator.isWorkDay(
@@ -63,12 +87,12 @@ class RosterReminderWorker(
             }
 
         val tomorrowIsWork =
-            if (savedRoster.isCustomRoster) {
+            if (roster.isCustomRoster) {
                 RosterCalculator.isWorkDay(
                     date = tomorrow,
                     startDate = startDate,
-                    workDays = savedRoster.customWorkDays,
-                    offDays = savedRoster.customOffDays
+                    workDays = roster.customWorkDays,
+                    offDays = roster.customOffDays
                 )
             } else {
                 RosterCalculator.isWorkDay(
@@ -106,24 +130,32 @@ class RosterReminderWorker(
             return Result.success()
         }
 
-        RosterNotificationManager.createChannel(applicationContext)
-
-        val message = if (tomorrowIsWork) {
-            "Tomorrow is your first WORK day"
-        } else {
-            "Tomorrow is your first day OFF"
-        }
-
-        val notification = NotificationCompat.Builder(
-            applicationContext,
-            RosterNotificationManager.CHANNEL_ID
+        RosterNotificationManager.createChannel(
+            applicationContext
         )
-            .setSmallIcon(android.R.drawable.ic_dialog_info)
-            .setContentTitle("FIFOKIT roster")
-            .setContentText(message)
-            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
-            .setAutoCancel(true)
-            .build()
+
+        val message =
+            if (tomorrowIsWork) {
+                "Tomorrow is your first WORK day"
+            } else {
+                "Tomorrow is your first day OFF"
+            }
+
+        val notification =
+            NotificationCompat.Builder(
+                applicationContext,
+                RosterNotificationManager.CHANNEL_ID
+            )
+                .setSmallIcon(
+                    android.R.drawable.ic_dialog_info
+                )
+                .setContentTitle("FIFOKIT roster")
+                .setContentText(message)
+                .setPriority(
+                    NotificationCompat.PRIORITY_DEFAULT
+                )
+                .setAutoCancel(true)
+                .build()
 
         NotificationManagerCompat
             .from(applicationContext)
