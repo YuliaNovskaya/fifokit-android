@@ -48,7 +48,20 @@ fun FIFOKITApp() {
                         showSettings = false
                     },
                     selectedStates = rosterSetupViewModel.selectedStates,
-                    onStateToggle = rosterSetupViewModel::toggleState
+                    onStateToggle = rosterSetupViewModel::toggleState,
+                    remindersEnabled = rosterSetupViewModel.remindersEnabled,
+                    workRemindersEnabled = rosterSetupViewModel.workRemindersEnabled,
+                    offRemindersEnabled = rosterSetupViewModel.offRemindersEnabled,
+                    reminderHour = rosterSetupViewModel.reminderHour,
+                    reminderMinute = rosterSetupViewModel.reminderMinute,
+                    onRemindersEnabledChange =
+                        rosterSetupViewModel::updateRemindersEnabled,
+                    onWorkRemindersEnabledChange =
+                        rosterSetupViewModel::updateWorkRemindersEnabled,
+                    onOffRemindersEnabledChange =
+                        rosterSetupViewModel::updateOffRemindersEnabled,
+                    onReminderTimeChange =
+                        rosterSetupViewModel::updateReminderTime
                 )
             } else if (showCalendar) {
                 RosterCalendarScreen(

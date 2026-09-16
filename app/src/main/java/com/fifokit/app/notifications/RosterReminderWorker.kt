@@ -29,6 +29,12 @@ class RosterReminderWorker(
         val savedRoster = preferences.savedRoster.first()
             ?: return Result.success()
 
+        val reminderSettings = preferences.reminderSettings.first()
+
+        if (!reminderSettings.enabled) {
+            return Result.success()
+        }
+
         val pattern = runCatching {
             RosterPattern.valueOf(savedRoster.pattern)
         }.getOrNull() ?: return Result.success()
@@ -73,6 +79,20 @@ class RosterReminderWorker(
             }
 
         if (todayIsWork == tomorrowIsWork) {
+            return Result.success()
+        }
+
+        if (
+            tomorrowIsWork &&
+            !reminderSettings.workRemindersEnabled
+        ) {
+            return Result.success()
+        }
+
+        if (
+            !tomorrowIsWork &&
+            !reminderSettings.offRemindersEnabled
+        ) {
             return Result.success()
         }
 

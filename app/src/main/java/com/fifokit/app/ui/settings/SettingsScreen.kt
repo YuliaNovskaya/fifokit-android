@@ -22,13 +22,25 @@ import androidx.compose.foundation.layout.Row
 import com.fifokit.app.domain.roster.AustralianState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.material3.Button
+import android.app.TimePickerDialog
+import androidx.compose.material3.Switch
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
     onBack: () -> Unit,
     selectedStates: Set<AustralianState> = setOf(AustralianState.WA),
-    onStateToggle: (AustralianState) -> Unit = {}
+    onStateToggle: (AustralianState) -> Unit = {},
+    remindersEnabled: Boolean = true,
+    workRemindersEnabled: Boolean = true,
+    offRemindersEnabled: Boolean = true,
+    reminderHour: Int = 19,
+    reminderMinute: Int = 0,
+    onRemindersEnabledChange: (Boolean) -> Unit = {},
+    onWorkRemindersEnabledChange: (Boolean) -> Unit = {},
+    onOffRemindersEnabledChange: (Boolean) -> Unit = {},
+    onReminderTimeChange: (Int, Int) -> Unit = { _, _ -> }
 ) {
     val context = LocalContext.current
     val notificationsEnabled =
@@ -83,6 +95,79 @@ fun SettingsScreen(
                 }
             ) {
                 Text("Open notification settings")
+            }
+
+            Spacer(modifier = Modifier.height(32.dp))
+
+            Text("Roster reminders")
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text("Enable roster reminders")
+
+                Switch(
+                    checked = remindersEnabled,
+                    onCheckedChange = onRemindersEnabledChange
+                )
+            }
+
+            if (remindersEnabled) {
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text("First WORK day reminder")
+
+                    Switch(
+                        checked = workRemindersEnabled,
+                        onCheckedChange = onWorkRemindersEnabledChange
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text("First OFF day reminder")
+
+                    Switch(
+                        checked = offRemindersEnabled,
+                        onCheckedChange = onOffRemindersEnabledChange
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                OutlinedButton(
+                    modifier = Modifier.fillMaxWidth(),
+                    onClick = {
+                        TimePickerDialog(
+                            context,
+                            { _, hour, minute ->
+                                onReminderTimeChange(hour, minute)
+                            },
+                            reminderHour,
+                            reminderMinute,
+                            true
+                        ).show()
+                    }
+                ) {
+                    Text(
+                        "Reminder time: %02d:%02d".format(
+                            reminderHour,
+                            reminderMinute
+                        )
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.height(32.dp))

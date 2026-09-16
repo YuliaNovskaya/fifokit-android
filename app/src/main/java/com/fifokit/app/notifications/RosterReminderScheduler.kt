@@ -4,6 +4,8 @@ import android.content.Context
 import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
+import com.fifokit.app.data.RosterPreferences
+import kotlinx.coroutines.flow.first
 import java.time.Duration
 import java.time.ZonedDateTime
 import java.util.concurrent.TimeUnit
@@ -12,12 +14,21 @@ object RosterReminderScheduler {
 
     private const val WORK_NAME = "roster_reminder"
 
-    fun schedule(context: Context) {
+    suspend fun schedule(context: Context) {
+
+        val settings =
+            RosterPreferences(context).reminderSettings.first()
+
+        if (!settings.enabled) {
+            cancel(context)
+            return
+        }
+
         val now = ZonedDateTime.now()
 
         var nextRun = now
-            .withHour(19)
-            .withMinute(0)
+            .withHour(settings.hour)
+            .withMinute(settings.minute)
             .withSecond(0)
             .withNano(0)
 

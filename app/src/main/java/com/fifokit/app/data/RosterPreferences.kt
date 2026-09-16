@@ -22,6 +22,14 @@ data class SavedRoster(
     val customOffDays: Int
 )
 
+data class ReminderSettings(
+    val enabled: Boolean = true,
+    val workRemindersEnabled: Boolean = true,
+    val offRemindersEnabled: Boolean = true,
+    val hour: Int = 19,
+    val minute: Int = 0
+)
+
 class RosterPreferences(
     private val context: Context
 ) {
@@ -34,6 +42,21 @@ class RosterPreferences(
         val IS_CUSTOM_ROSTER = booleanPreferencesKey("is_custom_roster")
         val CUSTOM_WORK_DAYS = intPreferencesKey("custom_work_days")
         val CUSTOM_OFF_DAYS = intPreferencesKey("custom_off_days")
+        val REMINDERS_ENABLED =
+            booleanPreferencesKey("reminders_enabled")
+
+        val WORK_REMINDERS_ENABLED =
+            booleanPreferencesKey("work_reminders_enabled")
+
+        val OFF_REMINDERS_ENABLED =
+            booleanPreferencesKey("off_reminders_enabled")
+
+        val REMINDER_HOUR =
+            intPreferencesKey("reminder_hour")
+
+        val REMINDER_MINUTE =
+            intPreferencesKey("reminder_minute")
+
     }
 
     val savedRoster: Flow<SavedRoster?> =
@@ -59,6 +82,18 @@ class RosterPreferences(
             preferences[Keys.SELECTED_STATES] ?: setOf("WA")
         }
 
+    val reminderSettings: Flow<ReminderSettings> =
+        context.dataStore.data.map { preferences ->
+            ReminderSettings(
+                enabled = preferences[Keys.REMINDERS_ENABLED] ?: true,
+                workRemindersEnabled =
+                    preferences[Keys.WORK_REMINDERS_ENABLED] ?: true,
+                offRemindersEnabled =
+                    preferences[Keys.OFF_REMINDERS_ENABLED] ?: true,
+                hour = preferences[Keys.REMINDER_HOUR] ?: 19,
+                minute = preferences[Keys.REMINDER_MINUTE] ?: 0
+            )
+        }
     suspend fun saveRoster(
         pattern: String,
         startDate: String,
@@ -80,6 +115,20 @@ class RosterPreferences(
     ) {
         context.dataStore.edit { preferences ->
             preferences[Keys.SELECTED_STATES] = states
+        }
+    }
+
+    suspend fun saveReminderSettings(
+        settings: ReminderSettings
+    ) {
+        context.dataStore.edit { preferences ->
+            preferences[Keys.REMINDERS_ENABLED] = settings.enabled
+            preferences[Keys.WORK_REMINDERS_ENABLED] =
+                settings.workRemindersEnabled
+            preferences[Keys.OFF_REMINDERS_ENABLED] =
+                settings.offRemindersEnabled
+            preferences[Keys.REMINDER_HOUR] = settings.hour
+            preferences[Keys.REMINDER_MINUTE] = settings.minute
         }
     }
 

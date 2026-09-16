@@ -18,6 +18,7 @@ import com.fifokit.app.notifications.RosterReminderScheduler
 import com.fifokit.app.domain.roster.AustralianState
 import android.os.Bundle
 import com.google.firebase.analytics.FirebaseAnalytics
+import com.fifokit.app.data.ReminderSettings
 
 @Composable
 fun RosterSetupRoute(
@@ -85,10 +86,25 @@ class RosterSetupViewModel(
 
     var hasSavedRoster by mutableStateOf<Boolean?>(null)
         private set
+    var remindersEnabled by mutableStateOf(true)
+        private set
+
+    var workRemindersEnabled by mutableStateOf(true)
+        private set
+
+    var offRemindersEnabled by mutableStateOf(true)
+        private set
+
+    var reminderHour by mutableStateOf(19)
+        private set
+
+    var reminderMinute by mutableStateOf(0)
+        private set
 
     init {
         restoreRoster()
         restoreSelectedStates()
+        restoreReminderSettings()
     }
 
     fun clearRoster() {
@@ -103,6 +119,27 @@ class RosterSetupViewModel(
             hasSavedRoster = false
             analytics.logEvent("roster_reset", null)
         }
+    }
+
+    fun updateRemindersEnabled(enabled: Boolean) {
+        remindersEnabled = enabled
+        saveReminderSettings()
+    }
+
+    fun updateWorkRemindersEnabled(enabled: Boolean) {
+        workRemindersEnabled = enabled
+        saveReminderSettings()
+    }
+
+    fun updateOffRemindersEnabled(enabled: Boolean) {
+        offRemindersEnabled = enabled
+        saveReminderSettings()
+    }
+
+    fun updateReminderTime(hour: Int, minute: Int) {
+        reminderHour = hour
+        reminderMinute = minute
+        saveReminderSettings()
     }
 
     fun selectPattern(pattern: RosterPattern) {
@@ -242,4 +279,44 @@ class RosterSetupViewModel(
                 .toSet()
         }
     }
+    private fun restoreReminderSettings() {
+        viewModelScope.launch {
+            val settings = rosterPreferences.reminderSettings.first()
+
+            remindersEnabled = settings.enabled
+            workRemindersEnabled = settings.workRemindersEnabled
+            offRemindersEnabled = settings.offRemindersEnabled
+            reminderHour = settings.hour
+            reminderMinute = settings.minute
+        }
+    }
+
+    private fun saveReminderSettings() {
+        viewModelScope.launch {
+            val settings = ReminderSettings(
+                enabled = remindersEnabled,
+                workRemindersEnabled = workRemindersEnabled,
+                offRemindersEnabled = offRemindersEnabled,
+                hour = reminderHour,
+                minute = reminderMinute
+            )
+
+            rosterPreferences.saveReminderSettings(settings)
+
+            val rosterExists =
+                rosterPreferences.savedRoster.first() != null
+
+            if (
+                settings.enabled &&
+                (settings.workRemindersEnabled ||
+                        settings.offRemindersEnabled) &&
+                rosterExists
+            ) {
+                RosterReminderScheduler.schedule(getApplication())
+            } else {
+                RosterReminderScheduler.cancel(getApplication())
+            }
+        }
+    }
+
 }
