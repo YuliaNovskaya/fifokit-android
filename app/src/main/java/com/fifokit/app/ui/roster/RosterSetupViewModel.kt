@@ -65,6 +65,15 @@ class RosterSetupViewModel(
     var selectedPattern by mutableStateOf(RosterPattern.TWO_ONE)
         private set
 
+    var isCustomRoster by mutableStateOf(false)
+        private set
+
+    var customWorkDays by mutableStateOf(14)
+        private set
+
+    var customOffDays by mutableStateOf(7)
+        private set
+
     var startDate by mutableStateOf(LocalDate.now())
         private set
 
@@ -81,6 +90,9 @@ class RosterSetupViewModel(
             rosterPreferences.clearRoster()
             RosterReminderScheduler.cancel(getApplication())
             selectedPattern = RosterPattern.TWO_ONE
+            isCustomRoster = false
+            customWorkDays = 14
+            customOffDays = 7
             startDate = LocalDate.now()
             hasSavedRoster = false
             analytics.logEvent("roster_reset", null)
@@ -89,6 +101,19 @@ class RosterSetupViewModel(
 
     fun selectPattern(pattern: RosterPattern) {
         selectedPattern = pattern
+        isCustomRoster = false
+    }
+
+    fun selectCustomRoster() {
+        isCustomRoster = true
+    }
+
+    fun updateCustomWorkDays(days: Int) {
+        customWorkDays = days.coerceIn(1, 99)
+    }
+
+    fun updateCustomOffDays(days: Int) {
+        customOffDays = days.coerceIn(1, 99)
     }
 
     fun selectStartDate(date: LocalDate) {
@@ -96,12 +121,22 @@ class RosterSetupViewModel(
     }
 
     fun isWorkDay(date: LocalDate): Boolean {
-        return RosterCalculator.isWorkDay(
-            date = date,
-            startDate = startDate,
-            pattern = selectedPattern
-        )
+        return if (isCustomRoster) {
+            RosterCalculator.isWorkDay(
+                date = date,
+                startDate = startDate,
+                workDays = customWorkDays,
+                offDays = customOffDays
+            )
+        } else {
+            RosterCalculator.isWorkDay(
+                date = date,
+                startDate = startDate,
+                pattern = selectedPattern
+            )
+        }
     }
+
     fun isTodayWorkDay(): Boolean {
         return isWorkDay(LocalDate.now())
     }

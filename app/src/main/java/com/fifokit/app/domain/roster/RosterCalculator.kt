@@ -11,11 +11,26 @@ object RosterCalculator {
         startDate: LocalDate,
         pattern: RosterPattern
     ): Boolean {
+        return isWorkDay(
+            date = date,
+            startDate = startDate,
+            workDays = pattern.workDays,
+            offDays = pattern.offDays
+        )
+    }
+
+    fun isWorkDay(
+        date: LocalDate,
+        startDate: LocalDate,
+        workDays: Int,
+        offDays: Int
+    ): Boolean {
         val daysFromStart = ChronoUnit.DAYS.between(startDate, date)
+        val cycleLength = workDays + offDays
 
         val positionInCycle =
-            Math.floorMod(daysFromStart, pattern.cycleLength.toLong()).toInt()
+            Math.floorMod(daysFromStart, cycleLength.toLong()).toInt()
 
-        return positionInCycle < pattern.workDays
+        return positionInCycle < workDays
     }
 }
