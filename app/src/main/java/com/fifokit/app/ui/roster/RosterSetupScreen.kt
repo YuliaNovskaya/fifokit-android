@@ -30,10 +30,13 @@ import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 import androidx.compose.material3.ExperimentalMaterial3Api
 import com.fifokit.app.domain.model.RosterPattern
+import androidx.compose.material3.OutlinedTextField
 
 @Composable
 fun RosterSetupScreen(
     modifier: Modifier = Modifier,
+    rosterName: String = "My Roster",
+    onRosterNameChanged: (String) -> Unit = {},
     selectedRoster: RosterPattern = RosterPattern.TWO_ONE,
     isCustomRoster: Boolean = false,
     customWorkDays: Int = 14,
@@ -44,6 +47,8 @@ fun RosterSetupScreen(
     onCustomWorkDaysChanged: (Int) -> Unit = {},
     onCustomOffDaysChanged: (Int) -> Unit = {},
     onStartDateSelected: (LocalDate) -> Unit = {},
+    showCancelNewRoster: Boolean = false,
+    onCancelNewRoster: () -> Unit = {},
     showResetRoster: Boolean = false,
     onResetRoster: () -> Unit = {},
     onGenerateRoster: () -> Unit = {}
@@ -55,6 +60,22 @@ fun RosterSetupScreen(
             .fillMaxSize()
             .padding(24.dp)
     ) {
+        Text("Roster name")
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        OutlinedTextField(
+            value = rosterName,
+            onValueChange = onRosterNameChanged,
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = true,
+            placeholder = {
+                Text("e.g. My Roster")
+            }
+        )
+
+        Spacer(modifier = Modifier.height(24.dp))
+
         Text("Choose your roster")
 
         Spacer(modifier = Modifier.height(12.dp))
@@ -195,6 +216,17 @@ fun RosterSetupScreen(
 
         Spacer(modifier = Modifier.height(32.dp))
 
+        if (showCancelNewRoster) {
+            OutlinedButton(
+                modifier = Modifier.fillMaxWidth(),
+                onClick = onCancelNewRoster
+            ) {
+                Text("Cancel")
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+        }
+
         Button(
             modifier = Modifier.fillMaxWidth(),
             onClick = {
@@ -210,7 +242,7 @@ fun RosterSetupScreen(
                 modifier = Modifier.fillMaxWidth(),
                 onClick = onResetRoster
             ) {
-                Text("Reset roster")
+                Text("Delete roster")
             }
         }
     }

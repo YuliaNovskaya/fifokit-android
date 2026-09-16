@@ -54,6 +54,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.fillMaxHeight
 import com.fifokit.app.domain.roster.RosterPhrases
 import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 
 private enum class CalendarViewMode {
     MONTH,
@@ -94,6 +96,10 @@ fun RosterCalendarScreen(
         mutableStateOf(CalendarViewMode.MONTH)
     }
 
+    var rosterMenuExpanded by remember {
+        mutableStateOf(false)
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -123,6 +129,54 @@ fun RosterCalendarScreen(
                 .padding(innerPadding)
                 .padding(horizontal = 16.dp)
         ) {
+            Box(
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                OutlinedButton(
+                    modifier = Modifier.fillMaxWidth(),
+                    onClick = {
+                        rosterMenuExpanded = true
+                    }
+                ) {
+                    Text("Roster: ${viewModel.rosterName}")
+                }
+
+                DropdownMenu(
+                    expanded = rosterMenuExpanded,
+                    onDismissRequest = {
+                        rosterMenuExpanded = false
+                    }
+                ) {
+                    viewModel.rosters.forEach { roster ->
+                        DropdownMenuItem(
+                            text = {
+                                Text(roster.name)
+                            },
+                            onClick = {
+                                rosterMenuExpanded = false
+
+                                if (roster.id != viewModel.activeRosterId) {
+                                    viewModel.switchRoster(roster.id)
+                                }
+                            }
+                        )
+                    }
+
+                    DropdownMenuItem(
+                        text = {
+                            Text("+ New roster")
+                        },
+                        onClick = {
+                            rosterMenuExpanded = false
+                            viewModel.createNewRoster()
+                            onBack()
+                        }
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
