@@ -19,6 +19,7 @@ import com.fifokit.app.ui.settings.SettingsScreen
 import com.fifokit.app.ui.finance.FinanceToolsScreen
 import com.fifokit.app.ui.finance.PayCalculatorScreen
 import com.fifokit.app.ui.finance.AnnualEarningsScreen
+import com.fifokit.app.ui.finance.FinancialGoalScreen
 
 @Composable
 fun FIFOKITApp() {
@@ -46,6 +47,10 @@ fun FIFOKITApp() {
         mutableStateOf(false)
     }
 
+    var showFinancialGoal by remember {
+        mutableStateOf(false)
+    }
+
     Surface(
         modifier = Modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.background
@@ -56,7 +61,15 @@ fun FIFOKITApp() {
                 .safeDrawingPadding()
         ) {
 
-            if (showAnnualEarnings) {
+            if (showFinancialGoal) {
+
+                FinancialGoalScreen(
+                    onBack = {
+                        showFinancialGoal = false
+                    }
+                )
+
+            } else if (showAnnualEarnings) {
 
                 AnnualEarningsScreen(
                     selectedPattern = rosterSetupViewModel.selectedPattern,
@@ -93,6 +106,9 @@ fun FIFOKITApp() {
                     },
                     onAnnualEarnings = {
                         showAnnualEarnings = true
+                    },
+                    onFinancialGoal = {
+                        showFinancialGoal = true
                     }
                 )
 

@@ -125,4 +125,20 @@ class FinanceCalculatorTest {
         assertEquals(3660.0, result.allowances, 0.001)
         assertEquals(153660.0, result.totalGrossEarnings, 0.001)
     }
+    @Test
+    fun completedFinancialGoalRequiresNoMoreContributions() {
+        val result = FinanceCalculator.calculateFinancialGoal(
+            FinancialGoal(
+                targetAmount = 10000.0,
+                currentAmount = 12000.0,
+                contributionPerPay = 1000.0,
+                payFrequencyDays = 14
+            )
+        )
+
+        assertEquals(0.0, result.amountRemaining, 0.001)
+        assertEquals(0, result.contributionsRequired)
+        assertEquals(0, result.daysRequired)
+    }
+
 }
