@@ -36,6 +36,7 @@ import androidx.compose.ui.platform.LocalContext
 import com.fifokit.app.data.FinancePreferences
 import android.os.Bundle
 import com.google.firebase.analytics.FirebaseAnalytics
+import com.fifokit.app.domain.finance.FinanceFormatter
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -159,6 +160,8 @@ fun AnnualEarningsScreen(
                     TextButton(
                         onClick = {
                             rateType = type
+                            annualResult = null
+                            validationError = null
                         }
                     ) {
                         Text(
@@ -180,6 +183,8 @@ fun AnnualEarningsScreen(
                 value = rate,
                 onValueChange = {
                     rate = it
+                    annualResult = null
+                    validationError = null
                 },
                 label = {
                     Text(
@@ -204,6 +209,8 @@ fun AnnualEarningsScreen(
                 value = hoursPerDay,
                 onValueChange = {
                     hoursPerDay = it
+                    annualResult = null
+                    validationError = null
                 },
                 label = {
                     Text(
@@ -231,6 +238,8 @@ fun AnnualEarningsScreen(
                 value = allowancePerDay,
                 onValueChange = {
                     allowancePerDay = it
+                    annualResult = null
+                    validationError = null
                 },
                 label = {
                     Text("Allowance per work day")
@@ -294,7 +303,23 @@ fun AnnualEarningsScreen(
                                     year = year
                                 )
                             }
-
+                        analytics.logEvent(
+                            "annual_earnings_calculated",
+                            Bundle().apply {
+                                putString(
+                                    "pay_type",
+                                    rateType.name.lowercase()
+                                )
+                                putString(
+                                    "roster_type",
+                                    if (isCustomRoster) {
+                                        "custom"
+                                    } else {
+                                        selectedPattern.name.lowercase()
+                                    }
+                                )
+                            }
+                        )
                     } else {
                         annualResult = null
                     }
@@ -333,16 +358,16 @@ fun AnnualEarningsScreen(
                 Text(
                     text = when (rateType) {
                         PayRateType.ANNUAL_SALARY ->
-                            "Annual salary: $${"%.2f".format(result.baseEarnings)}"
+                            "Annual salary: ${FinanceFormatter.money(result.baseEarnings)}"
 
                         PayRateType.HOURLY,
                         PayRateType.DAILY ->
-                            "Base earnings: $${"%.2f".format(result.baseEarnings)}"
+                            "Base earnings: ${FinanceFormatter.money(result.baseEarnings)}"
                     }
                 )
 
                 Text(
-                    "Allowances: $${"%.2f".format(result.allowances)}"
+                    "Allowances: ${FinanceFormatter.money(result.allowances)}"
                 )
 
                 Spacer(
@@ -350,27 +375,9 @@ fun AnnualEarningsScreen(
                 )
 
                 Text(
-                    "Total gross earnings: $${"%.2f".format(result.totalGrossEarnings)}"
+                    "Total gross earnings: ${FinanceFormatter.money(result.totalGrossEarnings)}"
                 )
             }
-            analytics.logEvent(
-                "annual_earnings_calculated",
-                Bundle().apply {
-                    putString(
-                        "pay_type",
-                        rateType.name.lowercase()
-                    )
-
-                    putString(
-                        "roster_type",
-                        if (isCustomRoster) {
-                            "custom"
-                        } else {
-                            selectedPattern.name.lowercase()
-                        }
-                    )
-                }
-            )
 
         }
     }

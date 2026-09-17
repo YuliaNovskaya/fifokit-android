@@ -34,6 +34,7 @@ import com.fifokit.app.data.FinancePreferences
 import kotlinx.coroutines.launch
 import android.os.Bundle
 import com.google.firebase.analytics.FirebaseAnalytics
+import com.fifokit.app.domain.finance.FinanceFormatter
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -121,6 +122,8 @@ fun FinancialGoalScreen(
                 value = targetAmount,
                 onValueChange = {
                     targetAmount = it
+                    goalResult = null
+                    validationError = null
                 },
                 label = {
                     Text("Target amount")
@@ -139,6 +142,8 @@ fun FinancialGoalScreen(
                 value = currentAmount,
                 onValueChange = {
                     currentAmount = it
+                    goalResult = null
+                    validationError = null
                 },
                 label = {
                     Text("Current savings")
@@ -157,6 +162,8 @@ fun FinancialGoalScreen(
                 value = contributionPerPay,
                 onValueChange = {
                     contributionPerPay = it
+                    goalResult = null
+                    validationError = null
                 },
                 label = {
                     Text("Contribution per pay")
@@ -175,6 +182,8 @@ fun FinancialGoalScreen(
                 value = payFrequencyDays,
                 onValueChange = {
                     payFrequencyDays = it
+                    goalResult = null
+                    validationError = null
                 },
                 label = {
                     Text("Pay frequency in days")
@@ -203,8 +212,11 @@ fun FinancialGoalScreen(
                         currentValue == null || currentValue < 0.0 ->
                             "Enter valid current savings"
 
-                        contributionValue == null || contributionValue <= 0.0 ->
+                        contributionValue == null || contributionValue < 0.0 ->
                             "Enter a valid contribution"
+
+                        currentValue < targetValue && contributionValue == 0.0 ->
+                            "Enter a contribution greater than zero"
 
                         frequencyValue == null || frequencyValue <= 0 ->
                             "Enter a valid pay frequency"
@@ -270,7 +282,7 @@ fun FinancialGoalScreen(
                     LocalDate.now().plusDays(result.daysRequired.toLong())
 
                 Text(
-                    "Amount remaining: $${"%.2f".format(result.amountRemaining)}"
+                    "Amount remaining: ${FinanceFormatter.money(result.amountRemaining)}"
                 )
 
                 Text(

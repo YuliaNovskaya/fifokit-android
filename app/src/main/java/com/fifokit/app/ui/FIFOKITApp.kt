@@ -20,6 +20,7 @@ import com.fifokit.app.ui.finance.FinanceToolsScreen
 import com.fifokit.app.ui.finance.PayCalculatorScreen
 import com.fifokit.app.ui.finance.AnnualEarningsScreen
 import com.fifokit.app.ui.finance.FinancialGoalScreen
+import androidx.activity.compose.BackHandler
 
 @Composable
 fun FIFOKITApp() {
@@ -49,6 +50,32 @@ fun FIFOKITApp() {
 
     var showFinancialGoal by remember {
         mutableStateOf(false)
+    }
+
+    BackHandler(
+        enabled =
+            showFinancialGoal ||
+                    showAnnualEarnings ||
+                    showPayCalculator ||
+                    showFinance ||
+                    showSettings
+    ) {
+        when {
+            showFinancialGoal ->
+                showFinancialGoal = false
+
+            showAnnualEarnings ->
+                showAnnualEarnings = false
+
+            showPayCalculator ->
+                showPayCalculator = false
+
+            showFinance ->
+                showFinance = false
+
+            showSettings ->
+                showSettings = false
+        }
     }
 
     Surface(
@@ -98,6 +125,11 @@ fun FIFOKITApp() {
             } else if (showFinance) {
 
                 FinanceToolsScreen(
+                    selectedPattern = rosterSetupViewModel.selectedPattern,
+                    isCustomRoster = rosterSetupViewModel.isCustomRoster,
+                    customWorkDays = rosterSetupViewModel.customWorkDays,
+                    customOffDays = rosterSetupViewModel.customOffDays,
+                    rosterStartDate = rosterSetupViewModel.startDate,
                     onBack = {
                         showFinance = false
                     },

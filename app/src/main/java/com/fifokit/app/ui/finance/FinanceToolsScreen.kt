@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -21,10 +20,20 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import com.google.firebase.analytics.FirebaseAnalytics
+import com.fifokit.app.domain.model.RosterPattern
+import java.time.LocalDate
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.MaterialTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FinanceToolsScreen(
+    selectedPattern: RosterPattern,
+    isCustomRoster: Boolean,
+    customWorkDays: Int,
+    customOffDays: Int,
+    rosterStartDate: LocalDate,
     onBack: () -> Unit,
     onPayCalculator: () -> Unit = {},
     onAnnualEarnings: () -> Unit = {},
@@ -68,6 +77,22 @@ fun FinanceToolsScreen(
         ) {
 
             Text(
+                text = if (isCustomRoster) {
+                    "Active roster: $customWorkDays/$customOffDays"
+                } else {
+                    "Active roster: ${selectedPattern.label}"
+                }
+            )
+
+            Text(
+                text = "Roster start: $rosterStartDate"
+            )
+
+            Spacer(
+                modifier = Modifier.height(16.dp)
+            )
+
+            Text(
                 text = "FIFO financial calculators"
             )
 
@@ -75,7 +100,7 @@ fun FinanceToolsScreen(
                 modifier = Modifier.height(24.dp)
             )
 
-            OutlinedButton(
+            Card(
                 modifier = Modifier.fillMaxWidth(),
                 onClick = {
                     analytics.logEvent(
@@ -85,16 +110,24 @@ fun FinanceToolsScreen(
                         }
                     )
                     onPayCalculator()
-                }
+                },
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant
+                )
             ) {
-                Text("FIFO pay calculator")
+                Column(
+                    modifier = Modifier.padding(16.dp)
+                ) {
+                    Text("FIFO Pay Calculator")
+                    Text("Calculate pay using your active roster.")
+                }
             }
 
             Spacer(
                 modifier = Modifier.height(12.dp)
             )
 
-            OutlinedButton(
+            Card(
                 modifier = Modifier.fillMaxWidth(),
                 onClick = {
                     analytics.logEvent(
@@ -104,16 +137,24 @@ fun FinanceToolsScreen(
                         }
                     )
                     onAnnualEarnings()
-                }
+                },
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant
+                )
             ) {
-                Text("Annual earnings")
+                Column(
+                    modifier = Modifier.padding(16.dp)
+                ) {
+                    Text("Annual Earnings")
+                    Text("Estimate yearly work days, hours and gross earnings.")
+                }
             }
 
             Spacer(
                 modifier = Modifier.height(12.dp)
             )
 
-            OutlinedButton(
+            Card(
                 modifier = Modifier.fillMaxWidth(),
                 onClick = {
                     analytics.logEvent(
@@ -123,9 +164,17 @@ fun FinanceToolsScreen(
                         }
                     )
                     onFinancialGoal()
-                }
+                },
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant
+                )
             ) {
-                Text("Financial goal")
+                Column(
+                    modifier = Modifier.padding(16.dp)
+                ) {
+                    Text("Financial Goal")
+                    Text("Estimate how long it will take to reach a savings target.")
+                }
             }
         }
     }
