@@ -48,8 +48,22 @@ fun RosterSetupRoute(
             viewModel.cancelNewRoster()
             onGenerateRoster()
         },
+        showCancelExistingRoster =
+            !viewModel.isCreatingNewRoster &&
+                    viewModel.hasSavedRoster == true,
+
+        onCancelExistingRoster = {
+            viewModel.cancelEditRoster()
+            onGenerateRoster()
+        },
         showResetRoster = viewModel.hasSavedRoster == true,
-        onResetRoster = viewModel::clearRoster,
+        onResetRoster = {
+            viewModel.clearRoster { hasRemainingRoster ->
+                if (hasRemainingRoster) {
+                    onGenerateRoster()
+                }
+            }
+        },
         onGenerateRoster = {
             viewModel.saveCurrentRoster()
             onGenerateRoster()
@@ -144,7 +158,9 @@ class RosterSetupViewModel(
         restoreReminderSettings()
     }
 
-    fun clearRoster() {
+    fun clearRoster(
+        onFinished: (Boolean) -> Unit = {}
+    ) {
         viewModelScope.launch {
 
             val rosterId = activeRosterId
@@ -200,6 +216,7 @@ class RosterSetupViewModel(
                 "roster_deleted",
                 null
             )
+            onFinished(nextRoster != null)
         }
     }
 
@@ -496,7 +513,7 @@ class RosterSetupViewModel(
         }.getOrNull()?.let {
             selectedPattern = it
         }
-        rosterName = "My Roster"
+        rosterName = roster.name
         isCustomRoster = roster.isCustomRoster
         customWorkDays = roster.customWorkDays
         customOffDays = roster.customOffDays
@@ -545,6 +562,20 @@ class RosterSetupViewModel(
 
             isCreatingNewRoster = false
             hasSavedRoster = false
+        }
+    }
+    fun cancelEditRoster() {
+        viewModelScope.launch {
+            val rosterId = activeRosterId
+                ?: return@launch
+
+            val roster = rosterRepository.getRosterById(rosterId)
+                ?: return@launch
+
+            editingRosterId = roster.id
+            isCreatingNewRoster = false
+
+            applyRoster(roster)
         }
     }
 

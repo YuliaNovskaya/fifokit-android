@@ -49,6 +49,8 @@ fun RosterSetupScreen(
     onStartDateSelected: (LocalDate) -> Unit = {},
     showCancelNewRoster: Boolean = false,
     onCancelNewRoster: () -> Unit = {},
+    showCancelExistingRoster: Boolean = false,
+    onCancelExistingRoster: () -> Unit = {},
     showResetRoster: Boolean = false,
     onResetRoster: () -> Unit = {},
     onGenerateRoster: () -> Unit = {}
@@ -216,10 +218,16 @@ fun RosterSetupScreen(
 
         Spacer(modifier = Modifier.height(32.dp))
 
-        if (showCancelNewRoster) {
+        if (showCancelNewRoster || showCancelExistingRoster) {
             OutlinedButton(
                 modifier = Modifier.fillMaxWidth(),
-                onClick = onCancelNewRoster
+                onClick = {
+                    if (showCancelNewRoster) {
+                        onCancelNewRoster()
+                    } else {
+                        onCancelExistingRoster()
+                    }
+                }
             ) {
                 Text("Cancel")
             }
