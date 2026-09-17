@@ -16,6 +16,7 @@ import com.fifokit.app.ui.roster.RosterCalendarScreen
 import com.fifokit.app.ui.roster.RosterSetupRoute
 import com.fifokit.app.ui.roster.RosterSetupViewModel
 import com.fifokit.app.ui.settings.SettingsScreen
+import com.fifokit.app.ui.finance.FinanceToolsScreen
 
 @Composable
 fun FIFOKITApp() {
@@ -32,6 +33,10 @@ fun FIFOKITApp() {
     var showSettings by remember {
         mutableStateOf(false)
     }
+    var showFinance by remember {
+        mutableStateOf(false)
+    }
+
     Surface(
         modifier = Modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.background
@@ -42,7 +47,13 @@ fun FIFOKITApp() {
                 .safeDrawingPadding()
         ) {
 
-            if (showSettings) {
+            if (showFinance) {
+                FinanceToolsScreen(
+                    onBack = {
+                        showFinance = false
+                    }
+                )
+            } else if (showSettings) {
                 SettingsScreen(
                     onBack = {
                         showSettings = false
@@ -71,6 +82,9 @@ fun FIFOKITApp() {
                     },
                     onSettings = {
                         showSettings = true
+                    },
+                    onFinance = {
+                        showFinance = true
                     }
                 )
             } else {

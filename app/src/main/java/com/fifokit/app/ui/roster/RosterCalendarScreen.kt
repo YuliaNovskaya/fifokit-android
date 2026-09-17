@@ -66,7 +66,8 @@ private enum class CalendarViewMode {
 fun RosterCalendarScreen(
     viewModel: RosterSetupViewModel,
     onBack: () -> Unit,
-    onSettings: () -> Unit
+    onSettings: () -> Unit,
+    onFinance: () -> Unit
 ) {
     val context = LocalContext.current
     val analytics = remember(context) {
@@ -107,6 +108,11 @@ fun RosterCalendarScreen(
                     Text("Roster Calendar")
                 },
                 actions = {
+                    TextButton(
+                        onClick = onFinance
+                    ) {
+                        Text("Tools")
+                    }
                     TextButton(
                         onClick = onSettings
                     ) {
