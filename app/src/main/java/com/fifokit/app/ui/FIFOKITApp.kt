@@ -17,6 +17,7 @@ import com.fifokit.app.ui.roster.RosterSetupRoute
 import com.fifokit.app.ui.roster.RosterSetupViewModel
 import com.fifokit.app.ui.settings.SettingsScreen
 import com.fifokit.app.ui.finance.FinanceToolsScreen
+import com.fifokit.app.ui.finance.PayCalculatorScreen
 
 @Composable
 fun FIFOKITApp() {
@@ -37,6 +38,10 @@ fun FIFOKITApp() {
         mutableStateOf(false)
     }
 
+    var showPayCalculator by remember {
+        mutableStateOf(false)
+    }
+
     Surface(
         modifier = Modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.background
@@ -47,12 +52,30 @@ fun FIFOKITApp() {
                 .safeDrawingPadding()
         ) {
 
-            if (showFinance) {
+            if (showPayCalculator) {
+
+                PayCalculatorScreen(
+                    selectedPattern = rosterSetupViewModel.selectedPattern,
+                    isCustomRoster = rosterSetupViewModel.isCustomRoster,
+                    customWorkDays = rosterSetupViewModel.customWorkDays,
+                    customOffDays = rosterSetupViewModel.customOffDays,
+                    rosterStartDate = rosterSetupViewModel.startDate,
+                    onBack = {
+                        showPayCalculator = false
+                    }
+                )
+
+            } else if (showFinance) {
+
                 FinanceToolsScreen(
                     onBack = {
                         showFinance = false
+                    },
+                    onPayCalculator = {
+                        showPayCalculator = true
                     }
                 )
+
             } else if (showSettings) {
                 SettingsScreen(
                     onBack = {

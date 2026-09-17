@@ -90,4 +90,20 @@ class FinanceCalculatorTest {
         assertEquals(8, result.contributionsRequired)
         assertEquals(112, result.daysRequired)
     }
+    @Test
+    fun customRosterCalculatesAnnualWorkDays() {
+        val result = FinanceCalculator.calculateAnnualEarnings(
+            input = PayInput(
+                rateType = PayRateType.DAILY,
+                rate = 1.0
+            ),
+            rosterStartDate = LocalDate.of(2026, 1, 1),
+            workDays = 7,
+            offDays = 7,
+            year = 2026
+        )
+
+        assertEquals(183, result.workDaysPerYear)
+        assertEquals(182, result.restDaysPerYear)
+    }
 }

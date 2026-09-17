@@ -103,5 +103,44 @@ object FinanceCalculator {
             restDaysPerYear = totalDays - workDays
         )
     }
+    fun calculateAnnualEarnings(
+        input: PayInput,
+        rosterStartDate: LocalDate,
+        workDays: Int,
+        offDays: Int,
+        year: Int
+    ): EarningsResult {
+
+        val firstDay = LocalDate.of(year, 1, 1)
+        val lastDay = LocalDate.of(year, 12, 31)
+
+        var workDaysInYear = 0
+        var totalDays = 0
+        var date = firstDay
+
+        while (!date.isAfter(lastDay)) {
+
+            if (
+                RosterCalculator.isWorkDay(
+                    date = date,
+                    startDate = rosterStartDate,
+                    workDays = workDays,
+                    offDays = offDays
+                )
+            ) {
+                workDaysInYear++
+            }
+
+            totalDays++
+            date = date.plusDays(1)
+        }
+
+        return calculateAnnualEarnings(
+            input = input,
+            workDaysPerYear = workDaysInYear
+        ).copy(
+            restDaysPerYear = totalDays - workDaysInYear
+        )
+    }
 
 }
