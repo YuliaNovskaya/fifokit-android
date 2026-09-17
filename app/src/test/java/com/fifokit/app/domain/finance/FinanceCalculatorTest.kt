@@ -106,4 +106,23 @@ class FinanceCalculatorTest {
         assertEquals(183, result.workDaysPerYear)
         assertEquals(182, result.restDaysPerYear)
     }
+    @Test
+    fun annualSalaryIncludesRosterBasedAllowances() {
+        val result = FinanceCalculator.calculateAnnualEarnings(
+            input = PayInput(
+                rateType = PayRateType.ANNUAL_SALARY,
+                rate = 150000.0,
+                hoursPerWorkDay = 12.0,
+                allowancePerWorkDay = 20.0
+            ),
+            rosterStartDate = LocalDate.of(2026, 1, 1),
+            workDays = 7,
+            offDays = 7,
+            year = 2026
+        )
+
+        assertEquals(183, result.workDaysPerYear)
+        assertEquals(3660.0, result.allowances, 0.001)
+        assertEquals(153660.0, result.totalGrossEarnings, 0.001)
+    }
 }
