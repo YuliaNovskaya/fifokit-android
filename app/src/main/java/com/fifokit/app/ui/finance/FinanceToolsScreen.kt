@@ -145,7 +145,7 @@ fun FinanceToolsScreen(
                 Column(
                     modifier = Modifier.padding(16.dp)
                 ) {
-                    Text("Annual Earnings")
+                    Text("Annual Earnings · PRO")
                     Text("Estimate yearly work days, hours and gross earnings.")
                 }
             }

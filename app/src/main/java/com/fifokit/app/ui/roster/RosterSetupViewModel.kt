@@ -24,11 +24,14 @@ import com.fifokit.app.data.RosterRepository
 import com.fifokit.app.data.local.RosterDatabase
 import com.fifokit.app.data.local.RosterEntity
 import kotlinx.coroutines.flow.collectLatest
+import com.fifokit.app.domain.pro.ProAccess
+import com.fifokit.app.domain.pro.ProFeature
 
 @Composable
 fun RosterSetupRoute(
     viewModel: RosterSetupViewModel,
-    onGenerateRoster: () -> Unit = {}
+    onGenerateRoster: () -> Unit = {},
+    onProRequested: (String) -> Unit = { _ -> }
 ) {
     RosterSetupScreen(
         rosterName = viewModel.rosterName,
@@ -39,7 +42,17 @@ fun RosterSetupRoute(
         customOffDays = viewModel.customOffDays,
         startDate = viewModel.startDate,
         onRosterSelected = viewModel::selectPattern,
-        onCustomRosterSelected = viewModel::selectCustomRoster,
+        onCustomRosterSelected = {
+            if (
+                ProAccess.canUse(
+                    ProFeature.CUSTOM_ROSTER
+                )
+            ) {
+                viewModel.selectCustomRoster()
+            } else {
+                onProRequested("custom_roster")
+            }
+        },
         onCustomWorkDaysChanged = viewModel::updateCustomWorkDays,
         onCustomOffDaysChanged = viewModel::updateCustomOffDays,
         onStartDateSelected = viewModel::selectStartDate,
@@ -65,8 +78,15 @@ fun RosterSetupRoute(
             }
         },
         onGenerateRoster = {
-            viewModel.saveCurrentRoster()
-            onGenerateRoster()
+            if (
+                viewModel.isCustomRoster &&
+                !ProAccess.canUse(ProFeature.CUSTOM_ROSTER)
+            ) {
+                onProRequested("custom_roster")
+            } else {
+                viewModel.saveCurrentRoster()
+                onGenerateRoster()
+            }
         }
     )
 }

@@ -24,12 +24,17 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.material3.Button
 import android.app.TimePickerDialog
 import androidx.compose.material3.Switch
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import com.fifokit.app.domain.pro.ProEntitlementManager
+import android.content.pm.ApplicationInfo
 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
     onBack: () -> Unit,
+    onPro: () -> Unit = {},
     selectedStates: Set<AustralianState> = setOf(AustralianState.WA),
     onStateToggle: (AustralianState) -> Unit = {},
     remindersEnabled: Boolean = true,
@@ -45,6 +50,11 @@ fun SettingsScreen(
     val context = LocalContext.current
     val notificationsEnabled =
         NotificationManagerCompat.from(context).areNotificationsEnabled()
+
+    val entitlement by ProEntitlementManager.entitlement.collectAsState()
+
+    val isDebugBuild =
+        (context.applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE) != 0
 
     Scaffold(
         topBar = {
@@ -69,6 +79,43 @@ fun SettingsScreen(
                 .padding(innerPadding)
                 .padding(16.dp)
         ) {
+            Button(
+                modifier = Modifier.fillMaxWidth(),
+                onClick = onPro
+            ) {
+                Text(
+                    if (entitlement.isPro) {
+                        "FIFOKIT Pro - Active"
+                    } else {
+                        "FIFOKIT Pro"
+                    }
+                )
+            }
+
+            if (isDebugBuild) {
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                OutlinedButton(
+                    modifier = Modifier.fillMaxWidth(),
+                    onClick = {
+                        ProEntitlementManager.setDebugPro(
+                            !entitlement.isPro
+                        )
+                    }
+                ) {
+                    Text(
+                        if (entitlement.isPro) {
+                            "Debug: Set Free"
+                        } else {
+                            "Debug: Set Pro"
+                        }
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
+
             Text(
                 text = if (notificationsEnabled) {
                     "Notifications are enabled"

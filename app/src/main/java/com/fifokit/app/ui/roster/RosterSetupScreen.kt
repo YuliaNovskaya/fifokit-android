@@ -113,14 +113,14 @@ fun RosterSetupScreen(
                 modifier = Modifier.fillMaxWidth(),
                 onClick = onCustomRosterSelected
             ) {
-                Text("Custom")
+                Text("Custom · PRO")
             }
         } else {
             OutlinedButton(
                 modifier = Modifier.fillMaxWidth(),
                 onClick = onCustomRosterSelected
             ) {
-                Text("Custom")
+                Text("Custom · PRO")
             }
         }
 

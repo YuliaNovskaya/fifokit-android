@@ -21,9 +21,18 @@ import com.fifokit.app.ui.finance.PayCalculatorScreen
 import com.fifokit.app.ui.finance.AnnualEarningsScreen
 import com.fifokit.app.ui.finance.FinancialGoalScreen
 import androidx.activity.compose.BackHandler
+import com.fifokit.app.ui.pro.ProScreen
+import com.fifokit.app.domain.pro.ProAccess
+import com.fifokit.app.domain.pro.ProFeature
+import com.google.firebase.analytics.FirebaseAnalytics
+import com.google.firebase.analytics.logEvent
+import androidx.compose.ui.platform.LocalContext
 
 @Composable
 fun FIFOKITApp() {
+
+    val context = LocalContext.current
+    val analytics = FirebaseAnalytics.getInstance(context)
 
     val rosterSetupViewModel: RosterSetupViewModel = viewModel()
 
@@ -49,6 +58,10 @@ fun FIFOKITApp() {
     }
 
     var showFinancialGoal by remember {
+        mutableStateOf(false)
+    }
+
+    var showPro by remember {
         mutableStateOf(false)
     }
 
@@ -88,7 +101,15 @@ fun FIFOKITApp() {
                 .safeDrawingPadding()
         ) {
 
-            if (showFinancialGoal) {
+            if (showPro) {
+
+                ProScreen(
+                    onBack = {
+                        showPro = false
+                    }
+                )
+
+            } else if (showFinancialGoal) {
 
                 FinancialGoalScreen(
                     onBack = {
@@ -137,7 +158,18 @@ fun FIFOKITApp() {
                         showPayCalculator = true
                     },
                     onAnnualEarnings = {
-                        showAnnualEarnings = true
+                        if (
+                            ProAccess.canUse(
+                                ProFeature.DETAILED_ANNUAL_EARNINGS
+                            )
+                        ) {
+                            showAnnualEarnings = true
+                        } else {
+                            analytics.logEvent("pro_feature_locked") {
+                                param("feature", "annual_earnings")
+                            }
+                            showPro = true
+                        }
                     },
                     onFinancialGoal = {
                         showFinancialGoal = true
@@ -148,6 +180,9 @@ fun FIFOKITApp() {
                 SettingsScreen(
                     onBack = {
                         showSettings = false
+                    },
+                    onPro = {
+                        showPro = true
                     },
                     selectedStates = rosterSetupViewModel.selectedStates,
                     onStateToggle = rosterSetupViewModel::toggleState,
@@ -176,6 +211,12 @@ fun FIFOKITApp() {
                     },
                     onFinance = {
                         showFinance = true
+                    },
+                    onProRequested = { feature ->
+                        analytics.logEvent("pro_feature_locked") {
+                            param("feature", feature)
+                        }
+                        showPro = true
                     }
                 )
             } else {
@@ -183,6 +224,12 @@ fun FIFOKITApp() {
                     viewModel = rosterSetupViewModel,
                     onGenerateRoster = {
                         screenOverride = true
+                    },
+                    onProRequested = { feature ->
+                        analytics.logEvent("pro_feature_locked") {
+                            param("feature", feature)
+                        }
+                        showPro = true
                     }
                 )
             }

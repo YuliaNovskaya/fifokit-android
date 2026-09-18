@@ -56,6 +56,8 @@ import com.fifokit.app.domain.roster.RosterPhrases
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import com.fifokit.app.domain.pro.ProAccess
+import com.fifokit.app.domain.pro.ProFeature
 
 private enum class CalendarViewMode {
     MONTH,
@@ -67,7 +69,8 @@ fun RosterCalendarScreen(
     viewModel: RosterSetupViewModel,
     onBack: () -> Unit,
     onSettings: () -> Unit,
-    onFinance: () -> Unit
+    onFinance: () -> Unit,
+    onProRequested: (String) -> Unit = { _ -> }
 ) {
     val context = LocalContext.current
     val analytics = remember(context) {
@@ -220,10 +223,18 @@ fun RosterCalendarScreen(
                     OutlinedButton(
                         modifier = Modifier.weight(1f),
                         onClick = {
-                            calendarViewMode = CalendarViewMode.YEAR
+                            if (
+                                ProAccess.canUse(
+                                    ProFeature.YEARLY_ROSTER
+                                )
+                            ) {
+                                calendarViewMode = CalendarViewMode.YEAR
+                            } else {
+                                onProRequested("yearly_roster")
+                            }
                         }
                     ) {
-                        Text("Year")
+                        Text("Year · PRO")
                     }
                 }
             }
