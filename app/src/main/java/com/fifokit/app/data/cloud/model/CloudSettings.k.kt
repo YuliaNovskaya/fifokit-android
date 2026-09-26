@@ -1,6 +1,8 @@
 package com.fifokit.app.data.cloud.model
 
 data class CloudSettings(
+    val activeRosterCloudId: String = "",
+
     val selectedStates: List<String> = listOf("WA"),
 
     val remindersEnabled: Boolean = true,

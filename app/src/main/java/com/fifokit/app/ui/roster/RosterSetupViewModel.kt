@@ -598,5 +598,46 @@ class RosterSetupViewModel(
             applyRoster(roster)
         }
     }
+    fun refreshFromLocalStorage() {
+        viewModelScope.launch {
+
+            val savedStates =
+                rosterPreferences.selectedStates.first()
+
+            selectedStates =
+                savedStates
+                    .mapNotNull { stateName ->
+                        runCatching {
+                            AustralianState.valueOf(stateName)
+                        }.getOrNull()
+                    }
+                    .toSet()
+
+            val settings =
+                rosterPreferences.reminderSettings.first()
+
+            remindersEnabled = settings.enabled
+            workRemindersEnabled =
+                settings.workRemindersEnabled
+            offRemindersEnabled =
+                settings.offRemindersEnabled
+            reminderHour = settings.hour
+            reminderMinute = settings.minute
+
+            val rosterId =
+                rosterPreferences.activeRosterId.first()
+
+            val roster =
+                rosterId?.let {
+                    rosterRepository.getRosterById(it)
+                }
+
+            if (roster != null) {
+                activeRosterId = roster.id
+                editingRosterId = roster.id
+                applyRoster(roster)
+            }
+        }
+    }
 
 }

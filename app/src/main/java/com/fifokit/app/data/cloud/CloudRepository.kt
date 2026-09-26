@@ -11,6 +11,7 @@ import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import com.google.firebase.firestore.SetOptions
+import com.fifokit.app.data.cloud.model.CloudPayInput
 class CloudRepository(
     private val firestore: FirebaseFirestore = FirebaseFirestore.getInstance()
 ) {
@@ -193,4 +194,30 @@ class CloudRepository(
                 }
             }
         }
+    suspend fun savePayInput(
+        uid: String,
+        payInput: CloudPayInput
+    ) {
+        firestore
+            .collection(FirestorePaths.USERS)
+            .document(uid)
+            .collection(FirestorePaths.FINANCE)
+            .document(FirestorePaths.PAY_INPUT_DOCUMENT)
+            .set(payInput)
+            .awaitResult()
+    }
+
+    suspend fun getPayInput(
+        uid: String
+    ): CloudPayInput? {
+        return firestore
+            .collection(FirestorePaths.USERS)
+            .document(uid)
+            .collection(FirestorePaths.FINANCE)
+            .document(FirestorePaths.PAY_INPUT_DOCUMENT)
+            .get()
+            .awaitResult()
+            .toObject(CloudPayInput::class.java)
+    }
+
 }

@@ -9,4 +9,9 @@ object FirestorePaths {
     const val SETTINGS = "settings"
 
     const val APP_SETTINGS_DOCUMENT = "app"
+
+    const val FINANCE = "finance"
+
+    const val PAY_INPUT_DOCUMENT = "payInput"
+
 }

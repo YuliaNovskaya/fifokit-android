@@ -31,4 +31,24 @@ class CloudSyncPreferences(
             )
             .apply()
     }
+    fun getLastSyncAt(): Long? {
+        val value =
+            preferences.getLong(
+                "last_sync_at",
+                0L
+            )
+
+        return value.takeIf { it > 0L }
+    }
+
+    fun setLastSyncAt(timestamp: Long) {
+        preferences
+            .edit()
+            .putLong(
+                "last_sync_at",
+                timestamp
+            )
+            .apply()
+    }
+
 }

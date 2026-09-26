@@ -30,5 +30,8 @@ data class RosterEntity(
 
     val createdAt: Long = System.currentTimeMillis(),
 
-    val updatedAt: Long = System.currentTimeMillis()
+    val updatedAt: Long = System.currentTimeMillis(),
+    val isDeleted: Boolean = false,
+
+    val deletedAt: Long? = null
 )

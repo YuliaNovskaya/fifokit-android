@@ -48,7 +48,13 @@ class RosterRepository(
     }
 
     suspend fun deleteRoster(id: Long) {
-        rosterDao.deleteRosterById(id)
+
+        val now = System.currentTimeMillis()
+
+        rosterDao.softDeleteRosterById(
+            id = id,
+            deletedAt = now
+        )
     }
 
     suspend fun getRosterCount(): Int =
@@ -56,7 +62,8 @@ class RosterRepository(
 
     suspend fun ensureCloudIds(): List<RosterEntity> {
 
-        val rosters = rosterDao.getAllRosters()
+        val rosters =
+            rosterDao.getAllRostersIncludingDeleted()
 
         rosters
             .filter { it.cloudId.isNullOrBlank() }
@@ -68,7 +75,46 @@ class RosterRepository(
                 )
             }
 
-        return rosterDao.getAllRosters()
+        return rosterDao.getAllRostersIncludingDeleted()
     }
+    suspend fun getRosterByCloudId(
+        cloudId: String
+    ): RosterEntity? =
+        rosterDao.getRosterByCloudId(cloudId)
+    suspend fun upsertRosterFromCloud(
+        roster: RosterEntity
+    ): Long {
+
+        val cloudId = requireNotNull(roster.cloudId)
+
+        val existing =
+            rosterDao.getRosterByCloudIdIncludingDeleted(cloudId)
+
+        return if (existing == null) {
+
+            rosterDao.insertRoster(
+                roster.copy(id = 0)
+            )
+
+        } else {
+
+            rosterDao.updateRoster(
+                roster.copy(
+                    id = existing.id
+                )
+            )
+
+            existing.id
+        }
+    }
+
+    suspend fun getAllRostersIncludingDeleted():
+            List<RosterEntity> =
+        rosterDao.getAllRostersIncludingDeleted()
+
+    suspend fun getRosterByCloudIdIncludingDeleted(
+        cloudId: String
+    ): RosterEntity? =
+        rosterDao.getRosterByCloudIdIncludingDeleted(cloudId)
 
 }

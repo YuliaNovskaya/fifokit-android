@@ -28,7 +28,8 @@ import com.google.firebase.analytics.FirebaseAnalytics
 import com.google.firebase.analytics.logEvent
 import androidx.compose.ui.platform.LocalContext
 import com.fifokit.app.ui.auth.AccountScreen
-
+import com.fifokit.app.ui.auth.AuthViewModel
+import androidx.compose.runtime.LaunchedEffect
 
 @Composable
 fun FIFOKITApp() {
@@ -37,6 +38,14 @@ fun FIFOKITApp() {
     val analytics = FirebaseAnalytics.getInstance(context)
 
     val rosterSetupViewModel: RosterSetupViewModel = viewModel()
+
+    val authViewModel: AuthViewModel = viewModel()
+
+    LaunchedEffect(authViewModel) {
+        authViewModel.syncCompleted.collect {
+            rosterSetupViewModel.refreshFromLocalStorage()
+        }
+    }
 
     var screenOverride by remember {
         mutableStateOf<Boolean?>(null)
@@ -188,9 +197,9 @@ fun FIFOKITApp() {
 
             } else if (showAccount) {
 
-                AccountScreen()
-
-
+                AccountScreen(
+                    authViewModel = authViewModel
+                )
             } else if (showSettings) {
                 SettingsScreen(
                     onBack = {

@@ -11,6 +11,7 @@ import com.fifokit.app.domain.finance.PayInput
 import com.fifokit.app.domain.finance.PayRateType
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import androidx.datastore.preferences.core.longPreferencesKey
 
 private val Context.financeDataStore by preferencesDataStore(
     name = "finance_preferences"
@@ -44,7 +45,19 @@ class FinancePreferences(
 
         val PAY_FREQUENCY_DAYS =
             intPreferencesKey("pay_frequency_days")
+
+        val FINANCIAL_GOAL_UPDATED_AT =
+            longPreferencesKey("financial_goal_updated_at")
+
+        val PAY_INPUT_UPDATED_AT =
+            longPreferencesKey("pay_input_updated_at")
+
     }
+
+    val payInputUpdatedAt: Flow<Long> =
+        context.financeDataStore.data.map { preferences ->
+            preferences[Keys.PAY_INPUT_UPDATED_AT] ?: 0L
+        }
 
     val payInput: Flow<PayInput> =
         context.financeDataStore.data.map { preferences ->
@@ -81,6 +94,10 @@ class FinancePreferences(
                     preferences[Keys.PAY_FREQUENCY_DAYS] ?: 14
             )
         }
+    val financialGoalUpdatedAt: Flow<Long> =
+        context.financeDataStore.data.map { preferences ->
+            preferences[Keys.FINANCIAL_GOAL_UPDATED_AT] ?: 0L
+        }
 
     suspend fun savePayInput(
         input: PayInput
@@ -97,6 +114,10 @@ class FinancePreferences(
 
             preferences[Keys.ALLOWANCE_PER_WORK_DAY] =
                 input.allowancePerWorkDay
+
+            preferences[Keys.PAY_INPUT_UPDATED_AT] =
+                System.currentTimeMillis()
+
         }
     }
 
@@ -115,6 +136,56 @@ class FinancePreferences(
 
             preferences[Keys.PAY_FREQUENCY_DAYS] =
                 goal.payFrequencyDays
+
+            preferences[Keys.FINANCIAL_GOAL_UPDATED_AT] =
+                System.currentTimeMillis()
+
         }
     }
+
+    suspend fun applyCloudFinancialGoal(
+        goal: FinancialGoal,
+        updatedAt: Long
+    ) {
+        context.financeDataStore.edit { preferences ->
+
+            preferences[Keys.TARGET_AMOUNT] =
+                goal.targetAmount
+
+            preferences[Keys.CURRENT_AMOUNT] =
+                goal.currentAmount
+
+            preferences[Keys.CONTRIBUTION_PER_PAY] =
+                goal.contributionPerPay
+
+            preferences[Keys.PAY_FREQUENCY_DAYS] =
+                goal.payFrequencyDays
+
+            preferences[Keys.FINANCIAL_GOAL_UPDATED_AT] =
+                updatedAt
+        }
+    }
+    suspend fun applyCloudPayInput(
+        input: PayInput,
+        updatedAt: Long
+    ) {
+        context.financeDataStore.edit { preferences ->
+
+            preferences[Keys.PAY_RATE_TYPE] =
+                input.rateType.name
+
+            preferences[Keys.PAY_RATE] =
+                input.rate
+
+            preferences[Keys.HOURS_PER_WORK_DAY] =
+                input.hoursPerWorkDay
+
+            preferences[Keys.ALLOWANCE_PER_WORK_DAY] =
+                input.allowancePerWorkDay
+
+            preferences[Keys.PAY_INPUT_UPDATED_AT] =
+                updatedAt
+        }
+    }
+
 }

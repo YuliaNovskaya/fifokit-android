@@ -64,6 +64,9 @@ class RosterPreferences(
         val LEGACY_ROSTER_MIGRATED =
             booleanPreferencesKey("legacy_roster_migrated")
 
+        val SETTINGS_UPDATED_AT =
+            longPreferencesKey("settings_updated_at")
+
     }
 
     val savedRoster: Flow<SavedRoster?> =
@@ -106,6 +109,11 @@ class RosterPreferences(
             preferences[Keys.ACTIVE_ROSTER_ID]
         }
 
+    val settingsUpdatedAt: Flow<Long> =
+        context.dataStore.data.map { preferences ->
+            preferences[Keys.SETTINGS_UPDATED_AT] ?: 0L
+        }
+
     val legacyRosterMigrated: Flow<Boolean> =
         context.dataStore.data.map { preferences ->
             preferences[Keys.LEGACY_ROSTER_MIGRATED] ?: false
@@ -131,6 +139,8 @@ class RosterPreferences(
     ) {
         context.dataStore.edit { preferences ->
             preferences[Keys.SELECTED_STATES] = states
+            preferences[Keys.SETTINGS_UPDATED_AT] =
+                System.currentTimeMillis()
         }
     }
 
@@ -145,6 +155,8 @@ class RosterPreferences(
                 settings.offRemindersEnabled
             preferences[Keys.REMINDER_HOUR] = settings.hour
             preferences[Keys.REMINDER_MINUTE] = settings.minute
+            preferences[Keys.SETTINGS_UPDATED_AT] =
+                System.currentTimeMillis()
         }
     }
 
@@ -155,6 +167,8 @@ class RosterPreferences(
             } else {
                 preferences[Keys.ACTIVE_ROSTER_ID] = id
             }
+            preferences[Keys.SETTINGS_UPDATED_AT] =
+                System.currentTimeMillis()
         }
     }
 
@@ -172,4 +186,42 @@ class RosterPreferences(
             preferences.remove(Keys.CUSTOM_OFF_DAYS)
         }
     }
+    suspend fun applyCloudSettings(
+        selectedStates: Set<String>,
+        reminderSettings: ReminderSettings,
+        activeRosterId: Long?,
+        updatedAt: Long
+    ) {
+        context.dataStore.edit { preferences ->
+
+            preferences[Keys.SELECTED_STATES] =
+                selectedStates
+
+            preferences[Keys.REMINDERS_ENABLED] =
+                reminderSettings.enabled
+
+            preferences[Keys.WORK_REMINDERS_ENABLED] =
+                reminderSettings.workRemindersEnabled
+
+            preferences[Keys.OFF_REMINDERS_ENABLED] =
+                reminderSettings.offRemindersEnabled
+
+            preferences[Keys.REMINDER_HOUR] =
+                reminderSettings.hour
+
+            preferences[Keys.REMINDER_MINUTE] =
+                reminderSettings.minute
+
+            if (activeRosterId == null) {
+                preferences.remove(Keys.ACTIVE_ROSTER_ID)
+            } else {
+                preferences[Keys.ACTIVE_ROSTER_ID] =
+                    activeRosterId
+            }
+
+            preferences[Keys.SETTINGS_UPDATED_AT] =
+                updatedAt
+        }
+    }
+
 }

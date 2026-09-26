@@ -11,7 +11,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
     entities = [
         RosterEntity::class
     ],
-    version = 2,
+    version = 3,
     exportSchema = false
 )
 abstract class RosterDatabase : RoomDatabase() {
@@ -24,17 +24,38 @@ abstract class RosterDatabase : RoomDatabase() {
             object : Migration(1, 2) {
 
                 override fun migrate(
-                    database: SupportSQLiteDatabase
+                    db: SupportSQLiteDatabase
                 ) {
-                    database.execSQL(
+                    db.execSQL(
                         "ALTER TABLE rosters ADD COLUMN cloudId TEXT"
                     )
 
-                    database.execSQL(
+                    db.execSQL(
                         """
                 CREATE UNIQUE INDEX IF NOT EXISTS
                 index_rosters_cloudId
                 ON rosters(cloudId)
+                """.trimIndent()
+                    )
+                }
+            }
+        private val MIGRATION_2_3 =
+            object : Migration(2, 3) {
+
+                override fun migrate(
+                    db: SupportSQLiteDatabase
+                ) {
+                    db.execSQL(
+                        """
+                ALTER TABLE rosters
+                ADD COLUMN isDeleted INTEGER NOT NULL DEFAULT 0
+                """.trimIndent()
+                    )
+
+                    db.execSQL(
+                        """
+                ALTER TABLE rosters
+                ADD COLUMN deletedAt INTEGER
                 """.trimIndent()
                     )
                 }
@@ -49,7 +70,10 @@ abstract class RosterDatabase : RoomDatabase() {
                     RosterDatabase::class.java,
                     "fifokit_roster.db"
                 )
-                    .addMigrations(MIGRATION_1_2)
+                    .addMigrations(
+                        MIGRATION_1_2,
+                        MIGRATION_2_3
+                    )
                     .build()
                     .also { INSTANCE = it }
             }

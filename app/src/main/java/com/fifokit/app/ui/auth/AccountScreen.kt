@@ -25,12 +25,14 @@ import java.util.Locale
 @Composable
 fun AccountScreen(
     authViewModel: AuthViewModel = viewModel()
-) {
+){
     val currentUser by authViewModel.currentUser.collectAsState()
     val isLoading by authViewModel.isLoading.collectAsState()
     val errorMessage by authViewModel.errorMessage.collectAsState()
     val isBackingUp by authViewModel.isBackingUp.collectAsState()
     val lastBackupAt by authViewModel.lastBackupAt.collectAsState()
+    val isSyncing by authViewModel.isSyncing.collectAsState()
+    val lastSyncAt by authViewModel.lastSyncAt.collectAsState()
 
     val context = LocalContext.current
     val activity = context.findActivity()
@@ -86,9 +88,31 @@ fun AccountScreen(
             currentUser?.email?.let {
                 Text(text = it)
             }
+
             Button(
                 modifier = Modifier.padding(top = 24.dp),
-                enabled = !isBackingUp,
+                enabled = !isSyncing && !isBackingUp,
+                onClick = authViewModel::syncNow
+            ) {
+                Text(
+                    if (isSyncing) {
+                        "Syncing..."
+                    } else {
+                        "Sync now"
+                    }
+                )
+            }
+
+            lastSyncAt?.let { timestamp ->
+                Text(
+                    text = "Last sync: ${formatBackupTime(timestamp)}",
+                    modifier = Modifier.padding(top = 12.dp)
+                )
+            }
+
+            Button(
+                modifier = Modifier.padding(top = 24.dp),
+                enabled = !isBackingUp && !isSyncing,
                 onClick = authViewModel::backupNow
             ) {
                 Text(

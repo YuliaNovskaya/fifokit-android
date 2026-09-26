@@ -70,9 +70,16 @@ class CloudBackupManager(
         val backupTime =
             System.currentTimeMillis()
 
+        val activeRosterCloudId =
+            rosters
+                .firstOrNull { it.id == activeRosterId }
+                ?.cloudId
+                .orEmpty()
+
         cloudRepository.saveSettings(
             uid = uid,
             settings = CloudSettings(
+                activeRosterCloudId = activeRosterCloudId,
                 selectedStates = selectedStates.sorted(),
                 remindersEnabled = reminderSettings.enabled,
                 workRemindersEnabled =
