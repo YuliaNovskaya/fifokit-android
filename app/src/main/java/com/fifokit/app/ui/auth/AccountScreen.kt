@@ -65,8 +65,11 @@ fun AccountScreen(
                             authViewModel.signInWithGoogle(idToken)
 
                         } catch (e: Exception) {
-                            // Credential Manager may also throw if the user
-                            // closes the Google sign-in dialog.
+                            android.util.Log.e(
+                                "FIFOKIT_AUTH",
+                                "Google credential sign-in failed",
+                                e
+                            )
                         }
                     }
                 }
