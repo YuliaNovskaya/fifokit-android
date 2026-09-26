@@ -53,7 +53,10 @@ class BillingRepository(
                 override fun onBillingSetupFinished(
                     billingResult: BillingResult
                 ) {
-                    if (billingResult.responseCode == BillingClient.BillingResponseCode.OK) {
+                    if (
+                        billingResult.responseCode ==
+                        BillingClient.BillingResponseCode.OK
+                    ) {
                         queryProProduct()
                         queryExistingPurchases()
                     }
@@ -121,7 +124,6 @@ class BillingRepository(
     }
 
     private fun queryProProduct() {
-
         val product = QueryProductDetailsParams.Product.newBuilder()
             .setProductId(ProProductIds.SUBSCRIPTION_ID)
             .setProductType(BillingClient.ProductType.SUBS)
