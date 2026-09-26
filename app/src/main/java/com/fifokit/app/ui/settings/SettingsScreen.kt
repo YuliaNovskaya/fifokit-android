@@ -35,6 +35,7 @@ import android.content.pm.ApplicationInfo
 fun SettingsScreen(
     onBack: () -> Unit,
     onPro: () -> Unit = {},
+    onAccount: () -> Unit = {},
     selectedStates: Set<AustralianState> = setOf(AustralianState.WA),
     onStateToggle: (AustralianState) -> Unit = {},
     remindersEnabled: Boolean = true,
@@ -90,6 +91,15 @@ fun SettingsScreen(
                         "FIFOKIT Pro"
                     }
                 )
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            OutlinedButton(
+                modifier = Modifier.fillMaxWidth(),
+                onClick = onAccount
+            ) {
+                Text("Account & cloud sync")
             }
 
             if (isDebugBuild) {

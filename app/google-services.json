@@ -12,7 +12,28 @@
           "package_name": "com.fifokit.app"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "457823685553-5eciilrrq8qtbatubo74r4fs586flbkv.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.fifokit.app",
+            "certificate_hash": "b35bcb4b233521581fa9bc0178d61758dcf6873d"
+          }
+        },
+        {
+          "client_id": "457823685553-7khhhqr15ed3q820baqlj5tt19shr7c0.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.fifokit.app",
+            "certificate_hash": "f9d924b15902f79011f18e39d8dfeed371666a71"
+          }
+        },
+        {
+          "client_id": "457823685553-jj7jnk1uc70sde7vr57j6p2t3a8mo21b.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyC3b0UU6vgWgP4Tgj6vBh6cwcLz4ZgQjOE"
@@ -20,7 +41,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "457823685553-jj7jnk1uc70sde7vr57j6p2t3a8mo21b.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }

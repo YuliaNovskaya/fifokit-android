@@ -27,6 +27,8 @@ import com.fifokit.app.domain.pro.ProFeature
 import com.google.firebase.analytics.FirebaseAnalytics
 import com.google.firebase.analytics.logEvent
 import androidx.compose.ui.platform.LocalContext
+import com.fifokit.app.ui.auth.AccountScreen
+
 
 @Composable
 fun FIFOKITApp() {
@@ -65,15 +67,23 @@ fun FIFOKITApp() {
         mutableStateOf(false)
     }
 
+    var showAccount by remember {
+        mutableStateOf(false)
+    }
+
     BackHandler(
         enabled =
-            showFinancialGoal ||
+            showAccount ||
+                    showFinancialGoal ||
                     showAnnualEarnings ||
                     showPayCalculator ||
                     showFinance ||
                     showSettings
     ) {
         when {
+            showAccount ->
+                showAccount = false
+
             showFinancialGoal ->
                 showFinancialGoal = false
 
@@ -176,6 +186,11 @@ fun FIFOKITApp() {
                     }
                 )
 
+            } else if (showAccount) {
+
+                AccountScreen()
+
+
             } else if (showSettings) {
                 SettingsScreen(
                     onBack = {
@@ -183,6 +198,9 @@ fun FIFOKITApp() {
                     },
                     onPro = {
                         showPro = true
+                    },
+                    onAccount = {
+                        showAccount = true
                     },
                     selectedStates = rosterSetupViewModel.selectedStates,
                     onStateToggle = rosterSetupViewModel::toggleState,
