@@ -3,6 +3,7 @@ package com.fifokit.app.data
 import com.fifokit.app.data.local.RosterDao
 import com.fifokit.app.data.local.RosterEntity
 import kotlinx.coroutines.flow.Flow
+import java.util.UUID
 
 class RosterRepository(
     private val rosterDao: RosterDao
@@ -27,6 +28,7 @@ class RosterRepository(
     ): Long {
         return rosterDao.insertRoster(
             RosterEntity(
+                cloudId = UUID.randomUUID().toString(),
                 name = name,
                 pattern = pattern,
                 startDate = startDate,
@@ -51,4 +53,22 @@ class RosterRepository(
 
     suspend fun getRosterCount(): Int =
         rosterDao.getRosterCount()
+
+    suspend fun ensureCloudIds(): List<RosterEntity> {
+
+        val rosters = rosterDao.getAllRosters()
+
+        rosters
+            .filter { it.cloudId.isNullOrBlank() }
+            .forEach { roster ->
+
+                rosterDao.updateCloudId(
+                    id = roster.id,
+                    cloudId = UUID.randomUUID().toString()
+                )
+            }
+
+        return rosterDao.getAllRosters()
+    }
+
 }

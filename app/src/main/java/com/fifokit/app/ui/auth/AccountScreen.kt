@@ -18,6 +18,9 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.fifokit.app.data.auth.GoogleSignInManager
 import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 @Composable
 fun AccountScreen(
@@ -26,6 +29,8 @@ fun AccountScreen(
     val currentUser by authViewModel.currentUser.collectAsState()
     val isLoading by authViewModel.isLoading.collectAsState()
     val errorMessage by authViewModel.errorMessage.collectAsState()
+    val isBackingUp by authViewModel.isBackingUp.collectAsState()
+    val lastBackupAt by authViewModel.lastBackupAt.collectAsState()
 
     val context = LocalContext.current
     val activity = context.findActivity()
@@ -81,6 +86,27 @@ fun AccountScreen(
             currentUser?.email?.let {
                 Text(text = it)
             }
+            Button(
+                modifier = Modifier.padding(top = 24.dp),
+                enabled = !isBackingUp,
+                onClick = authViewModel::backupNow
+            ) {
+                Text(
+                    if (isBackingUp) {
+                        "Backing up..."
+                    } else {
+                        "Back up now"
+                    }
+                )
+            }
+
+            lastBackupAt?.let { timestamp ->
+
+                Text(
+                    text = "Last backup: ${formatBackupTime(timestamp)}",
+                    modifier = Modifier.padding(top = 12.dp)
+                )
+            }
 
             Button(
                 modifier = Modifier.padding(top = 24.dp),
@@ -111,4 +137,16 @@ private fun Context.findActivity(): Activity? {
         is ContextWrapper -> baseContext.findActivity()
         else -> null
     }
+}
+
+private fun formatBackupTime(
+    timestamp: Long
+): String {
+
+    return SimpleDateFormat(
+        "dd MMM yyyy, HH:mm",
+        Locale.getDefault()
+    ).format(
+        Date(timestamp)
+    )
 }

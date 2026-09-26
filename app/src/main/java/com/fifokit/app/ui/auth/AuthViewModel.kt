@@ -17,11 +17,50 @@ import kotlinx.coroutines.launch
 import com.fifokit.app.data.cloud.CloudRepository
 import com.fifokit.app.data.cloud.model.CloudUser
 
+import com.fifokit.app.data.RosterPreferences
+import com.fifokit.app.data.RosterRepository
+import com.fifokit.app.data.cloud.CloudBackupManager
+import com.fifokit.app.data.cloud.CloudSyncPreferences
+import com.fifokit.app.data.local.RosterDatabase
+
 class AuthViewModel(
     application: Application
 ) : AndroidViewModel(application) {
 
     private val cloudRepository = CloudRepository()
+
+    private val rosterDatabase =
+        RosterDatabase.getInstance(application)
+
+    private val rosterRepository =
+        RosterRepository(rosterDatabase.rosterDao())
+
+    private val rosterPreferences =
+        RosterPreferences(application)
+
+    private val cloudBackupManager =
+        CloudBackupManager(
+            context = application,
+            rosterRepository = rosterRepository,
+            rosterPreferences = rosterPreferences
+        )
+
+    private val cloudSyncPreferences =
+        CloudSyncPreferences(application)
+
+    private val _isBackingUp =
+        MutableStateFlow(false)
+
+    val isBackingUp: StateFlow<Boolean> =
+        _isBackingUp.asStateFlow()
+
+    private val _lastBackupAt =
+        MutableStateFlow(
+            cloudSyncPreferences.getLastBackupAt()
+        )
+
+    val lastBackupAt: StateFlow<Long?> =
+        _lastBackupAt.asStateFlow()
 
     private val authRepository: AuthRepository =
         FirebaseAuthRepository()
@@ -85,6 +124,57 @@ class AuthViewModel(
                     e.message ?: "Google sign-in failed"
             } finally {
                 _isLoading.value = false
+            }
+        }
+    }
+
+    fun backupNow() {
+
+        val uid = currentUser.value?.uid
+            ?: return
+
+        viewModelScope.launch {
+
+            _isBackingUp.value = true
+            _errorMessage.value = null
+
+            try {
+
+                val result =
+                    cloudBackupManager.backup(uid)
+
+                cloudSyncPreferences.setLastBackupAt(
+                    result.backedUpAt
+                )
+
+                _lastBackupAt.value =
+                    result.backedUpAt
+
+                analytics.logEvent(
+                    "cloud_backup_complete"
+                ) {
+                    param(
+                        "roster_count",
+                        result.rostersBackedUp.toLong()
+                    )
+                }
+
+            } catch (e: Exception) {
+
+                analytics.logEvent(
+                    "cloud_backup_failed"
+                ) {
+                    param(
+                        "error_type",
+                        e.javaClass.simpleName
+                    )
+                }
+
+                _errorMessage.value =
+                    "Cloud backup failed"
+
+            } finally {
+                _isBackingUp.value = false
             }
         }
     }

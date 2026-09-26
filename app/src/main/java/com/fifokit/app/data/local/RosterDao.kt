@@ -34,4 +34,10 @@ interface RosterDao {
 
     @Query("SELECT COUNT(*) FROM rosters")
     suspend fun getRosterCount(): Int
+
+    @Query("UPDATE rosters SET cloudId = :cloudId WHERE id = :id")
+    suspend fun updateCloudId(
+        id: Long,
+        cloudId: String
+    )
 }
