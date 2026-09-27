@@ -43,25 +43,103 @@ class CloudRepository(
         uid: String,
         roster: CloudRoster
     ) {
+        val data = mapOf(
+            "id" to roster.id,
+            "name" to roster.name,
+            "pattern" to roster.pattern,
+            "isCustomRoster" to roster.isCustomRoster,
+            "customWorkDays" to roster.customWorkDays,
+            "customOffDays" to roster.customOffDays,
+            "startDate" to roster.startDate,
+            "isActive" to roster.isActive,
+            "isDeleted" to roster.isDeleted,
+            "deletedAt" to roster.deletedAt,
+            "createdAt" to roster.createdAt,
+            "updatedAt" to roster.updatedAt,
+            "deviceId" to roster.deviceId,
+            "schemaVersion" to roster.schemaVersion
+        )
+
         firestore
             .collection(FirestorePaths.USERS)
             .document(uid)
             .collection(FirestorePaths.ROSTERS)
             .document(roster.id)
-            .set(roster)
+            .set(data)
             .awaitResult()
     }
 
     suspend fun getRosters(
         uid: String
     ): List<CloudRoster> {
-        return firestore
-            .collection(FirestorePaths.USERS)
-            .document(uid)
-            .collection(FirestorePaths.ROSTERS)
-            .get()
-            .awaitResult()
-            .toObjects(CloudRoster::class.java)
+
+        val snapshot =
+            firestore
+                .collection(FirestorePaths.USERS)
+                .document(uid)
+                .collection(FirestorePaths.ROSTERS)
+                .get()
+                .awaitResult()
+
+        return snapshot.documents.map { document ->
+
+            CloudRoster(
+                id =
+                    document.getString("id")
+                        ?: document.id,
+
+                name =
+                    document.getString("name").orEmpty(),
+
+                pattern =
+                    document.getString("pattern").orEmpty(),
+
+                isCustomRoster =
+                    document.getBoolean("isCustomRoster")
+                        ?: document.getBoolean("customRoster")
+                        ?: false,
+
+                customWorkDays =
+                    (document.getLong("customWorkDays")
+                        ?: 0L).toInt(),
+
+                customOffDays =
+                    (document.getLong("customOffDays")
+                        ?: 0L).toInt(),
+
+                startDate =
+                    document.getString("startDate").orEmpty(),
+
+                isActive =
+                    document.getBoolean("isActive")
+                        ?: document.getBoolean("active")
+                        ?: false,
+
+                isDeleted =
+                    document.getBoolean("isDeleted")
+                        ?: document.getBoolean("deleted")
+                        ?: false,
+
+                deletedAt =
+                    document.getLong("deletedAt")
+                        ?: 0L,
+
+                createdAt =
+                    document.getLong("createdAt")
+                        ?: 0L,
+
+                updatedAt =
+                    document.getLong("updatedAt")
+                        ?: 0L,
+
+                deviceId =
+                    document.getString("deviceId").orEmpty(),
+
+                schemaVersion =
+                    (document.getLong("schemaVersion")
+                        ?: 1L).toInt()
+            )
+        }
     }
 
     suspend fun deleteRoster(

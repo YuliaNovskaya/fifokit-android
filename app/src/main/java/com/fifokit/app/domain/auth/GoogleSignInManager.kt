@@ -19,7 +19,9 @@ class GoogleSignInManager(
 
         val googleOption =
             GetSignInWithGoogleOption.Builder(
-                activity.getString(R.string.default_web_client_id)
+                activity.getString(
+                    R.string.default_web_client_id
+                )
             ).build()
 
         val request =

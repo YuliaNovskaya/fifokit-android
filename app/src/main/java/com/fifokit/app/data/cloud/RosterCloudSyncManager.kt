@@ -90,6 +90,33 @@ class RosterCloudSyncManager(
                 local != null && cloud != null -> {
 
                     when {
+
+                        // Cloud deletion always wins over an active local copy.
+                        cloud.isDeleted && !local.isDeleted -> {
+
+
+                            rosterRepository.upsertRosterFromCloud(
+                                cloud.toRosterEntity()
+                            )
+
+                            downloaded++
+                        }
+
+                        // Local deletion always wins over an active cloud copy.
+                        local.isDeleted && !cloud.isDeleted -> {
+
+                            cloudRepository.saveRoster(
+                                uid = uid,
+                                roster = local.toCloudRoster(
+                                    deviceId = deviceId,
+                                    isActive = false
+                                )
+                            )
+
+                            uploaded++
+                        }
+
+                        // Same state: newest edit wins.
                         local.updatedAt > cloud.updatedAt -> {
 
                             cloudRepository.saveRoster(

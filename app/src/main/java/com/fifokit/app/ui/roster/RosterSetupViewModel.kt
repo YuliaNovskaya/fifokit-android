@@ -624,18 +624,46 @@ class RosterSetupViewModel(
             reminderHour = settings.hour
             reminderMinute = settings.minute
 
-            val rosterId =
+            var rosterId =
                 rosterPreferences.activeRosterId.first()
 
-            val roster =
+            var roster =
                 rosterId?.let {
                     rosterRepository.getRosterById(it)
                 }
 
+            if (roster == null) {
+
+                roster =
+                    rosterRepository
+                        .getAllRosters()
+                        .firstOrNull()
+
+                rosterId = roster?.id
+
+                rosterPreferences.setActiveRosterId(
+                    rosterId
+                )
+            }
+
             if (roster != null) {
+
                 activeRosterId = roster.id
                 editingRosterId = roster.id
                 applyRoster(roster)
+
+            } else {
+
+                activeRosterId = null
+                editingRosterId = null
+
+                rosterName = "My Roster"
+                selectedPattern = RosterPattern.TWO_ONE
+                isCustomRoster = false
+                customWorkDays = 14
+                customOffDays = 7
+                startDate = LocalDate.now()
+                hasSavedRoster = false
             }
         }
     }
