@@ -53,6 +53,7 @@ fun RosterSetupScreen(
     onCancelExistingRoster: () -> Unit = {},
     showResetRoster: Boolean = false,
     onResetRoster: () -> Unit = {},
+    onSettings: () -> Unit = {},
     onGenerateRoster: () -> Unit = {}
 ) {
     var showDatePicker by remember { mutableStateOf(false) }
@@ -62,6 +63,18 @@ fun RosterSetupScreen(
             .fillMaxSize()
             .padding(24.dp)
     ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.End
+        ) {
+            TextButton(
+                onClick = onSettings
+            ) {
+                Text("Settings")
+            }
+        }
+
+        Spacer(modifier = Modifier.height(8.dp))
         Text("Roster name")
 
         Spacer(modifier = Modifier.height(8.dp))

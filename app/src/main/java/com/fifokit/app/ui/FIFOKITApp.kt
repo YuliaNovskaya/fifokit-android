@@ -252,6 +252,9 @@ fun FIFOKITApp() {
                     onGenerateRoster = {
                         screenOverride = true
                     },
+                    onSettings = {
+                        showSettings = true
+                    },
                     onProRequested = { feature ->
                         analytics.logEvent("pro_feature_locked") {
                             param("feature", feature)

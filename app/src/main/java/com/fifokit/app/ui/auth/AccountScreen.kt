@@ -21,6 +21,9 @@ import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.TextButton
 
 @Composable
 fun AccountScreen(
@@ -33,6 +36,12 @@ fun AccountScreen(
     val lastBackupAt by authViewModel.lastBackupAt.collectAsState()
     val isSyncing by authViewModel.isSyncing.collectAsState()
     val lastSyncAt by authViewModel.lastSyncAt.collectAsState()
+
+    val isDeletingAccount by authViewModel.isDeletingAccount.collectAsState()
+
+    var showDeleteConfirmation by remember {
+        mutableStateOf(false)
+    }
 
     val context = LocalContext.current
     val activity = context.findActivity()
@@ -141,6 +150,26 @@ fun AccountScreen(
             ) {
                 Text("Sign out")
             }
+
+            OutlinedButton(
+                modifier = Modifier.padding(top = 16.dp),
+                enabled =
+                    !isDeletingAccount &&
+                            !isSyncing &&
+                            !isBackingUp,
+                onClick = {
+                    showDeleteConfirmation = true
+                }
+            ) {
+                Text(
+                    if (isDeletingAccount) {
+                        "Deleting account..."
+                    } else {
+                        "Delete account"
+                    }
+                )
+            }
+
         }
 
         if (isLoading) {
@@ -156,6 +185,70 @@ fun AccountScreen(
             )
         }
     }
+    if (showDeleteConfirmation) {
+
+        AlertDialog(
+            onDismissRequest = {
+                if (!isDeletingAccount) {
+                    showDeleteConfirmation = false
+                }
+            },
+            title = {
+                Text("Delete account?")
+            },
+            text = {
+                Text(
+                    "This permanently deletes your FIFOKIT cloud data and account."
+                )
+            },
+            confirmButton = {
+
+                TextButton(
+                    enabled = !isDeletingAccount,
+                    onClick = {
+
+                        activity ?: return@TextButton
+
+                        showDeleteConfirmation = false
+
+                        scope.launch {
+                            try {
+
+                                val idToken =
+                                    GoogleSignInManager(activity)
+                                        .getGoogleIdToken()
+
+                                authViewModel.deleteAccount(
+                                    idToken
+                                )
+
+                            } catch (e: Exception) {
+                                android.util.Log.e(
+                                    "FIFOKIT_AUTH",
+                                    "Account deletion reauthentication failed",
+                                    e
+                                )
+                            }
+                        }
+                    }
+                ) {
+                    Text("Delete")
+                }
+            },
+            dismissButton = {
+
+                TextButton(
+                    enabled = !isDeletingAccount,
+                    onClick = {
+                        showDeleteConfirmation = false
+                    }
+                ) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
+
 }
 
 private fun Context.findActivity(): Activity? {

@@ -41,6 +41,12 @@ class AuthViewModel(
     application: Application
 ) : AndroidViewModel(application) {
 
+    private val _isDeletingAccount =
+        MutableStateFlow(false)
+
+    val isDeletingAccount: StateFlow<Boolean> =
+        _isDeletingAccount.asStateFlow()
+
     private val financePreferences =
         FinancePreferences(application)
 
@@ -393,6 +399,54 @@ class AuthViewModel(
 
             } finally {
                 _isBackingUp.value = false
+            }
+        }
+    }
+
+    fun deleteAccount(
+        googleIdToken: String
+    ) {
+
+        val uid = currentUser.value?.uid
+            ?: return
+
+        viewModelScope.launch {
+
+            _isDeletingAccount.value = true
+            _errorMessage.value = null
+
+            try {
+
+                authRepository.reauthenticateWithGoogle(
+                    googleIdToken
+                )
+
+                cloudRepository.deleteAllUserData(
+                    uid
+                )
+
+                authRepository.deleteAccount()
+
+                analytics.logEvent(
+                    "account_deleted"
+                ) {}
+
+            } catch (e: Exception) {
+
+                analytics.logEvent(
+                    "account_delete_failed"
+                ) {
+                    param(
+                        "error_type",
+                        e.javaClass.simpleName
+                    )
+                }
+
+                _errorMessage.value =
+                    "Account deletion failed"
+
+            } finally {
+                _isDeletingAccount.value = false
             }
         }
     }

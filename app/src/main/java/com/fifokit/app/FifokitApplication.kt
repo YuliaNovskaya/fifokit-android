@@ -13,5 +13,6 @@ class FifokitApplication : Application() {
 
         billingRepository = BillingRepository(this)
         billingRepository.startConnection()
+        AppCheckInstaller.install()
     }
 }

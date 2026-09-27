@@ -31,6 +31,7 @@ import com.fifokit.app.domain.pro.ProFeature
 fun RosterSetupRoute(
     viewModel: RosterSetupViewModel,
     onGenerateRoster: () -> Unit = {},
+    onSettings: () -> Unit = {},
     onProRequested: (String) -> Unit = { _ -> }
 ) {
     RosterSetupScreen(
@@ -42,6 +43,7 @@ fun RosterSetupRoute(
         customOffDays = viewModel.customOffDays,
         startDate = viewModel.startDate,
         onRosterSelected = viewModel::selectPattern,
+        onSettings = onSettings,
         onCustomRosterSelected = {
             if (
                 ProAccess.canUse(

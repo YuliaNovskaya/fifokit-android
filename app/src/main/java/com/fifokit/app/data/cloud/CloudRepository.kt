@@ -298,4 +298,40 @@ class CloudRepository(
             .toObject(CloudPayInput::class.java)
     }
 
+    suspend fun deleteAllUserData(
+        uid: String
+    ) {
+        val userDocument =
+            firestore
+                .collection(FirestorePaths.USERS)
+                .document(uid)
+
+        val subcollections = listOf(
+            FirestorePaths.ROSTERS,
+            FirestorePaths.FINANCIAL_GOALS,
+            FirestorePaths.SAVED_CALCULATIONS,
+            FirestorePaths.SETTINGS,
+            FirestorePaths.FINANCE
+        )
+
+        subcollections.forEach { collectionName ->
+
+            val snapshot =
+                userDocument
+                    .collection(collectionName)
+                    .get()
+                    .awaitResult()
+
+            snapshot.documents.forEach { document ->
+                document.reference
+                    .delete()
+                    .awaitResult()
+            }
+        }
+
+        userDocument
+            .delete()
+            .awaitResult()
+    }
+
 }

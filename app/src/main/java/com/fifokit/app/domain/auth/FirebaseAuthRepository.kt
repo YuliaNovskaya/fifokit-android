@@ -66,4 +66,55 @@ class FirebaseAuthRepository(
             photoUrl = photoUrl?.toString()
         )
     }
+
+    override suspend fun reauthenticateWithGoogle(
+        idToken: String
+    ) {
+
+        val user = firebaseAuth.currentUser
+            ?: throw IllegalStateException(
+                "No authenticated user"
+            )
+
+        val credential =
+            GoogleAuthProvider.getCredential(
+                idToken,
+                null
+            )
+
+        suspendCancellableCoroutine<Unit> { continuation ->
+
+            user.reauthenticate(credential)
+                .addOnSuccessListener {
+                    continuation.resume(Unit)
+                }
+                .addOnFailureListener { exception ->
+                    continuation.resumeWithException(
+                        exception
+                    )
+                }
+        }
+    }
+
+    override suspend fun deleteAccount() {
+
+        val user = firebaseAuth.currentUser
+            ?: throw IllegalStateException(
+                "No authenticated user"
+            )
+
+        suspendCancellableCoroutine<Unit> { continuation ->
+
+            user.delete()
+                .addOnSuccessListener {
+                    continuation.resume(Unit)
+                }
+                .addOnFailureListener { exception ->
+                    continuation.resumeWithException(
+                        exception
+                    )
+                }
+        }
+    }
+
 }
