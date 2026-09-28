@@ -45,6 +45,8 @@ import androidx.compose.ui.platform.LocalContext
 import com.fifokit.app.domain.roster.PublicHolidayProvider
 import com.google.firebase.analytics.FirebaseAnalytics
 import com.google.firebase.analytics.logEvent
+import com.fifokit.app.domain.sharing.FamilyPlanningCalculator
+import androidx.compose.foundation.clickable
 
 @Composable
 fun TogetherRosterCalendarScreen(
@@ -65,6 +67,14 @@ fun TogetherRosterCalendarScreen(
     LaunchedEffect(partnerRoster.id) {
         analytics.logEvent("together_calendar_viewed") {
             param("partner_roster_id", partnerRoster.id)
+        }
+        analytics.logEvent(
+            "family_planning_summary_viewed"
+        ) {
+            param(
+                "partner_roster_id",
+                partnerRoster.id
+            )
         }
     }
 
@@ -107,27 +117,105 @@ fun TogetherRosterCalendarScreen(
         }
     }
 
-    val sharedOffPeriods =
+    val planningSummary =
         remember(
             partnerRoster.id,
             viewModel.activeRosterId
         ) {
-            RosterOverlapCalculator.findSharedOffPeriods(
-                fromDate = LocalDate.now(),
-                daysToCheck = 90,
+            FamilyPlanningCalculator.calculate(
                 myIsWorkDay = viewModel::isWorkDay,
                 partnerIsWorkDay = ::partnerIsWorkDay
             )
         }
-
-    val nextSharedOff =
-        sharedOffPeriods.firstOrNull()
 
     val dateFormatter =
         DateTimeFormatter.ofPattern(
             "d MMM",
             Locale.getDefault()
         )
+
+    val nextSharedOff =
+        planningSummary.nextSharedOffPeriod
+
+    Spacer(
+        modifier = Modifier.height(12.dp)
+    )
+
+    Text(
+        text = "Shared time off",
+        style = MaterialTheme.typography.titleMedium
+    )
+
+    Spacer(
+        modifier = Modifier.height(8.dp)
+    )
+
+    Text(
+        text = "${planningSummary.sharedOffDaysThisMonth} shared days off this month",
+        style = MaterialTheme.typography.bodyMedium
+    )
+
+    Text(
+        text = "${planningSummary.sharedOffDaysNext3Months} shared days off in the next 3 months",
+        style = MaterialTheme.typography.bodyMedium
+    )
+
+    planningSummary.longestSharedOffPeriod?.let { period ->
+
+        Spacer(
+            modifier = Modifier.height(8.dp)
+        )
+
+        Text(
+            text =
+                "Longest shared break in the next 3 months: " +
+                        if (period.startDate == period.endDate) {
+                            period.startDate.format(dateFormatter)
+                        } else {
+                            "${period.startDate.format(dateFormatter)} - " +
+                                    "${period.endDate.format(dateFormatter)} " +
+                                    "(${period.days} days)"
+                        },
+            style = MaterialTheme.typography.bodyMedium
+        )
+    }
+
+    if (planningSummary.upcomingSharedOffPeriods.isNotEmpty()) {
+
+        Spacer(
+            modifier = Modifier.height(12.dp)
+        )
+
+        planningSummary.upcomingSharedOffPeriods.forEach { period ->
+
+            Text(
+                text =
+                    if (period.startDate == period.endDate) {
+                        period.startDate.format(dateFormatter)
+                    } else {
+                        "${period.startDate.format(dateFormatter)} - " +
+                                "${period.endDate.format(dateFormatter)} " +
+                                "(${period.days} days)"
+                    },
+                style = MaterialTheme.typography.bodySmall
+            )
+        }
+    }
+
+    planningSummary.nextSharedWeekend?.let { weekend ->
+
+        Spacer(
+            modifier = Modifier.height(8.dp)
+        )
+
+        Text(
+            text =
+                "Next free weekend: " +
+                        "${weekend.startDate.format(dateFormatter)} - " +
+                        weekend.endDate.format(dateFormatter),
+            style = MaterialTheme.typography.bodyMedium
+        )
+    }
 
     val firstDayOffset =
         month.atDay(1).dayOfWeek.value - 1
@@ -188,30 +276,80 @@ fun TogetherRosterCalendarScreen(
             modifier = Modifier.height(12.dp)
         )
 
-        if (nextSharedOff != null) {
+        nextSharedOff?.let { period ->
 
-            Text(
-                text =
-                    if (nextSharedOff.startDate == nextSharedOff.endDate) {
-                        "Next shared day off: ${
-                            nextSharedOff.startDate.format(dateFormatter)
-                        }"
-                    } else {
-                        "Next shared time off: ${
-                            nextSharedOff.startDate.format(dateFormatter)
-                        } - ${
-                            nextSharedOff.endDate.format(dateFormatter)
-                        } (${nextSharedOff.days} days)"
+            Surface(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable {
+
+                        month =
+                            YearMonth.from(
+                                period.startDate
+                            )
+
+                        analytics.logEvent(
+                            "shared_time_card_clicked"
+                        ) {
+                            param(
+                                "partner_roster_id",
+                                partnerRoster.id
+                            )
+                        }
                     },
-                style = MaterialTheme.typography.titleMedium
-            )
+                shape = MaterialTheme.shapes.medium,
+                color =
+                    MaterialTheme.colorScheme.surfaceVariant
+            ) {
 
-        } else {
+                Column(
+                    modifier = Modifier.padding(16.dp)
+                ) {
 
-            Text(
-                text = "No shared days off in the next 90 days",
-                style = MaterialTheme.typography.titleMedium
-            )
+                    Text(
+                        text = "Upcoming shared time",
+                        style = MaterialTheme.typography.titleMedium
+                    )
+
+                    Spacer(
+                        modifier = Modifier.height(6.dp)
+                    )
+
+                    Text(
+                        text =
+                            if (
+                                period.startDate ==
+                                period.endDate
+                            ) {
+                                "Shared day off: ${
+                                    period.startDate.format(
+                                        dateFormatter
+                                    )
+                                }"
+                            } else {
+                                "${
+                                    period.startDate.format(
+                                        dateFormatter
+                                    )
+                                } - ${
+                                    period.endDate.format(
+                                        dateFormatter
+                                    )
+                                } (${period.days} days)"
+                            },
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+
+                    Spacer(
+                        modifier = Modifier.height(4.dp)
+                    )
+
+                    Text(
+                        text = "Tap to view in calendar",
+                        style = MaterialTheme.typography.labelMedium
+                    )
+                }
+            }
         }
 
         Spacer(
