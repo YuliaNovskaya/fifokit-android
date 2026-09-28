@@ -16,4 +16,6 @@ data class CloudRoster(
     val schemaVersion: Int = 1,
     val isDeleted: Boolean = false,
     val deletedAt: Long = 0L,
+
+    val ownerId: String = "",
 )

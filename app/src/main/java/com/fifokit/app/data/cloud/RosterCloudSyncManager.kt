@@ -6,6 +6,7 @@ import com.fifokit.app.data.RosterRepository
 import com.fifokit.app.data.cloud.model.CloudRoster
 import com.fifokit.app.data.local.RosterEntity
 import kotlinx.coroutines.flow.first
+import com.google.firebase.auth.FirebaseAuth
 
 data class RosterSyncResult(
     val uploaded: Int,
@@ -174,7 +175,8 @@ class RosterCloudSyncManager(
             createdAt = createdAt,
             updatedAt = updatedAt,
             deviceId = deviceId,
-            schemaVersion = 1
+            schemaVersion = 1,
+            ownerId = FirebaseAuth.getInstance().currentUser?.uid.orEmpty(),
         )
     }
 

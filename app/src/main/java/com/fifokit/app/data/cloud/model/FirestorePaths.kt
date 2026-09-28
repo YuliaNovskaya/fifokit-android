@@ -14,4 +14,6 @@ object FirestorePaths {
 
     const val PAY_INPUT_DOCUMENT = "payInput"
 
+    const val ROSTER_SHARES = "rosterShares"
+
 }
