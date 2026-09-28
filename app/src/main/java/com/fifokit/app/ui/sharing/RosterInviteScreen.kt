@@ -25,6 +25,9 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.compose.ui.platform.LocalContext
+import com.google.firebase.analytics.FirebaseAnalytics
+import com.google.firebase.analytics.logEvent
 
 @Composable
 fun RosterInviteScreen(
@@ -35,7 +38,16 @@ fun RosterInviteScreen(
     accessViewModel: RosterAccessViewModel = viewModel()
 ) {
     val context = LocalContext.current
+    val analytics = FirebaseAnalytics.getInstance(context)
     val state by viewModel.uiState.collectAsState()
+
+    LaunchedEffect(state.inviteId) {
+        if (state.inviteId != null) {
+            analytics.logEvent("roster_invite_created") {
+                param("roster_id", rosterId)
+            }
+        }
+    }
 
     val accessState by accessViewModel.uiState.collectAsState()
 
@@ -183,6 +195,9 @@ fun RosterInviteScreen(
 
                     OutlinedButton(
                         onClick = {
+                            analytics.logEvent("roster_share_revoked") {
+                                param("roster_id", rosterId)
+                            }
                             accessViewModel.revokeAccess(
                                 rosterId = rosterId,
                                 userId = access.userId

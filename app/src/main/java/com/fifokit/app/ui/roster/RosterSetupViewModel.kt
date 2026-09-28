@@ -26,6 +26,7 @@ import com.fifokit.app.data.local.RosterEntity
 import kotlinx.coroutines.flow.collectLatest
 import com.fifokit.app.domain.pro.ProAccess
 import com.fifokit.app.domain.pro.ProFeature
+import com.fifokit.app.notifications.SharedTimeReminderScheduler
 
 @Composable
 fun RosterSetupRoute(
@@ -101,6 +102,10 @@ class RosterSetupViewModel(
         private set
     var isCreatingNewRoster by mutableStateOf(false)
         private set
+
+    var sharedTimeRemindersEnabled by mutableStateOf(true)
+        private set
+
     fun toggleState(state: AustralianState) {
         selectedStates =
             if (state in selectedStates) {
@@ -459,6 +464,7 @@ class RosterSetupViewModel(
             remindersEnabled = settings.enabled
             workRemindersEnabled = settings.workRemindersEnabled
             offRemindersEnabled = settings.offRemindersEnabled
+            sharedTimeRemindersEnabled = settings.sharedTimeRemindersEnabled
             reminderHour = settings.hour
             reminderMinute = settings.minute
         }
@@ -470,11 +476,27 @@ class RosterSetupViewModel(
                 enabled = remindersEnabled,
                 workRemindersEnabled = workRemindersEnabled,
                 offRemindersEnabled = offRemindersEnabled,
+                sharedTimeRemindersEnabled = sharedTimeRemindersEnabled,
                 hour = reminderHour,
                 minute = reminderMinute
             )
 
             rosterPreferences.saveReminderSettings(settings)
+
+            if (
+                settings.enabled &&
+                settings.sharedTimeRemindersEnabled
+            ) {
+                SharedTimeReminderScheduler.schedule(
+                    context = getApplication(),
+                    hour = settings.hour,
+                    minute = settings.minute
+                )
+            } else {
+                SharedTimeReminderScheduler.cancel(
+                    getApplication()
+                )
+            }
 
             val rosterId =
                 activeRosterId
@@ -668,6 +690,13 @@ class RosterSetupViewModel(
                 hasSavedRoster = false
             }
         }
+    }
+
+    fun updateSharedTimeRemindersEnabled(
+        enabled: Boolean
+    ) {
+        sharedTimeRemindersEnabled = enabled
+        saveReminderSettings()
     }
 
 }

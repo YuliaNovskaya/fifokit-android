@@ -16,6 +16,8 @@ object RosterNotificationManager {
 
     const val CHANNEL_ID = "roster_changes"
 
+    const val SHARED_TIME_CHANNEL_ID = "shared_time"
+
     fun createChannel(context: Context) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(
@@ -32,4 +34,35 @@ object RosterNotificationManager {
             notificationManager.createNotificationChannel(channel)
         }
     }
+
+    fun createSharedTimeChannel(
+        context: Context
+    ) {
+        if (
+            Build.VERSION.SDK_INT >=
+            Build.VERSION_CODES.O
+        ) {
+            val channel =
+                NotificationChannel(
+                    SHARED_TIME_CHANNEL_ID,
+                    "Shared time reminders",
+                    NotificationManager
+                        .IMPORTANCE_DEFAULT
+                ).apply {
+                    description =
+                        "Reminders when shared time off begins"
+                }
+
+            val notificationManager =
+                context.getSystemService(
+                    NotificationManager::class.java
+                )
+
+            notificationManager
+                .createNotificationChannel(
+                    channel
+                )
+        }
+    }
+
 }

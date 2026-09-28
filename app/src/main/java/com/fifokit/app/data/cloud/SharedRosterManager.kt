@@ -10,26 +10,49 @@ class SharedRosterManager(
 ) {
 
     suspend fun loadSharedRosters(): List<SharedRoster> {
-        val userId = auth.currentUser?.uid ?: return emptyList()
+        val userId =
+            auth.currentUser?.uid
+                ?: return emptyList()
 
-        return sharingRepository
-            .getSharedRostersForUser(userId)
-            .mapNotNull { access ->
+        val accesses =
+            sharingRepository
+                .getSharedRostersForUser(userId)
 
-                val role = runCatching {
-                    RosterAccessRole.valueOf(access.role)
-                }.getOrNull() ?: return@mapNotNull null
+        return accesses.mapNotNull { access ->
 
-                val roster = sharingRepository.getSharedRoster(
-                    ownerId = access.ownerId,
-                    rosterId = access.rosterId
-                ) ?: return@mapNotNull null
-
-                SharedRoster(
-                    roster = roster,
-                    ownerId = access.ownerId,
-                    role = role
-                )
+            if (access.userId != userId) {
+                return@mapNotNull null
             }
+
+            val role =
+                runCatching {
+                    RosterAccessRole.valueOf(
+                        access.role
+                    )
+                }.getOrNull()
+                    ?: return@mapNotNull null
+
+            val roster =
+                runCatching {
+                    sharingRepository.getSharedRoster(
+                        ownerId = access.ownerId,
+                        rosterId = access.rosterId
+                    )
+                }.getOrNull()
+                    ?: return@mapNotNull null
+
+            if (
+                roster.isDeleted ||
+                roster.id.isBlank()
+            ) {
+                return@mapNotNull null
+            }
+
+            SharedRoster(
+                roster = roster,
+                ownerId = access.ownerId,
+                role = role
+            )
+        }
     }
 }

@@ -27,6 +27,7 @@ data class ReminderSettings(
     val enabled: Boolean = true,
     val workRemindersEnabled: Boolean = true,
     val offRemindersEnabled: Boolean = true,
+    val sharedTimeRemindersEnabled: Boolean = true,
     val hour: Int = 19,
     val minute: Int = 0
 )
@@ -67,6 +68,9 @@ class RosterPreferences(
         val SETTINGS_UPDATED_AT =
             longPreferencesKey("settings_updated_at")
 
+        val SHARED_TIME_REMINDERS_ENABLED =
+            booleanPreferencesKey("shared_time_reminders_enabled")
+
     }
 
     val savedRoster: Flow<SavedRoster?> =
@@ -100,6 +104,8 @@ class RosterPreferences(
                     preferences[Keys.WORK_REMINDERS_ENABLED] ?: true,
                 offRemindersEnabled =
                     preferences[Keys.OFF_REMINDERS_ENABLED] ?: true,
+                sharedTimeRemindersEnabled =
+                    preferences[Keys.SHARED_TIME_REMINDERS_ENABLED] ?: true,
                 hour = preferences[Keys.REMINDER_HOUR] ?: 19,
                 minute = preferences[Keys.REMINDER_MINUTE] ?: 0
             )
@@ -157,6 +163,8 @@ class RosterPreferences(
             preferences[Keys.REMINDER_MINUTE] = settings.minute
             preferences[Keys.SETTINGS_UPDATED_AT] =
                 System.currentTimeMillis()
+            preferences[Keys.SHARED_TIME_REMINDERS_ENABLED] =
+                settings.sharedTimeRemindersEnabled
         }
     }
 

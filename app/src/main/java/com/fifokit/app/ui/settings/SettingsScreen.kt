@@ -46,6 +46,8 @@ fun SettingsScreen(
     onRemindersEnabledChange: (Boolean) -> Unit = {},
     onWorkRemindersEnabledChange: (Boolean) -> Unit = {},
     onOffRemindersEnabledChange: (Boolean) -> Unit = {},
+    sharedTimeRemindersEnabled: Boolean = true,
+    onSharedTimeRemindersEnabledChange: (Boolean) -> Unit = {},
     onReminderTimeChange: (Int, Int) -> Unit = { _, _ -> }
 ) {
     val context = LocalContext.current
@@ -199,6 +201,21 @@ fun SettingsScreen(
                     Switch(
                         checked = offRemindersEnabled,
                         onCheckedChange = onOffRemindersEnabledChange
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text("Shared time off reminder")
+
+                    Switch(
+                        checked = sharedTimeRemindersEnabled,
+                        onCheckedChange =
+                            onSharedTimeRemindersEnabledChange
                     )
                 }
 

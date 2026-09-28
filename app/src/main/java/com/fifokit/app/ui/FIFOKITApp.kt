@@ -358,7 +358,12 @@ fun FIFOKITApp(
                     onOffRemindersEnabledChange =
                         rosterSetupViewModel::updateOffRemindersEnabled,
                     onReminderTimeChange =
-                        rosterSetupViewModel::updateReminderTime
+                        rosterSetupViewModel::updateReminderTime,
+                    sharedTimeRemindersEnabled =
+                        rosterSetupViewModel.sharedTimeRemindersEnabled,
+
+                    onSharedTimeRemindersEnabledChange =
+                        rosterSetupViewModel::updateSharedTimeRemindersEnabled
                 )
             } else if (showCalendar) {
                 RosterCalendarScreen(

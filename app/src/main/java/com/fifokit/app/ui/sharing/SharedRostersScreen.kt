@@ -21,6 +21,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.fifokit.app.domain.sharing.SharedRoster
+import androidx.compose.ui.platform.LocalContext
+import com.google.firebase.analytics.FirebaseAnalytics
+import com.google.firebase.analytics.logEvent
 
 @Composable
 fun SharedRostersScreen(
@@ -30,7 +33,11 @@ fun SharedRostersScreen(
 ) {
     val state by viewModel.uiState.collectAsState()
 
+    val context = LocalContext.current
+    val analytics = FirebaseAnalytics.getInstance(context)
+
     LaunchedEffect(Unit) {
+        analytics.logEvent("shared_rosters_viewed") {}
         viewModel.loadSharedRosters()
     }
 
@@ -57,10 +64,23 @@ fun SharedRostersScreen(
             }
 
             state.errorMessage != null -> {
+
                 Text(
                     text = state.errorMessage ?: "",
                     color = MaterialTheme.colorScheme.error
                 )
+
+                Spacer(
+                    modifier = Modifier.height(12.dp)
+                )
+
+                OutlinedButton(
+                    onClick = {
+                        viewModel.loadSharedRosters()
+                    }
+                ) {
+                    Text("Try again")
+                }
             }
 
             state.rosters.isEmpty() -> {

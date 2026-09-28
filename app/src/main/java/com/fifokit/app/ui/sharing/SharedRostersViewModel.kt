@@ -29,8 +29,9 @@ class SharedRostersViewModel(
         viewModelScope.launch {
 
             _uiState.value =
-                SharedRostersUiState(
-                    isLoading = true
+                _uiState.value.copy(
+                    isLoading = true,
+                    errorMessage = null
                 )
 
             runCatching {
@@ -39,16 +40,17 @@ class SharedRostersViewModel(
 
                 _uiState.value =
                     SharedRostersUiState(
+                        isLoading = false,
                         rosters = rosters
                     )
 
-            }.onFailure { error ->
+            }.onFailure {
 
                 _uiState.value =
-                    SharedRostersUiState(
+                    _uiState.value.copy(
+                        isLoading = false,
                         errorMessage =
-                            error.message
-                                ?: "Unable to load shared rosters"
+                            "Shared rosters could not be refreshed"
                     )
             }
         }

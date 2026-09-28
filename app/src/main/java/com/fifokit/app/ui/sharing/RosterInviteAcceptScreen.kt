@@ -19,6 +19,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.platform.LocalContext
+import com.google.firebase.analytics.FirebaseAnalytics
+import com.google.firebase.analytics.logEvent
 
 @Composable
 fun RosterInviteAcceptScreen(
@@ -27,6 +30,17 @@ fun RosterInviteAcceptScreen(
     viewModel: RosterInviteViewModel = viewModel()
 ) {
     val state by viewModel.uiState.collectAsState()
+
+    val context = LocalContext.current
+    val analytics = FirebaseAnalytics.getInstance(context)
+
+    LaunchedEffect(state.accepted) {
+        if (state.accepted) {
+            analytics.logEvent("roster_invite_accepted") {
+                param("invite_id", inviteId)
+            }
+        }
+    }
 
     LaunchedEffect(inviteId) {
         viewModel.clearState()

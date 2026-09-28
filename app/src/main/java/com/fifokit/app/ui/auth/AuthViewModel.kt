@@ -36,10 +36,14 @@ import kotlinx.coroutines.flow.collectLatest
 import android.content.Context
 import android.net.ConnectivityManager
 import android.net.Network
+import com.fifokit.app.data.cloud.RosterSharingCleanupRepository
 
 class AuthViewModel(
     application: Application
 ) : AndroidViewModel(application) {
+
+    private val rosterSharingCleanupRepository =
+        RosterSharingCleanupRepository()
 
     private val _isDeletingAccount =
         MutableStateFlow(false)
@@ -424,6 +428,16 @@ class AuthViewModel(
                 cloudRepository.deleteAllUserData(
                     uid
                 )
+
+                val uid = currentUser.value?.uid
+                    ?: error("User must be signed in")
+
+                rosterSharingCleanupRepository
+                    .deleteAllSharingDataForUser(uid)
+
+                analytics.logEvent(
+                    "roster_sharing_cleanup_complete"
+                ) {}
 
                 authRepository.deleteAccount()
 
