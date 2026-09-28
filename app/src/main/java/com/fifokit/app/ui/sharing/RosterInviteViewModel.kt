@@ -23,7 +23,7 @@ class RosterInviteViewModel(
     val uiState: StateFlow<RosterInviteUiState> = _uiState.asStateFlow()
 
     fun createInvite(
-        rosterId: Long,
+        rosterId: String,
         rosterName: String
     ) {
         viewModelScope.launch {

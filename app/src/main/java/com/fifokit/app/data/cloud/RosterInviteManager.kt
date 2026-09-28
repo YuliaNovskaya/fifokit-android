@@ -11,7 +11,7 @@ class RosterInviteManager(
 ) {
 
     suspend fun createInvite(
-        rosterId: Long,
+        rosterId: String,
         rosterName: String
     ): String {
         val ownerId = auth.currentUser?.uid

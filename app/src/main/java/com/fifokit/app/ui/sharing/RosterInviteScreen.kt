@@ -22,16 +22,27 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.lifecycle.viewmodel.compose.viewModel
 
 @Composable
 fun RosterInviteScreen(
-    rosterId: Long,
+    rosterId: String,
     rosterName: String,
     onBack: () -> Unit,
-    viewModel: RosterInviteViewModel = viewModel()
+    viewModel: RosterInviteViewModel = viewModel(),
+    accessViewModel: RosterAccessViewModel = viewModel()
 ) {
     val context = LocalContext.current
     val state by viewModel.uiState.collectAsState()
+
+    val accessState by accessViewModel.uiState.collectAsState()
+
+    LaunchedEffect(rosterId) {
+        viewModel.clearState()
+        accessViewModel.loadShares(rosterId)
+    }
 
     Column(
         modifier = Modifier
@@ -142,6 +153,51 @@ fun RosterInviteScreen(
         }
 
         Spacer(modifier = Modifier.height(16.dp))
+
+        if (accessState.shares.isNotEmpty()) {
+
+            Spacer(
+                modifier = Modifier.height(32.dp)
+            )
+
+            Text(
+                text = "Shared access",
+                style = MaterialTheme.typography.titleMedium
+            )
+
+            Spacer(
+                modifier = Modifier.height(12.dp)
+            )
+
+            accessState.shares.forEach { access ->
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+
+                    Text(
+                        text = "Viewer"
+                    )
+
+                    OutlinedButton(
+                        onClick = {
+                            accessViewModel.revokeAccess(
+                                rosterId = rosterId,
+                                userId = access.userId
+                            )
+                        }
+                    ) {
+                        Text("Remove access")
+                    }
+                }
+
+                Spacer(
+                    modifier = Modifier.height(8.dp)
+                )
+            }
+        }
 
         Row(
             modifier = Modifier.fillMaxWidth(),

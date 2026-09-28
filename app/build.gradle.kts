@@ -16,8 +16,8 @@ android {
         applicationId = "com.fifokit.app"
         minSdk = 26
         targetSdk = 36
-        versionCode = 18
-        versionName = "1.0.18"
+        versionCode = 23
+        versionName = "1.0.23"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }

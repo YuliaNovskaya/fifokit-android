@@ -9,7 +9,7 @@ class RosterSharingManager(
 ) {
 
     suspend fun grantViewerAccess(
-        rosterId: Long,
+        rosterId: String,
         viewerUserId: String
     ) {
         val ownerId = auth.currentUser?.uid ?: return
@@ -22,7 +22,7 @@ class RosterSharingManager(
     }
 
     suspend fun getRosterShares(
-        rosterId: Long
+        rosterId: String
     ): List<CloudRosterAccess> {
         val ownerId = auth.currentUser?.uid ?: return emptyList()
 
@@ -33,7 +33,7 @@ class RosterSharingManager(
     }
 
     suspend fun revokeViewerAccess(
-        rosterId: Long,
+        rosterId: String,
         viewerUserId: String
     ) {
         val ownerId = auth.currentUser?.uid ?: return

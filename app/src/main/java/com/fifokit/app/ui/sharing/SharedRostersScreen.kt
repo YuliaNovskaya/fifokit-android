@@ -1,0 +1,116 @@
+package com.fifokit.app.ui.sharing
+
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.fifokit.app.domain.sharing.SharedRoster
+
+@Composable
+fun SharedRostersScreen(
+    onBack: () -> Unit,
+    onRosterSelected: (SharedRoster) -> Unit,
+    viewModel: SharedRostersViewModel = viewModel()
+) {
+    val state by viewModel.uiState.collectAsState()
+
+    LaunchedEffect(Unit) {
+        viewModel.loadSharedRosters()
+    }
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(24.dp),
+        verticalArrangement = Arrangement.Top
+    ) {
+
+        Text(
+            text = "Shared rosters",
+            style = MaterialTheme.typography.headlineMedium
+        )
+
+        Spacer(
+            modifier = Modifier.height(24.dp)
+        )
+
+        when {
+
+            state.isLoading -> {
+                CircularProgressIndicator()
+            }
+
+            state.errorMessage != null -> {
+                Text(
+                    text = state.errorMessage ?: "",
+                    color = MaterialTheme.colorScheme.error
+                )
+            }
+
+            state.rosters.isEmpty() -> {
+                Text("No shared rosters")
+            }
+
+            else -> {
+                state.rosters.forEach { sharedRoster ->
+
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable {
+                                onRosterSelected(sharedRoster)
+                            }
+                            .padding(
+                                vertical = 16.dp
+                            )
+                    ) {
+
+                        Text(
+                            text = sharedRoster.roster.name,
+                            style = MaterialTheme.typography.titleMedium
+                        )
+
+                        Spacer(
+                            modifier = Modifier.height(4.dp)
+                        )
+
+                        Text(
+                            text = sharedRoster.roster.pattern,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color =
+                                MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+
+                    HorizontalDivider()
+                }
+            }
+        }
+
+        Spacer(
+            modifier = Modifier.height(24.dp)
+        )
+
+        OutlinedButton(
+            onClick = onBack
+        ) {
+            Text("Back")
+        }
+    }
+}

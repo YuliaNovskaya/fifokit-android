@@ -32,6 +32,9 @@ import com.fifokit.app.ui.auth.AuthViewModel
 import androidx.compose.runtime.LaunchedEffect
 import com.fifokit.app.ui.sharing.RosterInviteScreen
 import com.fifokit.app.ui.sharing.RosterInviteAcceptScreen
+import com.fifokit.app.ui.sharing.SharedRostersScreen
+import com.fifokit.app.domain.sharing.SharedRoster
+
 @Composable
 fun FIFOKITApp(
     inviteId: String? = null
@@ -52,6 +55,14 @@ fun FIFOKITApp(
 
     var screenOverride by remember {
         mutableStateOf<Boolean?>(null)
+    }
+
+    var showSharedRosters by remember {
+        mutableStateOf(false)
+    }
+
+    var selectedSharedRoster by remember {
+        mutableStateOf<SharedRoster?>(null)
     }
 
     val showCalendar =
@@ -93,6 +104,7 @@ fun FIFOKITApp(
 
     BackHandler(
         enabled =
+            showSharedRosters ||
             showAcceptInvite ||
             showShareRoster ||
             showAccount ||
@@ -109,6 +121,11 @@ fun FIFOKITApp(
 
             showShareRoster ->
                 showShareRoster = false
+
+            showSharedRosters -> {
+                showSharedRosters = false
+                selectedSharedRoster = null
+            }
 
             showAccount ->
                 showAccount = false
@@ -140,7 +157,26 @@ fun FIFOKITApp(
                 .safeDrawingPadding()
         ) {
 
-            if (
+            val activeCloudRosterId =
+                rosterSetupViewModel.rosters
+                    .firstOrNull {
+                        it.id == rosterSetupViewModel.activeRosterId
+                    }
+                    ?.cloudId
+
+            if (showSharedRosters) {
+
+                SharedRostersScreen(
+                    onBack = {
+                        showSharedRosters = false
+                        selectedSharedRoster = null
+                    },
+                    onRosterSelected = { sharedRoster ->
+                        selectedSharedRoster = sharedRoster
+                    }
+                )
+
+            } else if (
                 showAcceptInvite &&
                 inviteId != null
             ) {
@@ -159,7 +195,7 @@ fun FIFOKITApp(
             ) {
 
                 RosterInviteScreen(
-                    rosterId = rosterSetupViewModel.activeRosterId!!,
+                    rosterId = activeCloudRosterId!!,
                     rosterName = rosterSetupViewModel.rosterName,
                     onBack = {
                         showShareRoster = false
@@ -287,6 +323,9 @@ fun FIFOKITApp(
                     },
                     onFinance = {
                         showFinance = true
+                    },
+                    onSharedRosters = {
+                        showSharedRosters = true
                     },
                     onProRequested = { feature ->
                         analytics.logEvent("pro_feature_locked") {

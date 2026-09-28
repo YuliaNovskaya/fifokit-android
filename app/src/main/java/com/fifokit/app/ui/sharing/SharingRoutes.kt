@@ -6,10 +6,10 @@ object SharingRoutes {
     const val ACCEPT_INVITE = "accept_invite/{inviteId}"
 
     fun shareRoster(
-        rosterId: Long,
+        rosterId: String,
         rosterName: String
     ): String {
-        return "share_roster/$rosterId/${android.net.Uri.encode(rosterName)}"
+        return "share_roster/${android.net.Uri.encode(rosterId)}/${android.net.Uri.encode(rosterName)}"
     }
 
     fun acceptInvite(

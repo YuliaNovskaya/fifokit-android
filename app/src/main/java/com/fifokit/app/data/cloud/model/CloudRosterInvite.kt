@@ -2,7 +2,7 @@ package com.fifokit.app.data.cloud.model
 
 data class CloudRosterInvite(
     val inviteId: String = "",
-    val rosterId: Long = 0,
+    val rosterId: String = "",
     val ownerId: String = "",
     val rosterName: String = "",
     val role: String = "VIEWER",

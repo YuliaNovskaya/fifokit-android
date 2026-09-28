@@ -18,6 +18,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.compose.runtime.LaunchedEffect
 
 @Composable
 fun RosterInviteAcceptScreen(
@@ -26,6 +27,10 @@ fun RosterInviteAcceptScreen(
     viewModel: RosterInviteViewModel = viewModel()
 ) {
     val state by viewModel.uiState.collectAsState()
+
+    LaunchedEffect(inviteId) {
+        viewModel.clearState()
+    }
 
     Column(
         modifier = Modifier
