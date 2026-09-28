@@ -30,9 +30,12 @@ import androidx.compose.ui.platform.LocalContext
 import com.fifokit.app.ui.auth.AccountScreen
 import com.fifokit.app.ui.auth.AuthViewModel
 import androidx.compose.runtime.LaunchedEffect
-
+import com.fifokit.app.ui.sharing.RosterInviteScreen
+import com.fifokit.app.ui.sharing.RosterInviteAcceptScreen
 @Composable
-fun FIFOKITApp() {
+fun FIFOKITApp(
+    inviteId: String? = null
+) {
 
     val context = LocalContext.current
     val analytics = FirebaseAnalytics.getInstance(context)
@@ -80,8 +83,18 @@ fun FIFOKITApp() {
         mutableStateOf(false)
     }
 
+    var showShareRoster by remember {
+        mutableStateOf(false)
+    }
+
+    var showAcceptInvite by remember(inviteId) {
+        mutableStateOf(inviteId != null)
+    }
+
     BackHandler(
         enabled =
+            showAcceptInvite ||
+            showShareRoster ||
             showAccount ||
                     showFinancialGoal ||
                     showAnnualEarnings ||
@@ -90,6 +103,13 @@ fun FIFOKITApp() {
                     showSettings
     ) {
         when {
+
+            showAcceptInvite ->
+                showAcceptInvite = false
+
+            showShareRoster ->
+                showShareRoster = false
+
             showAccount ->
                 showAccount = false
 
@@ -120,7 +140,33 @@ fun FIFOKITApp() {
                 .safeDrawingPadding()
         ) {
 
-            if (showPro) {
+            if (
+                showAcceptInvite &&
+                inviteId != null
+            ) {
+
+                RosterInviteAcceptScreen(
+                    inviteId = inviteId,
+                    onAccepted = {
+                        showAcceptInvite = false
+                        screenOverride = true
+                    }
+                )
+
+            } else if (
+                showShareRoster &&
+                rosterSetupViewModel.activeRosterId != null
+            ) {
+
+                RosterInviteScreen(
+                    rosterId = rosterSetupViewModel.activeRosterId!!,
+                    rosterName = rosterSetupViewModel.rosterName,
+                    onBack = {
+                        showShareRoster = false
+                    }
+                )
+
+            } else if (showPro) {
 
                 ProScreen(
                     onBack = {
@@ -232,6 +278,9 @@ fun FIFOKITApp() {
                     viewModel = rosterSetupViewModel,
                     onBack = {
                         screenOverride = false
+                    },
+                    onShareRoster = {
+                        showShareRoster = true
                     },
                     onSettings = {
                         showSettings = true

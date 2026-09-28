@@ -16,4 +16,6 @@ object FirestorePaths {
 
     const val ROSTER_SHARES = "rosterShares"
 
+    const val ROSTER_INVITES = "rosterInvites"
+
 }

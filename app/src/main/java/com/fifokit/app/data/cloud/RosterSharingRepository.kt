@@ -13,7 +13,8 @@ class RosterSharingRepository(
     suspend fun grantViewerAccess(
         rosterId: Long,
         ownerId: String,
-        userId: String
+        userId: String,
+        inviteId: String = ""
     ) {
         val shareId = "${ownerId}_${rosterId}_${userId}"
 
@@ -22,6 +23,7 @@ class RosterSharingRepository(
             ownerId = ownerId,
             userId = userId,
             role = RosterAccessRole.VIEWER.name,
+            inviteId = inviteId,
             createdAt = System.currentTimeMillis()
         )
 

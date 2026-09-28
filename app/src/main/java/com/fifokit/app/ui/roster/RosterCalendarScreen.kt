@@ -70,7 +70,8 @@ fun RosterCalendarScreen(
     onBack: () -> Unit,
     onSettings: () -> Unit,
     onFinance: () -> Unit,
-    onProRequested: (String) -> Unit = { _ -> }
+    onShareRoster: () -> Unit,
+    onProRequested: (String) -> Unit
 ) {
     val context = LocalContext.current
     val analytics = remember(context) {
@@ -115,6 +116,11 @@ fun RosterCalendarScreen(
                         onClick = onFinance
                     ) {
                         Text("Tools")
+                    }
+                    TextButton(
+                        onClick = onShareRoster
+                    ) {
+                        Text("Share")
                     }
                     TextButton(
                         onClick = onSettings
