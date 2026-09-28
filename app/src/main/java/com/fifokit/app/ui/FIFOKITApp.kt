@@ -34,6 +34,8 @@ import com.fifokit.app.ui.sharing.RosterInviteScreen
 import com.fifokit.app.ui.sharing.RosterInviteAcceptScreen
 import com.fifokit.app.ui.sharing.SharedRostersScreen
 import com.fifokit.app.domain.sharing.SharedRoster
+import com.fifokit.app.ui.sharing.SharedRosterCalendarScreen
+import com.fifokit.app.ui.sharing.TogetherRosterCalendarScreen
 
 @Composable
 fun FIFOKITApp(
@@ -102,8 +104,14 @@ fun FIFOKITApp(
         mutableStateOf(inviteId != null)
     }
 
+    var showTogetherRoster by remember {
+        mutableStateOf(false)
+    }
+
     BackHandler(
         enabled =
+            showTogetherRoster ||
+            selectedSharedRoster != null ||
             showSharedRosters ||
             showAcceptInvite ||
             showShareRoster ||
@@ -115,6 +123,11 @@ fun FIFOKITApp(
                     showSettings
     ) {
         when {
+            showTogetherRoster ->
+                showTogetherRoster = false
+
+            selectedSharedRoster != null ->
+                selectedSharedRoster = null
 
             showAcceptInvite ->
                 showAcceptInvite = false
@@ -164,7 +177,37 @@ fun FIFOKITApp(
                     }
                     ?.cloudId
 
-            if (showSharedRosters) {
+            if (
+                showTogetherRoster &&
+                selectedSharedRoster != null
+            ) {
+
+                TogetherRosterCalendarScreen(
+                    viewModel = rosterSetupViewModel,
+                    sharedRoster = selectedSharedRoster!!,
+                    onMyRoster = {
+                        showTogetherRoster = false
+                        showSharedRosters = false
+                        selectedSharedRoster = null
+                    },
+                    onBack = {
+                        showTogetherRoster = false
+                    }
+                )
+
+            } else if (selectedSharedRoster != null) {
+
+                SharedRosterCalendarScreen(
+                    sharedRoster = selectedSharedRoster!!,
+                    onBack = {
+                        selectedSharedRoster = null
+                    },
+                    onTogether = {
+                        showTogetherRoster = true
+                    }
+                )
+
+            } else if (showSharedRosters) {
 
                 SharedRostersScreen(
                     onBack = {
@@ -172,6 +215,14 @@ fun FIFOKITApp(
                         selectedSharedRoster = null
                     },
                     onRosterSelected = { sharedRoster ->
+
+                        analytics.logEvent("shared_roster_selected") {
+                            param(
+                                "roster_id",
+                                sharedRoster.roster.id
+                            )
+                        }
+
                         selectedSharedRoster = sharedRoster
                     }
                 )
