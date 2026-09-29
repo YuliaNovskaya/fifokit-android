@@ -49,14 +49,18 @@ fun FIFOKITApp(
 
     val authViewModel: AuthViewModel = viewModel()
 
-    LaunchedEffect(authViewModel) {
-        authViewModel.syncCompleted.collect {
-            rosterSetupViewModel.refreshFromLocalStorage()
-        }
-    }
-
     var screenOverride by remember {
         mutableStateOf<Boolean?>(null)
+    }
+
+    LaunchedEffect(authViewModel) {
+        authViewModel.syncCompleted.collect {
+
+            rosterSetupViewModel.refreshFromLocalStorage()
+
+            // Return navigation control to the actual saved-roster state.
+            screenOverride = null
+        }
     }
 
     var showSharedRosters by remember {
@@ -140,8 +144,13 @@ fun FIFOKITApp(
                 selectedSharedRoster = null
             }
 
-            showAccount ->
+            showAccount -> {
                 showAccount = false
+
+                rosterSetupViewModel.refreshFromLocalStorage()
+
+                screenOverride = null
+            }
 
             showFinancialGoal ->
                 showFinancialGoal = false

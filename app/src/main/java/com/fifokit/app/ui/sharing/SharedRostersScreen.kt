@@ -24,6 +24,7 @@ import com.fifokit.app.domain.sharing.SharedRoster
 import androidx.compose.ui.platform.LocalContext
 import com.google.firebase.analytics.FirebaseAnalytics
 import com.google.firebase.analytics.logEvent
+import com.fifokit.app.domain.model.RosterPattern
 
 @Composable
 fun SharedRostersScreen(
@@ -89,7 +90,20 @@ fun SharedRostersScreen(
 
             else -> {
                 state.rosters.forEach { sharedRoster ->
+                    val roster = sharedRoster.roster
 
+                    val patternLabel =
+                        if (roster.isCustomRoster) {
+                            "${roster.customWorkDays}/${roster.customOffDays} custom roster"
+                        } else {
+                            runCatching {
+                                RosterPattern.valueOf(
+                                    roster.pattern
+                                ).label
+                            }.getOrDefault(
+                                roster.pattern
+                            )
+                        }
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -102,7 +116,11 @@ fun SharedRostersScreen(
                     ) {
 
                         Text(
-                            text = sharedRoster.roster.name,
+                            text = roster.name
+                                .trim()
+                                .ifBlank {
+                                    "Unnamed roster"
+                                },
                             style = MaterialTheme.typography.titleMedium
                         )
 
@@ -111,7 +129,7 @@ fun SharedRostersScreen(
                         )
 
                         Text(
-                            text = sharedRoster.roster.pattern,
+                            text = patternLabel,
                             style = MaterialTheme.typography.bodyMedium,
                             color =
                                 MaterialTheme.colorScheme.onSurfaceVariant

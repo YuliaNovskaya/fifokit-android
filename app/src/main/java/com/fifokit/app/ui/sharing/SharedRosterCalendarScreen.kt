@@ -53,7 +53,18 @@ fun SharedRosterCalendarScreen(
     }
 
     val roster = sharedRoster.roster
-
+    val patternLabel =
+        if (roster.isCustomRoster) {
+            "${roster.customWorkDays}/${roster.customOffDays} custom roster"
+        } else {
+            runCatching {
+                RosterPattern.valueOf(
+                    roster.pattern
+                ).label
+            }.getOrDefault(
+                roster.pattern
+            )
+        }
     LaunchedEffect(roster.id) {
         analytics.logEvent("partner_calendar_viewed") {
             param("partner_roster_id", roster.id)
@@ -140,7 +151,7 @@ fun SharedRosterCalendarScreen(
         )
 
         Text(
-            text = roster.pattern,
+            text = patternLabel,
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )

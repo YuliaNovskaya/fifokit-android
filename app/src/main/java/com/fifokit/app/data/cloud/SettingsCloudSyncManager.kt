@@ -6,6 +6,7 @@ import com.fifokit.app.data.RosterPreferences
 import com.fifokit.app.data.RosterRepository
 import com.fifokit.app.data.cloud.model.CloudSettings
 import kotlinx.coroutines.flow.first
+import android.util.Log
 
 data class SettingsSyncResult(
     val uploaded: Boolean,
@@ -26,29 +27,53 @@ class SettingsCloudSyncManager(
         uid: String
     ): SettingsSyncResult {
 
+        Log.d("SettingsSync", "1 START")
+
         val deviceId =
             deviceIdProvider.getDeviceId()
+
+        Log.d("SettingsSync", "2 deviceId done")
 
         val cloudSettings =
             cloudRepository.getSettings(uid)
 
+        Log.d(
+            "SettingsSync",
+            "3 getSettings done, exists=${cloudSettings != null}"
+        )
+
         val localUpdatedAt =
             rosterPreferences.settingsUpdatedAt.first()
+
+        Log.d(
+            "SettingsSync",
+            "4 settingsUpdatedAt done: $localUpdatedAt"
+        )
 
         val selectedStates =
             rosterPreferences.selectedStates.first()
 
+        Log.d("SettingsSync", "5 selectedStates done")
+
         val reminderSettings =
             rosterPreferences.reminderSettings.first()
+
+        Log.d("SettingsSync", "6 reminderSettings done")
 
         val activeRosterId =
             rosterPreferences.activeRosterId.first()
 
+        Log.d("SettingsSync", "7 activeRosterId done")
+
         val activeRosterCloudId =
             activeRosterId
-                ?.let { rosterRepository.getRosterById(it) }
+                ?.let {
+                    rosterRepository.getRosterById(it)
+                }
                 ?.cloudId
                 .orEmpty()
+
+        Log.d("SettingsSync", "8 roster lookup done")
 
         if (cloudSettings == null) {
 
@@ -100,6 +125,8 @@ class SettingsCloudSyncManager(
                             ?.id
                     }
 
+            Log.d("SettingsSync", "9 applying cloud settings")
+
             rosterPreferences.applyCloudSettings(
                 selectedStates =
                     cloudSettings.selectedStates.toSet(),
@@ -121,7 +148,7 @@ class SettingsCloudSyncManager(
                 updatedAt =
                     cloudSettings.updatedAt
             )
-
+            Log.d("SettingsSync", "10 applyCloudSettings done")
             return SettingsSyncResult(
                 uploaded = false,
                 downloaded = true
@@ -129,7 +156,7 @@ class SettingsCloudSyncManager(
         }
 
         if (localUpdatedAt > cloudSettings.updatedAt) {
-
+            Log.d("SettingsSync", "9 saving cloud settings")
             cloudRepository.saveSettings(
                 uid = uid,
                 settings = CloudSettings(
@@ -154,7 +181,7 @@ class SettingsCloudSyncManager(
                     schemaVersion = 1
                 )
             )
-
+            Log.d("SettingsSync", "10 saveSettings done")
             return SettingsSyncResult(
                 uploaded = true,
                 downloaded = false

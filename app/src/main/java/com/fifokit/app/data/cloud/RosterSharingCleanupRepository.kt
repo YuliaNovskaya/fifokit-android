@@ -56,6 +56,13 @@ class RosterSharingCleanupRepository(
                 }
 
         deleteDocuments(documents)
+
+        firestore
+            .collection(FirestorePaths.USERS)
+            .document(userId)
+            .delete()
+            .await()
+
     }
 
     private suspend fun deleteDocuments(

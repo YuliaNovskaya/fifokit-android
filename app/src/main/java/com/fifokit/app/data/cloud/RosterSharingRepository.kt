@@ -6,6 +6,8 @@ import com.fifokit.app.domain.sharing.RosterAccessRole
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
+import com.google.firebase.firestore.FirebaseFirestoreException
+import com.google.firebase.firestore.Source
 
 class RosterSharingRepository(
     private val firestore: FirebaseFirestore = FirebaseFirestore.getInstance()
@@ -65,14 +67,57 @@ class RosterSharingRepository(
         ownerId: String,
         rosterId: String
     ): CloudRoster? {
-        return firestore
-            .collection(FirestorePaths.USERS)
-            .document(ownerId)
-            .collection(FirestorePaths.ROSTERS)
-            .document(rosterId)
-            .get()
-            .await()
-            .toObject(CloudRoster::class.java)
+
+        val reference =
+            firestore.collection(FirestorePaths.USERS)
+                .document(ownerId)
+                .collection(FirestorePaths.ROSTERS)
+                .document(rosterId)
+
+        val snapshot =
+            try {
+                reference
+                    .get(Source.SERVER)
+                    .await()
+            } catch (e: FirebaseFirestoreException) {
+
+                if (
+                    e.code ==
+                    FirebaseFirestoreException.Code.UNAVAILABLE
+                ) {
+                    reference
+                        .get(Source.CACHE)
+                        .await()
+                } else {
+                    throw e
+                }
+            }
+
+        val roster =
+            snapshot.toObject(
+                CloudRoster::class.java
+            ) ?: return null
+
+        return roster.copy(
+            id =
+                snapshot.getString("id")
+                    ?: snapshot.id,
+
+            isCustomRoster =
+                snapshot.getBoolean("isCustomRoster")
+                    ?: snapshot.getBoolean("customRoster")
+                    ?: roster.isCustomRoster,
+
+            isActive =
+                snapshot.getBoolean("isActive")
+                    ?: snapshot.getBoolean("active")
+                    ?: roster.isActive,
+
+            isDeleted =
+                snapshot.getBoolean("isDeleted")
+                    ?: snapshot.getBoolean("deleted")
+                    ?: roster.isDeleted
+        )
     }
 
     suspend fun revokeAccess(

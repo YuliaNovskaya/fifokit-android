@@ -7,6 +7,7 @@ import androidx.credentials.CustomCredential
 import com.fifokit.app.R
 import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
+import androidx.credentials.ClearCredentialStateRequest
 
 class GoogleSignInManager(
     private val activity: Activity
@@ -16,7 +17,11 @@ class GoogleSignInManager(
         CredentialManager.create(activity)
 
     suspend fun getGoogleIdToken(): String {
-
+        runCatching {
+            credentialManager.clearCredentialState(
+                ClearCredentialStateRequest()
+            )
+        }
         val googleOption =
             GetSignInWithGoogleOption.Builder(
                 activity.getString(

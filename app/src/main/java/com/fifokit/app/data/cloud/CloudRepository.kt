@@ -7,11 +7,10 @@ import com.fifokit.app.data.cloud.model.CloudSettings
 import com.fifokit.app.data.cloud.model.CloudUser
 import com.google.android.gms.tasks.Task
 import com.google.firebase.firestore.FirebaseFirestore
-import kotlinx.coroutines.suspendCancellableCoroutine
-import kotlin.coroutines.resume
-import kotlin.coroutines.resumeWithException
 import com.google.firebase.firestore.SetOptions
 import com.fifokit.app.data.cloud.model.CloudPayInput
+import kotlinx.coroutines.tasks.await
+import com.google.firebase.firestore.Source
 class CloudRepository(
     private val firestore: FirebaseFirestore = FirebaseFirestore.getInstance()
 ) {
@@ -171,12 +170,13 @@ class CloudRepository(
     suspend fun getSettings(
         uid: String
     ): CloudSettings? {
+
         return firestore
             .collection(FirestorePaths.USERS)
             .document(uid)
             .collection(FirestorePaths.SETTINGS)
             .document(FirestorePaths.APP_SETTINGS_DOCUMENT)
-            .get()
+            .get(Source.SERVER)
             .awaitResult()
             .toObject(CloudSettings::class.java)
     }
@@ -258,20 +258,8 @@ class CloudRepository(
     }
 
     private suspend fun <T> Task<T>.awaitResult(): T =
-        suspendCancellableCoroutine { continuation ->
+        await()
 
-            addOnSuccessListener { result ->
-                if (continuation.isActive) {
-                    continuation.resume(result)
-                }
-            }
-
-            addOnFailureListener { exception ->
-                if (continuation.isActive) {
-                    continuation.resumeWithException(exception)
-                }
-            }
-        }
     suspend fun savePayInput(
         uid: String,
         payInput: CloudPayInput

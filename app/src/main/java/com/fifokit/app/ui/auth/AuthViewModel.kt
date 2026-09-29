@@ -37,6 +37,8 @@ import android.content.Context
 import android.net.ConnectivityManager
 import android.net.Network
 import com.fifokit.app.data.cloud.RosterSharingCleanupRepository
+import kotlinx.coroutines.TimeoutCancellationException
+import kotlinx.coroutines.withTimeout
 
 class AuthViewModel(
     application: Application
@@ -274,65 +276,99 @@ class AuthViewModel(
 
         try {
 
-            val rosterResult =
-                rosterCloudSyncManager.sync(uid)
 
-            val settingsResult =
-                settingsCloudSyncManager.sync(uid)
+                _errorMessage.value = "Syncing rosters..."
 
-            val financialGoalResult =
-                financialGoalCloudSyncManager.sync(uid)
+                val rosterResult =
+                    withTimeout(10_000L) {
+                        rosterCloudSyncManager.sync(uid)
+                    }
 
-            val payInputResult =
-                payInputCloudSyncManager.sync(uid)
+                _errorMessage.value = "Syncing settings..."
 
-            val now =
-                System.currentTimeMillis()
+                val settingsResult =
+                    withTimeout(10_000L) {
+                        settingsCloudSyncManager.sync(uid)
+                    }
 
-            cloudSyncPreferences.setLastSyncAt(now)
-            _lastSyncAt.value = now
+                _errorMessage.value = "Syncing financial goal..."
 
-            _syncCompleted.emit(Unit)
+                val financialGoalResult =
+                    withTimeout(10_000L) {
+                        financialGoalCloudSyncManager.sync(uid)
+                    }
+
+                _errorMessage.value = "Syncing pay inputs..."
+
+                val payInputResult =
+                    withTimeout(10_000L) {
+                        payInputCloudSyncManager.sync(uid)
+                    }
+
+                _errorMessage.value = null
+
+                val now =
+                    System.currentTimeMillis()
+
+                cloudSyncPreferences.setLastSyncAt(now)
+                _lastSyncAt.value = now
+
+                _syncCompleted.emit(Unit)
+
+                analytics.logEvent(
+                    "cloud_sync_complete"
+                ) {
+                    param(
+                        "rosters_uploaded",
+                        rosterResult.uploaded.toLong()
+                    )
+                    param(
+                        "rosters_downloaded",
+                        rosterResult.downloaded.toLong()
+                    )
+                    param(
+                        "rosters_unchanged",
+                        rosterResult.unchanged.toLong()
+                    )
+
+                    param(
+                        "settings_uploaded",
+                        if (settingsResult.uploaded) 1L else 0L
+                    )
+                    param(
+                        "settings_downloaded",
+                        if (settingsResult.downloaded) 1L else 0L
+                    )
+
+                    param(
+                        "financial_goal_uploaded",
+                        if (financialGoalResult.uploaded) 1L else 0L
+                    )
+                    param(
+                        "financial_goal_downloaded",
+                        if (financialGoalResult.downloaded) 1L else 0L
+                    )
+
+                    param(
+                        "pay_input_uploaded",
+                        if (payInputResult.uploaded) 1L else 0L
+                    )
+                    param(
+                        "pay_input_downloaded",
+                        if (payInputResult.downloaded) 1L else 0L
+                    )
+                }
+
+
+        } catch (e: TimeoutCancellationException) {
 
             analytics.logEvent(
-                "cloud_sync_complete"
-            ) {
-                param(
-                    "rosters_uploaded",
-                    rosterResult.uploaded.toLong()
-                )
-                param(
-                    "rosters_downloaded",
-                    rosterResult.downloaded.toLong()
-                )
-                param(
-                    "rosters_unchanged",
-                    rosterResult.unchanged.toLong()
-                )
-                param(
-                    "settings_uploaded",
-                    if (settingsResult.uploaded) 1L else 0L
-                )
-                param(
-                    "settings_downloaded",
-                    if (settingsResult.downloaded) 1L else 0L
-                )
-                param(
-                    "financial_goal_uploaded",
-                    if (financialGoalResult.uploaded) 1L else 0L
-                )
-                param(
-                    "financial_goal_downloaded",
-                    if (financialGoalResult.downloaded) 1L else 0L
-                )
-                param(
-                    "pay_input_uploaded",
-                    if (payInputResult.uploaded) 1L else 0L
-                )
-                param(
-                    "pay_input_downloaded",
-                    if (payInputResult.downloaded) 1L else 0L
-                )
+                "cloud_sync_timeout"
+            ) {}
+
+            if (reportError) {
+                _errorMessage.value =
+                    "${_errorMessage.value ?: "Cloud sync"} timed out"
             }
 
         } catch (e: Exception) {
@@ -352,6 +388,7 @@ class AuthViewModel(
             }
 
         } finally {
+
             _isSyncing.value = false
         }
     }
