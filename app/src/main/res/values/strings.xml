@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">FIFOKIT</string>
+    <string name="swing_status_widget_description">Current swing status and next roster change</string>
 </resources>

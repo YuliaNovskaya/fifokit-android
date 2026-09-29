@@ -61,6 +61,7 @@ dependencies {
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
+    implementation(libs.androidx.glance.appwidget)
     implementation("androidx.datastore:datastore-preferences:1.2.1")
     implementation("androidx.work:work-runtime-ktx:2.11.2")
     implementation(platform("com.google.firebase:firebase-bom:34.18.0"))
