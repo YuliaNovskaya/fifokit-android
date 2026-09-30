@@ -6,8 +6,12 @@ import com.fifokit.app.data.RosterPreferences
 import com.fifokit.app.data.RosterRepository
 import com.fifokit.app.data.local.RosterDatabase
 import com.fifokit.app.domain.model.RosterPattern
+import com.fifokit.app.domain.roster.AustralianState
+import com.fifokit.app.domain.roster.PublicHolidayProvider
+import com.fifokit.app.domain.roster.RosterCalculator
 import kotlinx.coroutines.flow.first
 import java.time.LocalDate
+import java.time.YearMonth
 import java.time.temporal.ChronoUnit
 
 data class WidgetRoster(
@@ -15,7 +19,8 @@ data class WidgetRoster(
     val name: String,
     val startDate: LocalDate,
     val workDays: Int,
-    val offDays: Int
+    val offDays: Int,
+    val selectedStates: Set<AustralianState> = setOf(AustralianState.WA)
 )
 
 data class SwingStatus(
@@ -24,6 +29,13 @@ data class SwingStatus(
     val periodLength: Int,
     val daysUntilTransition: Int,
     val nextTransitionDate: LocalDate
+)
+
+data class WidgetCalendarDay(
+    val date: LocalDate,
+    val isWorkDay: Boolean,
+    val isToday: Boolean,
+    val isPublicHoliday: Boolean
 )
 
 class RosterWidgetDataSource(
@@ -98,12 +110,26 @@ class RosterWidgetDataSource(
             return null
         }
 
+        val selectedStates =
+            rosterPreferences.selectedStates
+                .first()
+                .mapNotNull { stateName ->
+                    runCatching {
+                        AustralianState.valueOf(stateName)
+                    }.getOrNull()
+                }
+                .toSet()
+                .ifEmpty {
+                    setOf(AustralianState.WA)
+                }
+
         return WidgetRoster(
             id = roster.id,
             name = roster.name,
             startDate = startDate,
             workDays = workDays,
-            offDays = offDays
+            offDays = offDays,
+            selectedStates = selectedStates
         )
     }
 }
@@ -162,5 +188,50 @@ object SwingStatusCalculator {
                     daysUntilTransition.toLong()
                 )
         )
+    }
+}
+
+object CompactRosterCalendarCalculator {
+
+    fun monthCells(
+        month: YearMonth,
+        roster: WidgetRoster,
+        today: LocalDate
+    ): List<WidgetCalendarDay?> {
+        val cells =
+            mutableListOf<WidgetCalendarDay?>()
+
+        repeat(
+            month.atDay(1).dayOfWeek.value - 1
+        ) {
+            cells += null
+        }
+
+        for (day in 1..month.lengthOfMonth()) {
+            val date = month.atDay(day)
+
+            cells += WidgetCalendarDay(
+                date = date,
+                isWorkDay =
+                    RosterCalculator.isWorkDay(
+                        date = date,
+                        startDate = roster.startDate,
+                        workDays = roster.workDays,
+                        offDays = roster.offDays
+                    ),
+                isToday = date == today,
+                isPublicHoliday =
+                    PublicHolidayProvider.isPublicHoliday(
+                        date = date,
+                        states = roster.selectedStates
+                    )
+            )
+        }
+
+        while (cells.size % 7 != 0) {
+            cells += null
+        }
+
+        return cells
     }
 }
