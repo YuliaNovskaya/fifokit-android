@@ -27,6 +27,7 @@ import kotlinx.coroutines.flow.collectLatest
 import com.fifokit.app.domain.pro.ProAccess
 import com.fifokit.app.domain.pro.ProFeature
 import com.fifokit.app.notifications.SharedTimeReminderScheduler
+import com.fifokit.app.widgets.RosterWidgetUpdater
 
 @Composable
 fun RosterSetupRoute(
@@ -117,6 +118,10 @@ class RosterSetupViewModel(
         viewModelScope.launch {
             rosterPreferences.saveSelectedStates(
                 selectedStates.map { it.name }.toSet()
+            )
+
+            RosterWidgetUpdater.updateAll(
+                getApplication()
             )
         }
     }
@@ -238,6 +243,10 @@ class RosterSetupViewModel(
                 startDate = LocalDate.now()
                 hasSavedRoster = false
             }
+
+            RosterWidgetUpdater.updateAll(
+                getApplication()
+            )
 
             analytics.logEvent(
                 "roster_deleted",
@@ -381,6 +390,10 @@ class RosterSetupViewModel(
             isCreatingNewRoster = false
 
             RosterReminderScheduler.schedule(getApplication())
+
+            RosterWidgetUpdater.updateAll(
+                getApplication()
+            )
 
             hasSavedRoster = true
 
@@ -545,6 +558,11 @@ class RosterSetupViewModel(
             ) {
                 RosterReminderScheduler.schedule(getApplication())
             }
+
+            RosterWidgetUpdater.updateAll(
+                getApplication()
+            )
+
             isCreatingNewRoster = false
         }
     }
@@ -689,6 +707,10 @@ class RosterSetupViewModel(
                 startDate = LocalDate.now()
                 hasSavedRoster = false
             }
+
+            RosterWidgetUpdater.updateAll(
+                getApplication()
+            )
         }
     }
 

@@ -22,11 +22,15 @@ import android.app.Activity
 import com.android.billingclient.api.BillingFlowParams
 import com.fifokit.app.domain.pro.ProPlan
 import com.fifokit.app.domain.pro.ProPurchaseState
+import com.fifokit.app.widgets.RosterWidgetUpdater
 
 
 class BillingRepository(
     context: Context
 ) : PurchasesUpdatedListener {
+
+    private val applicationContext =
+        context.applicationContext
 
     private val _proProductDetails = MutableStateFlow<ProductDetails?>(null)
 
@@ -34,7 +38,7 @@ class BillingRepository(
         _proProductDetails.asStateFlow()
 
     private val billingClient: BillingClient =
-        BillingClient.newBuilder(context.applicationContext)
+        BillingClient.newBuilder(applicationContext)
             .setListener(this)
             .enablePendingPurchases(
                 PendingPurchasesParams.newBuilder()
@@ -296,7 +300,7 @@ class BillingRepository(
         }
     }
     private val entitlementStore =
-        ProEntitlementStore(context.applicationContext)
+        ProEntitlementStore(applicationContext)
 
     init {
         ProEntitlementManager.updateEntitlement(
@@ -308,6 +312,10 @@ class BillingRepository(
     ) {
         entitlementStore.save(entitlement)
         ProEntitlementManager.updateEntitlement(entitlement)
+
+        RosterWidgetUpdater.updateAllAsync(
+            applicationContext
+        )
     }
     private val _purchaseState =
         MutableStateFlow(ProPurchaseState.IDLE)
