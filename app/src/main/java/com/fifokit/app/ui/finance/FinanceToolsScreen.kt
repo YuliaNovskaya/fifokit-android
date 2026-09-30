@@ -21,6 +21,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import com.google.firebase.analytics.FirebaseAnalytics
 import com.fifokit.app.domain.model.RosterPattern
+import com.fifokit.app.analytics.AnalyticsEvents
+import com.fifokit.app.analytics.AnalyticsParams
 import java.time.LocalDate
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -47,7 +49,7 @@ fun FinanceToolsScreen(
 
     LaunchedEffect(Unit) {
         analytics.logEvent(
-            "finance_tools_viewed",
+            AnalyticsEvents.FINANCE_TOOLS_VIEWED,
             null
         )
     }
@@ -104,9 +106,9 @@ fun FinanceToolsScreen(
                 modifier = Modifier.fillMaxWidth(),
                 onClick = {
                     analytics.logEvent(
-                        "finance_tool_selected",
+                        AnalyticsEvents.FINANCE_TOOL_SELECTED,
                         Bundle().apply {
-                            putString("tool", "pay_calculator")
+                            putString(AnalyticsParams.TOOL, "pay_calculator")
                         }
                     )
                     onPayCalculator()
@@ -131,9 +133,9 @@ fun FinanceToolsScreen(
                 modifier = Modifier.fillMaxWidth(),
                 onClick = {
                     analytics.logEvent(
-                        "finance_tool_selected",
+                        AnalyticsEvents.FINANCE_TOOL_SELECTED,
                         Bundle().apply {
-                            putString("tool", "annual_earnings")
+                            putString(AnalyticsParams.TOOL, "annual_earnings")
                         }
                     )
                     onAnnualEarnings()
@@ -158,9 +160,9 @@ fun FinanceToolsScreen(
                 modifier = Modifier.fillMaxWidth(),
                 onClick = {
                     analytics.logEvent(
-                        "finance_tool_selected",
+                        AnalyticsEvents.FINANCE_TOOL_SELECTED,
                         Bundle().apply {
-                            putString("tool", "financial_goal")
+                            putString(AnalyticsParams.TOOL, "financial_goal")
                         }
                     )
                     onFinancialGoal()

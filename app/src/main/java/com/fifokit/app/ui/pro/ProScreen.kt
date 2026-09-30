@@ -31,6 +31,8 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import com.fifokit.app.domain.pro.ProPurchaseState
+import com.fifokit.app.analytics.AnalyticsEvents
+import com.fifokit.app.analytics.AnalyticsParams
 import kotlinx.coroutines.delay
 import android.content.Intent
 import android.net.Uri
@@ -49,7 +51,7 @@ fun ProScreen(
     val analytics = FirebaseAnalytics.getInstance(context)
 
     LaunchedEffect(Unit) {
-        analytics.logEvent("pro_paywall_viewed") {}
+        analytics.logEvent(AnalyticsEvents.PRO_PAYWALL_VIEWED) {}
     }
 
     val plans by viewModel.proPlans.collectAsState()
@@ -62,25 +64,25 @@ fun ProScreen(
         when (purchaseState) {
 
             ProPurchaseState.PURCHASED -> {
-                analytics.logEvent("pro_purchase_success") {}
+                analytics.logEvent(AnalyticsEvents.PRO_PURCHASE_SUCCESS) {}
                 delay(2500)
                 viewModel.resetPurchaseState()
             }
 
             ProPurchaseState.CANCELLED -> {
-                analytics.logEvent("pro_purchase_cancelled") {}
+                analytics.logEvent(AnalyticsEvents.PRO_PURCHASE_CANCELLED) {}
                 delay(2500)
                 viewModel.resetPurchaseState()
             }
 
             ProPurchaseState.ERROR -> {
-                analytics.logEvent("pro_purchase_error") {}
+                analytics.logEvent(AnalyticsEvents.PRO_PURCHASE_ERROR) {}
                 delay(2500)
                 viewModel.resetPurchaseState()
             }
 
             ProPurchaseState.PENDING -> {
-                analytics.logEvent("pro_purchase_pending") {}
+                analytics.logEvent(AnalyticsEvents.PRO_PURCHASE_PENDING) {}
             }
 
             ProPurchaseState.IDLE -> Unit
@@ -195,8 +197,8 @@ fun ProScreen(
                     onClick = {
                         activity?.let {
 
-                            analytics.logEvent("pro_purchase_started") {
-                                param("plan", "monthly")
+                            analytics.logEvent(AnalyticsEvents.PRO_PURCHASE_STARTED) {
+                                param(AnalyticsParams.PLAN, "monthly")
                             }
 
                             viewModel.purchase(
@@ -219,8 +221,8 @@ fun ProScreen(
                     onClick = {
                         activity?.let {
 
-                            analytics.logEvent("pro_purchase_started") {
-                                param("plan", "annual")
+                            analytics.logEvent(AnalyticsEvents.PRO_PURCHASE_STARTED) {
+                                param(AnalyticsParams.PLAN, "annual")
                             }
 
                             viewModel.purchase(
@@ -237,7 +239,7 @@ fun ProScreen(
                 OutlinedButton(
                     modifier = Modifier.fillMaxWidth(),
                     onClick = {
-                        analytics.logEvent("pro_restore_tapped") {}
+                        analytics.logEvent(AnalyticsEvents.PRO_RESTORE_TAPPED) {}
                         viewModel.restorePurchases()
                     }
                 ) {

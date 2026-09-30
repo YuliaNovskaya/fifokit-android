@@ -23,6 +23,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.fifokit.app.domain.finance.FinancialGoal
+import com.fifokit.app.analytics.AnalyticsEvents
+import com.fifokit.app.analytics.AnalyticsParams
 import com.fifokit.app.domain.finance.FinancialGoalResult
 import com.fifokit.app.domain.finance.FinanceCalculator
 import java.time.LocalDate
@@ -240,10 +242,14 @@ fun FinancialGoalScreen(
                             FinanceCalculator.calculateFinancialGoal(goal)
 
                         analytics.logEvent(
-                            "financial_goal_calculated",
+                            AnalyticsEvents.FINANCIAL_GOAL_CALCULATED,
                             Bundle().apply {
+                                putString(
+                                    AnalyticsParams.TOOL,
+                                    "financial_goal"
+                                )
                                 putLong(
-                                    "pay_frequency_days",
+                                    AnalyticsParams.PAY_FREQUENCY_DAYS,
                                     frequencyValue!!.toLong()
                                 )
                             }

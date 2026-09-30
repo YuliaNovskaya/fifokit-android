@@ -37,6 +37,8 @@ import com.fifokit.app.data.FinancePreferences
 import android.os.Bundle
 import com.google.firebase.analytics.FirebaseAnalytics
 import com.fifokit.app.domain.finance.FinanceFormatter
+import com.fifokit.app.analytics.AnalyticsEvents
+import com.fifokit.app.analytics.AnalyticsParams
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -304,14 +306,18 @@ fun AnnualEarningsScreen(
                                 )
                             }
                         analytics.logEvent(
-                            "annual_earnings_calculated",
+                            AnalyticsEvents.ANNUAL_EARNINGS_CALCULATED,
                             Bundle().apply {
                                 putString(
-                                    "pay_type",
+                                    AnalyticsParams.TOOL,
+                                    "annual_earnings"
+                                )
+                                putString(
+                                    AnalyticsParams.PAY_TYPE,
                                     rateType.name.lowercase()
                                 )
                                 putString(
-                                    "roster_type",
+                                    AnalyticsParams.ROSTER_TYPE,
                                     if (isCustomRoster) {
                                         "custom"
                                     } else {

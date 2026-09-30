@@ -39,6 +39,8 @@ import kotlinx.coroutines.launch
 import android.os.Bundle
 import com.google.firebase.analytics.FirebaseAnalytics
 import com.fifokit.app.domain.finance.FinanceFormatter
+import com.fifokit.app.analytics.AnalyticsEvents
+import com.fifokit.app.analytics.AnalyticsParams
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -307,15 +309,19 @@ fun PayCalculatorScreen(
                                 )
                             }
                         analytics.logEvent(
-                            "pay_calculation_completed",
+                            AnalyticsEvents.PAY_CALCULATION_COMPLETED,
                             Bundle().apply {
                                 putString(
-                                    "pay_type",
+                                    AnalyticsParams.TOOL,
+                                    "pay_calculator"
+                                )
+                                putString(
+                                    AnalyticsParams.PAY_TYPE,
                                     rateType.name.lowercase()
                                 )
 
                                 putString(
-                                    "roster_type",
+                                    AnalyticsParams.ROSTER_TYPE,
                                     if (isCustomRoster) {
                                         "custom"
                                     } else {
