@@ -1,7 +1,5 @@
 package com.fifokit.app.widgets
 
-import android.appwidget.AppWidgetManager
-import android.content.ComponentName
 import android.content.Context
 import android.util.Log
 import androidx.glance.appwidget.GlanceAppWidget
@@ -27,55 +25,39 @@ object RosterWidgetUpdater {
         val appContext =
             context.applicationContext
 
-        updateProvider(
+        updateWidget(
             context = appContext,
-            receiverClass =
-                SwingStatusWidgetReceiver::class.java,
             widget = SwingStatusWidget()
         )
 
-        updateProvider(
+        updateWidget(
             context = appContext,
-            receiverClass =
-                CompactRosterCalendarWidgetReceiver::class.java,
             widget = CompactRosterCalendarWidget()
         )
     }
 
-    private suspend fun updateProvider(
+    private suspend fun updateWidget(
         context: Context,
-        receiverClass: Class<*>,
         widget: GlanceAppWidget
     ) {
-        val appWidgetManager =
-            AppWidgetManager.getInstance(context)
-
-        val glanceManager =
+        val manager =
             GlanceAppWidgetManager(context)
 
-        val appWidgetIds =
-            appWidgetManager.getAppWidgetIds(
-                ComponentName(
-                    context,
-                    receiverClass
-                )
+        val glanceIds =
+            manager.getGlanceIds(
+                widget.javaClass
             )
 
         Log.d(
             TAG,
             "Refreshing " +
-                    receiverClass.simpleName +
+                    widget.javaClass.simpleName +
                     " count=" +
-                    appWidgetIds.size
+                    glanceIds.size
         )
 
-        appWidgetIds.forEach { appWidgetId ->
+        glanceIds.forEach { glanceId ->
             runCatching {
-                val glanceId =
-                    glanceManager.getGlanceIdBy(
-                        appWidgetId
-                    )
-
                 widget.update(
                     context,
                     glanceId
@@ -84,9 +66,7 @@ object RosterWidgetUpdater {
                 Log.e(
                     TAG,
                     "Widget refresh failed for " +
-                            receiverClass.simpleName +
-                            " id=" +
-                            appWidgetId,
+                            widget.javaClass.simpleName,
                     error
                 )
             }
