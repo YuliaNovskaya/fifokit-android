@@ -71,13 +71,9 @@ fun FIFOKITApp(
         screenOverride ?: (rosterSetupViewModel.hasSavedRoster == true)
 
     var showSettings by remember { mutableStateOf(false) }
-    var showFinance by
-        remember(appLinkDestination) {
-            mutableStateOf(
-                appLinkDestination ==
-                        AppLinkDestination.FINANCE
-            )
-        }
+    var showFinance by remember {
+        mutableStateOf(false)
+    }
     var showPayCalculator by remember { mutableStateOf(false) }
     var showAnnualEarnings by remember { mutableStateOf(false) }
     var showFinancialGoal by remember { mutableStateOf(false) }
@@ -97,18 +93,77 @@ fun FIFOKITApp(
         )
     }
 
-    var showAcceptInvite by
-        remember(
-            inviteId,
-            appLinkDestination
-        ) {
-            mutableStateOf(
-                inviteId != null &&
-                        appLinkDestination ==
-                        AppLinkDestination.INVITE
-            )
+    var showAcceptInvite by remember {
+        mutableStateOf(false)
+    }
+
+    var showTogetherRoster by remember {
+        mutableStateOf(false)
+    }
+
+    LaunchedEffect(
+        appLinkDestination,
+        inviteId
+    ) {
+        when (appLinkDestination) {
+
+            AppLinkDestination.ROSTER -> {
+                showTogetherRoster = false
+                selectedSharedRoster = null
+                showSharedRosters = false
+                showAcceptInvite = false
+                showShareRoster = false
+                showRosterExport = false
+                showPro = false
+                showAccount = false
+                showFinancialGoal = false
+                showAnnualEarnings = false
+                showPayCalculator = false
+                showFinance = false
+                showSettings = false
+                screenOverride = null
+            }
+
+            AppLinkDestination.FINANCE -> {
+                showTogetherRoster = false
+                selectedSharedRoster = null
+                showSharedRosters = false
+                showAcceptInvite = false
+                showShareRoster = false
+                showRosterExport = false
+                showPro = false
+                showAccount = false
+                showFinancialGoal = false
+                showAnnualEarnings = false
+                showPayCalculator = false
+                showSettings = false
+                showFinance = true
+            }
+
+            AppLinkDestination.INVITE -> {
+                showTogetherRoster = false
+                selectedSharedRoster = null
+                showSharedRosters = false
+                showShareRoster = false
+                showRosterExport = false
+                showPro = false
+                showAccount = false
+                showFinancialGoal = false
+                showAnnualEarnings = false
+                showPayCalculator = false
+                showFinance = false
+                showSettings = false
+                showAcceptInvite =
+                    inviteId != null
+            }
+
+            null -> {
+                if (inviteId != null) {
+                    showAcceptInvite = true
+                }
+            }
         }
-    var showTogetherRoster by remember { mutableStateOf(false) }
+    }
 
     BackHandler(
         enabled =
