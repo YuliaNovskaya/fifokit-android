@@ -28,6 +28,7 @@ import com.fifokit.app.domain.pro.ProAccess
 import com.fifokit.app.domain.pro.ProFeature
 import com.fifokit.app.notifications.SharedTimeReminderScheduler
 import com.fifokit.app.widgets.RosterWidgetUpdater
+import com.fifokit.app.export.RosterExportData
 
 @Composable
 fun RosterSetupRoute(
@@ -712,6 +713,30 @@ class RosterSetupViewModel(
                 getApplication()
             )
         }
+    }
+
+    fun rosterExportData(): RosterExportData {
+        val workDays =
+            if (isCustomRoster) {
+                customWorkDays
+            } else {
+                selectedPattern.workDays
+            }
+
+        val offDays =
+            if (isCustomRoster) {
+                customOffDays
+            } else {
+                selectedPattern.offDays
+            }
+
+        return RosterExportData(
+            rosterName = rosterName,
+            startDate = startDate,
+            workDays = workDays,
+            offDays = offDays,
+            selectedStates = selectedStates
+        )
     }
 
     fun updateSharedTimeRemindersEnabled(

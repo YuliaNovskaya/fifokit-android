@@ -24,6 +24,8 @@ import com.fifokit.app.ui.finance.AnnualEarningsScreen
 import com.fifokit.app.ui.finance.FinanceToolsScreen
 import com.fifokit.app.ui.finance.FinancialGoalScreen
 import com.fifokit.app.ui.finance.PayCalculatorScreen
+import com.fifokit.app.ui.export.RosterExportScreen
+import java.time.YearMonth
 import com.fifokit.app.ui.pro.ProScreen
 import com.fifokit.app.ui.roster.RosterCalendarScreen
 import com.fifokit.app.ui.roster.RosterSetupRoute
@@ -75,6 +77,17 @@ fun FIFOKITApp(
     }
     var showAccount by remember { mutableStateOf(false) }
     var showShareRoster by remember { mutableStateOf(false) }
+
+    var showRosterExport by remember {
+        mutableStateOf(false)
+    }
+
+    var exportStartMonth by remember {
+        mutableStateOf(
+            YearMonth.now()
+        )
+    }
+
     var showAcceptInvite by remember(inviteId) {
         mutableStateOf(inviteId != null)
     }
@@ -87,6 +100,7 @@ fun FIFOKITApp(
             showSharedRosters ||
             showAcceptInvite ||
             showShareRoster ||
+            showRosterExport ||
             showPro ||
             showAccount ||
             showFinancialGoal ||
@@ -107,6 +121,9 @@ fun FIFOKITApp(
 
             showShareRoster ->
                 showShareRoster = false
+
+            showRosterExport ->
+                showRosterExport = false
 
             showSharedRosters -> {
                 showSharedRosters = false
@@ -209,6 +226,31 @@ fun FIFOKITApp(
                         screenOverride = true
                     }
                 )
+            } else if (showRosterExport) {
+                RosterExportScreen(
+                    data =
+                        rosterSetupViewModel
+                            .rosterExportData(),
+                    startMonth =
+                        exportStartMonth,
+                    onBack = {
+                        showRosterExport = false
+                    },
+                    onProRequested = { feature ->
+                        analytics.logEvent(
+                            "pro_feature_locked"
+                        ) {
+                            param(
+                                "feature",
+                                feature
+                            )
+                        }
+
+                        showRosterExport = false
+                        showPro = true
+                    }
+                )
+
             } else if (
                 showShareRoster &&
                 rosterSetupViewModel.activeRosterId != null
@@ -328,6 +370,10 @@ fun FIFOKITApp(
                     },
                     onShareRoster = {
                         showShareRoster = true
+                    },
+                    onExportRoster = { month ->
+                        exportStartMonth = month
+                        showRosterExport = true
                     },
                     onSettings = {
                         showSettings = true

@@ -71,6 +71,7 @@ fun RosterCalendarScreen(
     onSettings: () -> Unit,
     onFinance: () -> Unit,
     onShareRoster: () -> Unit,
+    onExportRoster: (YearMonth) -> Unit,
     onProRequested: (String) -> Unit,
     onSharedRosters: () -> Unit,
 ) {
@@ -118,6 +119,14 @@ fun RosterCalendarScreen(
                     ) {
                         Text("Tools")
                     }
+                    TextButton(
+                        onClick = {
+                            onExportRoster(month)
+                        }
+                    ) {
+                        Text("Export")
+                    }
+
                     TextButton(
                         onClick = onShareRoster
                     ) {
