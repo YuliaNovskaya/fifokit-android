@@ -15,6 +15,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.fifokit.app.deeplink.AppLinkDestination
 import com.fifokit.app.domain.pro.ProAccess
 import com.fifokit.app.domain.pro.ProFeature
 import com.fifokit.app.domain.sharing.SharedRoster
@@ -42,7 +43,9 @@ import com.google.firebase.analytics.logEvent
 @Composable
 fun FIFOKITApp(
     inviteId: String? = null,
-    initialShowPro: Boolean = false
+    initialShowPro: Boolean = false,
+    appLinkDestination:
+        AppLinkDestination? = null
 ) {
     val context = LocalContext.current
     val analytics = FirebaseAnalytics.getInstance(context)
@@ -68,7 +71,13 @@ fun FIFOKITApp(
         screenOverride ?: (rosterSetupViewModel.hasSavedRoster == true)
 
     var showSettings by remember { mutableStateOf(false) }
-    var showFinance by remember { mutableStateOf(false) }
+    var showFinance by
+        remember(appLinkDestination) {
+            mutableStateOf(
+                appLinkDestination ==
+                        AppLinkDestination.FINANCE
+            )
+        }
     var showPayCalculator by remember { mutableStateOf(false) }
     var showAnnualEarnings by remember { mutableStateOf(false) }
     var showFinancialGoal by remember { mutableStateOf(false) }
@@ -88,9 +97,17 @@ fun FIFOKITApp(
         )
     }
 
-    var showAcceptInvite by remember(inviteId) {
-        mutableStateOf(inviteId != null)
-    }
+    var showAcceptInvite by
+        remember(
+            inviteId,
+            appLinkDestination
+        ) {
+            mutableStateOf(
+                inviteId != null &&
+                        appLinkDestination ==
+                        AppLinkDestination.INVITE
+            )
+        }
     var showTogetherRoster by remember { mutableStateOf(false) }
 
     BackHandler(
