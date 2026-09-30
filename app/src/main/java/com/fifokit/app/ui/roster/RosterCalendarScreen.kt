@@ -79,6 +79,7 @@ fun RosterCalendarScreen(
     onShareRoster: () -> Unit,
     onExportRoster: (YearMonth) -> Unit,
     initialYearView: Boolean = false,
+    onInitialYearViewConsumed: () -> Unit = {},
     onProRequested: (String) -> Unit,
     onSharedRosters: () -> Unit,
 ) {
@@ -106,14 +107,19 @@ fun RosterCalendarScreen(
         mutableStateOf(YearMonth.now())
     }
 
-    var calendarViewMode by remember(initialYearView) {
+    var calendarViewMode by remember {
         mutableStateOf(
-            if (initialYearView) {
-                CalendarViewMode.YEAR
-            } else {
-                CalendarViewMode.MONTH
-            }
+            CalendarViewMode.MONTH
         )
+    }
+
+    LaunchedEffect(initialYearView) {
+        if (initialYearView) {
+            calendarViewMode =
+                CalendarViewMode.YEAR
+
+            onInitialYearViewConsumed()
+        }
     }
 
     val growthTracker =

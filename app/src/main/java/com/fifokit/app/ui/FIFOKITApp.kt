@@ -170,18 +170,6 @@ fun FIFOKITApp(
         }
     }
 
-    LaunchedEffect(
-        requestYearView,
-        showCalendar
-    ) {
-        if (
-            requestYearView &&
-            showCalendar
-        ) {
-            requestYearView = false
-        }
-    }
-
     BackHandler(
         enabled =
             showTogetherRoster ||
@@ -432,14 +420,6 @@ fun FIFOKITApp(
                         showAccount = true
                     },
                     onYearViewDiscovery = {
-                        analytics.logEvent(
-                            "feature_discovery_opened"
-                        ) {
-                            param(
-                                "feature",
-                                "year_view"
-                            )
-                        }
                         requestYearView = true
                         showSettings = false
                     },
@@ -486,6 +466,9 @@ fun FIFOKITApp(
                     },
                     initialYearView =
                         requestYearView,
+                    onInitialYearViewConsumed = {
+                        requestYearView = false
+                    },
                     onSettings = {
                         showSettings = true
                     },
