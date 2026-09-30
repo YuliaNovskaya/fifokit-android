@@ -29,6 +29,8 @@ import androidx.compose.ui.platform.LocalContext
 import com.google.firebase.analytics.FirebaseAnalytics
 import com.google.firebase.analytics.logEvent
 import com.fifokit.app.growth.GrowthEngagementTracker
+import com.fifokit.app.analytics.AnalyticsEvents
+import com.fifokit.app.analytics.AnalyticsParams
 
 @Composable
 fun RosterInviteScreen(
@@ -45,9 +47,10 @@ fun RosterInviteScreen(
 
     LaunchedEffect(state.inviteId) {
         if (state.inviteId != null) {
-            analytics.logEvent("roster_invite_created") {
-                param("roster_id", rosterId)
-            }
+            analytics.logEvent(
+                AnalyticsEvents.ROSTER_INVITE_CREATED,
+                null
+            )
         }
     }
 
@@ -143,9 +146,13 @@ fun RosterInviteScreen(
                         growthTracker.recordMeaningfulAction()
 
                         analytics.logEvent(
-                            "roster_invite_shared",
-                            null
-                        )
+                            AnalyticsEvents.ROSTER_INVITE_SHARED
+                        ) {
+                            param(
+                                AnalyticsParams.SURFACE,
+                                "invite_screen"
+                            )
+                        }
                     }
                 ) {
                     Text("Share invite")
@@ -204,9 +211,10 @@ fun RosterInviteScreen(
 
                     OutlinedButton(
                         onClick = {
-                            analytics.logEvent("roster_share_revoked") {
-                                param("roster_id", rosterId)
-                            }
+                            analytics.logEvent(
+                                AnalyticsEvents.ROSTER_SHARE_REVOKED,
+                                null
+                            )
                             accessViewModel.revokeAccess(
                                 rosterId = rosterId,
                                 userId = access.userId

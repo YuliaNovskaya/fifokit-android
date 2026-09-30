@@ -24,6 +24,7 @@ import com.fifokit.app.domain.sharing.SharedRoster
 import androidx.compose.ui.platform.LocalContext
 import com.google.firebase.analytics.FirebaseAnalytics
 import com.google.firebase.analytics.logEvent
+import com.fifokit.app.analytics.AnalyticsEvents
 import com.fifokit.app.domain.model.RosterPattern
 
 @Composable
@@ -38,7 +39,7 @@ fun SharedRostersScreen(
     val analytics = FirebaseAnalytics.getInstance(context)
 
     LaunchedEffect(Unit) {
-        analytics.logEvent("shared_rosters_viewed") {}
+        analytics.logEvent(AnalyticsEvents.SHARED_ROSTERS_VIEWED) {}
         viewModel.loadSharedRosters()
     }
 

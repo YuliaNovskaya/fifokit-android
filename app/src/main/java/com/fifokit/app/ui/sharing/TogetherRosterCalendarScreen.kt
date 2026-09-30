@@ -45,6 +45,7 @@ import androidx.compose.ui.platform.LocalContext
 import com.fifokit.app.domain.roster.PublicHolidayProvider
 import com.google.firebase.analytics.FirebaseAnalytics
 import com.google.firebase.analytics.logEvent
+import com.fifokit.app.analytics.AnalyticsEvents
 import com.fifokit.app.domain.sharing.FamilyPlanningCalculator
 import androidx.compose.foundation.clickable
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -71,17 +72,15 @@ fun TogetherRosterCalendarScreen(
     val partnerRoster = sharedRoster.roster
 
     LaunchedEffect(partnerRoster.id) {
-        analytics.logEvent("together_calendar_viewed") {
-            param("partner_roster_id", partnerRoster.id)
-        }
         analytics.logEvent(
-            "family_planning_summary_viewed"
-        ) {
-            param(
-                "partner_roster_id",
-                partnerRoster.id
-            )
-        }
+            AnalyticsEvents.TOGETHER_CALENDAR_VIEWED,
+            null
+        )
+
+        analytics.logEvent(
+            AnalyticsEvents.FAMILY_PLANNING_SUMMARY_VIEWED,
+            null
+        )
     }
 
 
@@ -301,13 +300,9 @@ fun TogetherRosterCalendarScreen(
                                 )
 
                             analytics.logEvent(
-                                "shared_time_card_clicked"
-                            ) {
-                                param(
-                                    "partner_roster_id",
-                                    partnerRoster.id
-                                )
-                            }
+                                AnalyticsEvents.SHARED_TIME_CARD_CLICKED,
+                                null
+                            )
                         },
                     shape = MaterialTheme.shapes.medium,
                     color =

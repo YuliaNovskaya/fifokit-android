@@ -22,6 +22,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.platform.LocalContext
 import com.google.firebase.analytics.FirebaseAnalytics
 import com.google.firebase.analytics.logEvent
+import com.fifokit.app.analytics.AnalyticsEvents
 
 @Composable
 fun RosterInviteAcceptScreen(
@@ -36,9 +37,10 @@ fun RosterInviteAcceptScreen(
 
     LaunchedEffect(state.accepted) {
         if (state.accepted) {
-            analytics.logEvent("roster_invite_accepted") {
-                param("invite_id", inviteId)
-            }
+            analytics.logEvent(
+                AnalyticsEvents.ROSTER_INVITE_ACCEPTED,
+                null
+            )
         }
     }
 
