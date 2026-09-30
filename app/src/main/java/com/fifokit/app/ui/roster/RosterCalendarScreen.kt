@@ -51,6 +51,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import com.google.firebase.analytics.FirebaseAnalytics
+import com.google.firebase.analytics.logEvent
 import com.fifokit.app.domain.roster.PublicHolidayProvider
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Box
