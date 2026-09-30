@@ -3,6 +3,7 @@ package com.fifokit.app
 import android.app.Application
 import com.fifokit.app.data.billing.BillingRepository
 import com.fifokit.app.widgets.RosterWidgetObserver
+import com.fifokit.app.growth.InstallAttributionTracker
 
 class FifokitApplication : Application() {
 
@@ -22,6 +23,11 @@ class FifokitApplication : Application() {
                 .also { it.start() }
 
         billingRepository.startConnection()
+
+        InstallAttributionTracker(
+            this
+        ).captureOnce()
+
         AppCheckInstaller.install()
     }
 }
