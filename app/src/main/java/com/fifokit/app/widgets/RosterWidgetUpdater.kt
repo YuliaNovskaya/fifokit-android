@@ -1,9 +1,10 @@
 package com.fifokit.app.widgets
 
+import android.appwidget.AppWidgetManager
+import android.content.ComponentName
 import android.content.Context
+import android.content.Intent
 import android.util.Log
-import androidx.glance.appwidget.GlanceAppWidget
-import androidx.glance.appwidget.GlanceAppWidgetManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -25,52 +26,56 @@ object RosterWidgetUpdater {
         val appContext =
             context.applicationContext
 
-        updateWidget(
+        requestProviderUpdate(
             context = appContext,
-            widget = SwingStatusWidget()
+            receiverClass =
+                SwingStatusWidgetReceiver::class.java
         )
 
-        updateWidget(
+        requestProviderUpdate(
             context = appContext,
-            widget = CompactRosterCalendarWidget()
+            receiverClass =
+                CompactRosterCalendarWidgetReceiver::class.java
         )
     }
 
-    private suspend fun updateWidget(
+    private fun requestProviderUpdate(
         context: Context,
-        widget: GlanceAppWidget
+        receiverClass: Class<*>
     ) {
-        val manager =
-            GlanceAppWidgetManager(context)
-
-        val glanceIds =
-            manager.getGlanceIds(
-                widget.javaClass
+        val component =
+            ComponentName(
+                context,
+                receiverClass
             )
+
+        val appWidgetIds =
+            AppWidgetManager
+                .getInstance(context)
+                .getAppWidgetIds(component)
 
         Log.d(
             TAG,
-            "Refreshing " +
-                    widget.javaClass.simpleName +
+            "Requesting update " +
+                    receiverClass.simpleName +
                     " count=" +
-                    glanceIds.size
+                    appWidgetIds.size
         )
 
-        glanceIds.forEach { glanceId ->
-            runCatching {
-                widget.update(
-                    context,
-                    glanceId
-                )
-            }.onFailure { error ->
-                Log.e(
-                    TAG,
-                    "Widget refresh failed for " +
-                            widget.javaClass.simpleName,
-                    error
-                )
-            }
+        if (appWidgetIds.isEmpty()) {
+            return
         }
+
+        context.sendBroadcast(
+            Intent(
+                AppWidgetManager.ACTION_APPWIDGET_UPDATE
+            )
+                .setComponent(component)
+                .putExtra(
+                    AppWidgetManager.EXTRA_APPWIDGET_IDS,
+                    appWidgetIds
+                )
+        )
     }
 
     fun updateAllAsync(

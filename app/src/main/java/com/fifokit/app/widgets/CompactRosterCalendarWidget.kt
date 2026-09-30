@@ -2,6 +2,7 @@ package com.fifokit.app.widgets
 
 import android.content.Context
 import android.content.Intent
+import android.util.Log
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
@@ -25,7 +26,7 @@ import androidx.glance.text.TextAlign
 import androidx.glance.text.TextStyle
 import androidx.glance.unit.ColorProvider
 import com.fifokit.app.MainActivity
-import com.fifokit.app.domain.pro.ProEntitlementManager
+import com.fifokit.app.data.billing.ProEntitlementStore
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.time.LocalDate
@@ -47,10 +48,22 @@ class CompactRosterCalendarWidget :
             }
 
         val isPro =
-            ProEntitlementManager.isPro
+            ProEntitlementStore(context)
+                .load()
+                .isPro
 
         val today = LocalDate.now()
         val month = YearMonth.from(today)
+
+        Log.d(
+            "FIFOKITWidget",
+            "Render Calendar isPro=" +
+                    isPro +
+                    " roster=" +
+                    (roster?.name ?: "none") +
+                    " id=" +
+                    (roster?.id ?: -1L)
+        )
 
         provideContent {
             CompactRosterCalendarContent(

@@ -1,6 +1,7 @@
 package com.fifokit.app.data.billing
 
 import android.content.Context
+import android.util.Log
 import com.android.billingclient.api.BillingClient
 import com.android.billingclient.api.BillingClientStateListener
 import com.android.billingclient.api.BillingResult
@@ -311,6 +312,12 @@ class BillingRepository(
     ) {
         entitlementStore.save(entitlement)
         ProEntitlementManager.updateEntitlement(entitlement)
+
+        Log.d(
+            "FIFOKITWidget",
+            "Entitlement persisted isPro=" +
+                    entitlement.isPro
+        )
     }
     private val _purchaseState =
         MutableStateFlow(ProPurchaseState.IDLE)

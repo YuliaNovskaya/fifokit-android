@@ -2,6 +2,7 @@ package com.fifokit.app.widgets
 
 import android.content.Context
 import android.content.Intent
+import android.util.Log
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
@@ -41,6 +42,14 @@ class SwingStatusWidget : GlanceAppWidget() {
             }
 
         val today = LocalDate.now()
+
+        Log.d(
+            "FIFOKITWidget",
+            "Render Swing roster=" +
+                    (roster?.name ?: "none") +
+                    " id=" +
+                    (roster?.id ?: -1L)
+        )
 
         provideContent {
             SwingStatusContent(

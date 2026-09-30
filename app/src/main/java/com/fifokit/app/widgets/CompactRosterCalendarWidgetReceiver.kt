@@ -1,6 +1,8 @@
 package com.fifokit.app.widgets
 
+import android.appwidget.AppWidgetManager
 import android.content.Context
+import android.util.Log
 import androidx.glance.appwidget.GlanceAppWidget
 import androidx.glance.appwidget.GlanceAppWidgetReceiver
 import com.fifokit.app.MainActivity
@@ -12,6 +14,24 @@ class CompactRosterCalendarWidgetReceiver :
 
     override val glanceAppWidget: GlanceAppWidget =
         CompactRosterCalendarWidget()
+
+    override fun onUpdate(
+        context: Context,
+        appWidgetManager: AppWidgetManager,
+        appWidgetIds: IntArray
+    ) {
+        Log.d(
+            "FIFOKITWidget",
+            "Calendar receiver onUpdate ids=" +
+                    appWidgetIds.joinToString()
+        )
+
+        super.onUpdate(
+            context,
+            appWidgetManager,
+            appWidgetIds
+        )
+    }
 
     override fun onEnabled(context: Context) {
         super.onEnabled(context)
