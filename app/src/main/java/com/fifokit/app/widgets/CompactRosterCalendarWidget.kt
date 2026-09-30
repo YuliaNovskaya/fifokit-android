@@ -26,7 +26,7 @@ import androidx.glance.text.TextAlign
 import androidx.glance.text.TextStyle
 import androidx.glance.unit.ColorProvider
 import com.fifokit.app.MainActivity
-import com.fifokit.app.data.billing.ProEntitlementStore
+import com.fifokit.app.domain.pro.ProEntitlementManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.time.LocalDate
@@ -48,9 +48,7 @@ class CompactRosterCalendarWidget :
             }
 
         val isPro =
-            ProEntitlementStore(context)
-                .load()
-                .isPro
+            ProEntitlementManager.isPro
 
         val today = LocalDate.now()
         val month = YearMonth.from(today)

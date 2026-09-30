@@ -1,91 +1,82 @@
 package com.fifokit.app.widgets
 
-import android.appwidget.AppWidgetManager
-import android.content.ComponentName
 import android.content.Context
-import android.content.Intent
 import android.util.Log
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.launch
+import androidx.glance.appwidget.GlanceAppWidget
+import androidx.glance.appwidget.GlanceAppWidgetManager
+import androidx.work.ExistingWorkPolicy
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkManager
 
 object RosterWidgetUpdater {
 
     private const val TAG = "FIFOKITWidget"
+    private const val WORK_NAME =
+        "fifokit_widget_refresh"
 
-    private val scope =
-        CoroutineScope(
-            SupervisorJob() +
-                    Dispatchers.Default
-        )
+    fun updateAll(
+        context: Context
+    ) {
+        val request =
+            OneTimeWorkRequestBuilder<
+                    RosterWidgetRefreshWorker
+                    >()
+                .build()
 
-    suspend fun updateAll(
+        WorkManager
+            .getInstance(
+                context.applicationContext
+            )
+            .enqueueUniqueWork(
+                WORK_NAME,
+                ExistingWorkPolicy.REPLACE,
+                request
+            )
+    }
+
+    internal suspend fun refreshNow(
         context: Context
     ) {
         val appContext =
             context.applicationContext
 
-        requestProviderUpdate(
+        refreshWidget(
             context = appContext,
-            receiverClass =
-                SwingStatusWidgetReceiver::class.java
+            widget = SwingStatusWidget()
         )
 
-        requestProviderUpdate(
+        refreshWidget(
             context = appContext,
-            receiverClass =
-                CompactRosterCalendarWidgetReceiver::class.java
+            widget =
+                CompactRosterCalendarWidget()
         )
     }
 
-    private fun requestProviderUpdate(
+    private suspend fun refreshWidget(
         context: Context,
-        receiverClass: Class<*>
+        widget: GlanceAppWidget
     ) {
-        val component =
-            ComponentName(
-                context,
-                receiverClass
-            )
+        val manager =
+            GlanceAppWidgetManager(context)
 
-        val appWidgetIds =
-            AppWidgetManager
-                .getInstance(context)
-                .getAppWidgetIds(component)
+        val glanceIds =
+            manager.getGlanceIds(
+                widget.javaClass
+            )
 
         Log.d(
             TAG,
-            "Requesting update " +
-                    receiverClass.simpleName +
+            "Refreshing " +
+                    widget.javaClass.simpleName +
                     " count=" +
-                    appWidgetIds.size
+                    glanceIds.size
         )
 
-        if (appWidgetIds.isEmpty()) {
-            return
-        }
-
-        context.sendBroadcast(
-            Intent(
-                AppWidgetManager.ACTION_APPWIDGET_UPDATE
+        glanceIds.forEach { glanceId ->
+            widget.update(
+                context,
+                glanceId
             )
-                .setComponent(component)
-                .putExtra(
-                    AppWidgetManager.EXTRA_APPWIDGET_IDS,
-                    appWidgetIds
-                )
-        )
-    }
-
-    fun updateAllAsync(
-        context: Context
-    ) {
-        val appContext =
-            context.applicationContext
-
-        scope.launch {
-            updateAll(appContext)
         }
     }
 }
