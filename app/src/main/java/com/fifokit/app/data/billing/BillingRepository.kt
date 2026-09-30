@@ -22,7 +22,6 @@ import android.app.Activity
 import com.android.billingclient.api.BillingFlowParams
 import com.fifokit.app.domain.pro.ProPlan
 import com.fifokit.app.domain.pro.ProPurchaseState
-import com.fifokit.app.widgets.RosterWidgetUpdater
 
 
 class BillingRepository(
@@ -312,10 +311,6 @@ class BillingRepository(
     ) {
         entitlementStore.save(entitlement)
         ProEntitlementManager.updateEntitlement(entitlement)
-
-        RosterWidgetUpdater.updateAllAsync(
-            applicationContext
-        )
     }
     private val _purchaseState =
         MutableStateFlow(ProPurchaseState.IDLE)
