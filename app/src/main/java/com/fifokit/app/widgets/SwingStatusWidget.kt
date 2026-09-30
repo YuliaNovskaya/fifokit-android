@@ -1,14 +1,13 @@
 package com.fifokit.app.widgets
 
 import android.content.Context
+import android.content.Intent
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.glance.GlanceId
 import androidx.glance.GlanceModifier
-import androidx.glance.action.ActionParameters
-import androidx.glance.action.actionParametersOf
 import androidx.glance.action.clickable
 import androidx.glance.appwidget.GlanceAppWidget
 import androidx.glance.appwidget.action.actionStartActivity
@@ -45,17 +44,13 @@ class SwingStatusWidget : GlanceAppWidget() {
 
         provideContent {
             SwingStatusContent(
+                context = context,
                 roster = roster,
                 today = today
             )
         }
     }
 }
-
-private val widgetTypeKey =
-    ActionParameters.Key<String>(
-        MainActivity.EXTRA_WIDGET_TYPE
-    )
 
 private val widgetBackground =
     ColorProvider(Color(0xFF111111))
@@ -74,16 +69,21 @@ private val widgetDateFormatter =
 
 @Composable
 private fun SwingStatusContent(
+    context: Context,
     roster: WidgetRoster?,
     today: LocalDate
 ) {
-    val openAppAction =
-        actionStartActivity<MainActivity>(
-            actionParametersOf(
-                widgetTypeKey to
-                        MainActivity.WIDGET_TYPE_SWING_STATUS
-            )
+    val openAppIntent =
+        Intent(
+            context,
+            MainActivity::class.java
+        ).putExtra(
+            MainActivity.EXTRA_WIDGET_TYPE,
+            MainActivity.WIDGET_TYPE_SWING_STATUS
         )
+
+    val openAppAction =
+        actionStartActivity(openAppIntent)
 
     Column(
         modifier = GlanceModifier

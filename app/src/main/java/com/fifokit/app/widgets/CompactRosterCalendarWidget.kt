@@ -1,14 +1,13 @@
 package com.fifokit.app.widgets
 
 import android.content.Context
+import android.content.Intent
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.glance.GlanceId
 import androidx.glance.GlanceModifier
-import androidx.glance.action.ActionParameters
-import androidx.glance.action.actionParametersOf
 import androidx.glance.action.clickable
 import androidx.glance.appwidget.GlanceAppWidget
 import androidx.glance.appwidget.action.actionStartActivity
@@ -16,10 +15,10 @@ import androidx.glance.appwidget.provideContent
 import androidx.glance.background
 import androidx.glance.layout.Column
 import androidx.glance.layout.Row
-import androidx.glance.layout.defaultWeight
 import androidx.glance.layout.fillMaxSize
 import androidx.glance.layout.fillMaxWidth
 import androidx.glance.layout.padding
+import androidx.glance.layout.width
 import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
 import androidx.glance.text.TextAlign
@@ -57,6 +56,7 @@ class CompactRosterCalendarWidget :
 
         provideContent {
             CompactRosterCalendarContent(
+                context = context,
                 roster = roster,
                 isPro = isPro,
                 month = month,
@@ -65,16 +65,6 @@ class CompactRosterCalendarWidget :
         }
     }
 }
-
-private val compactWidgetTypeKey =
-    ActionParameters.Key<String>(
-        MainActivity.EXTRA_WIDGET_TYPE
-    )
-
-private val compactWidgetDestinationKey =
-    ActionParameters.Key<String>(
-        MainActivity.EXTRA_WIDGET_DESTINATION
-    )
 
 private val compactBackground =
     ColorProvider(Color(0xFF111111))
@@ -96,29 +86,31 @@ private val compactSecondary =
 
 @Composable
 private fun CompactRosterCalendarContent(
+    context: Context,
     roster: WidgetRoster?,
     isPro: Boolean,
     month: YearMonth,
     today: LocalDate
 ) {
+    val openIntent =
+        Intent(
+            context,
+            MainActivity::class.java
+        )
+            .putExtra(
+                MainActivity.EXTRA_WIDGET_TYPE,
+                MainActivity.WIDGET_TYPE_COMPACT_CALENDAR
+            )
+
+    if (!isPro) {
+        openIntent.putExtra(
+            MainActivity.EXTRA_WIDGET_DESTINATION,
+            MainActivity.WIDGET_DESTINATION_PRO
+        )
+    }
+
     val openAction =
-        if (isPro) {
-            actionStartActivity<MainActivity>(
-                actionParametersOf(
-                    compactWidgetTypeKey to
-                            MainActivity.WIDGET_TYPE_COMPACT_CALENDAR
-                )
-            )
-        } else {
-            actionStartActivity<MainActivity>(
-                actionParametersOf(
-                    compactWidgetTypeKey to
-                            MainActivity.WIDGET_TYPE_COMPACT_CALENDAR,
-                    compactWidgetDestinationKey to
-                            MainActivity.WIDGET_DESTINATION_PRO
-                )
-            )
-        }
+        actionStartActivity(openIntent)
 
     Column(
         modifier = GlanceModifier
@@ -136,89 +128,94 @@ private fun CompactRosterCalendarContent(
             )
         )
 
-        if (!isPro) {
-            Text(
-                text = "ROSTER CALENDAR",
-                style = TextStyle(
-                    color = compactWhite,
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold
-                )
-            )
-            Text(
-                text = "FIFOKIT Pro · Tap to unlock",
-                style = TextStyle(
-                    color = compactOrange,
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Bold
-                )
-            )
-            return
-        }
-
-        if (roster == null) {
-            Text(
-                text = "No active roster",
-                style = TextStyle(
-                    color = compactWhite,
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold
-                )
-            )
-            Text(
-                text = "Open FIFOKIT to create a roster",
-                style = TextStyle(
-                    color = compactSecondary,
-                    fontSize = 11.sp
-                )
-            )
-            return
-        }
-
-        Text(
-            text =
-                month.month.getDisplayName(
-                    JavaTextStyle.FULL,
-                    Locale.getDefault()
-                ) +
-                        " " +
-                        month.year,
-            style = TextStyle(
-                color = compactWhite,
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Bold
-            )
-        )
-
-        Text(
-            text = roster.name,
-            style = TextStyle(
-                color = compactSecondary,
-                fontSize = 10.sp
-            ),
-            maxLines = 1
-        )
-
-        WeekdayRow()
-
-        CompactCalendarRows(
-            days =
-                CompactRosterCalendarCalculator
-                    .monthCells(
-                        month = month,
-                        roster = roster,
-                        today = today
+        when {
+            !isPro -> {
+                Text(
+                    text = "ROSTER CALENDAR",
+                    style = TextStyle(
+                        color = compactWhite,
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold
                     )
-        )
+                )
 
-        Text(
-            text = "Orange WORK · • Today · P Public holiday",
-            style = TextStyle(
-                color = compactSecondary,
-                fontSize = 9.sp
-            ),
-            maxLines = 1
-        )
+                Text(
+                    text = "FIFOKIT Pro · Tap to unlock",
+                    style = TextStyle(
+                        color = compactOrange,
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                )
+            }
+
+            roster == null -> {
+                Text(
+                    text = "No active roster",
+                    style = TextStyle(
+                        color = compactWhite,
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                )
+
+                Text(
+                    text = "Open FIFOKIT to create a roster",
+                    style = TextStyle(
+                        color = compactSecondary,
+                        fontSize = 11.sp
+                    )
+                )
+            }
+
+            else -> {
+                Text(
+                    text =
+                        month.month.getDisplayName(
+                            JavaTextStyle.FULL,
+                            Locale.getDefault()
+                        ) +
+                                " " +
+                                month.year,
+                    style = TextStyle(
+                        color = compactWhite,
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                )
+
+                Text(
+                    text = roster.name,
+                    style = TextStyle(
+                        color = compactSecondary,
+                        fontSize = 10.sp
+                    ),
+                    maxLines = 1
+                )
+
+                WeekdayRow()
+
+                CompactCalendarRows(
+                    days =
+                        CompactRosterCalendarCalculator
+                            .monthCells(
+                                month = month,
+                                roster = roster,
+                                today = today
+                            )
+                )
+
+                Text(
+                    text =
+                        "Orange WORK · • Today · P Public holiday",
+                    style = TextStyle(
+                        color = compactSecondary,
+                        fontSize = 9.sp
+                    ),
+                    maxLines = 1
+                )
+            }
+        }
     }
 }
 
@@ -233,7 +230,7 @@ private fun WeekdayRow() {
                     text = day,
                     modifier =
                         GlanceModifier
-                            .defaultWeight()
+                            .width(30.dp)
                             .padding(1.dp),
                     style = TextStyle(
                         color = compactSecondary,
@@ -255,7 +252,8 @@ private fun CompactCalendarRows(
     ) {
         days.chunked(7).forEach { week ->
             Row(
-                modifier = GlanceModifier.fillMaxWidth()
+                modifier =
+                    GlanceModifier.fillMaxWidth()
             ) {
                 week.forEach { day ->
                     if (day == null) {
@@ -263,7 +261,7 @@ private fun CompactCalendarRows(
                             text = "",
                             modifier =
                                 GlanceModifier
-                                    .defaultWeight()
+                                    .width(30.dp)
                                     .padding(2.dp)
                         )
                     } else {
@@ -274,7 +272,7 @@ private fun CompactCalendarRows(
                                         (if (day.isPublicHoliday) "P" else ""),
                             modifier =
                                 GlanceModifier
-                                    .defaultWeight()
+                                    .width(30.dp)
                                     .padding(2.dp)
                                     .background(
                                         if (day.isWorkDay) {
@@ -283,7 +281,9 @@ private fun CompactCalendarRows(
                                             compactSurface
                                         }
                                     )
-                                    .padding(vertical = 3.dp),
+                                    .padding(
+                                        vertical = 3.dp
+                                    ),
                             style = TextStyle(
                                 color =
                                     if (day.isWorkDay) {
