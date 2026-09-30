@@ -1,52 +1,51 @@
 package com.fifokit.app.ui
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.fifokit.app.domain.pro.ProAccess
+import com.fifokit.app.domain.pro.ProFeature
+import com.fifokit.app.domain.sharing.SharedRoster
+import com.fifokit.app.ui.auth.AccountScreen
+import com.fifokit.app.ui.auth.AuthViewModel
+import com.fifokit.app.ui.finance.AnnualEarningsScreen
+import com.fifokit.app.ui.finance.FinanceToolsScreen
+import com.fifokit.app.ui.finance.FinancialGoalScreen
+import com.fifokit.app.ui.finance.PayCalculatorScreen
+import com.fifokit.app.ui.pro.ProScreen
 import com.fifokit.app.ui.roster.RosterCalendarScreen
 import com.fifokit.app.ui.roster.RosterSetupRoute
 import com.fifokit.app.ui.roster.RosterSetupViewModel
 import com.fifokit.app.ui.settings.SettingsScreen
-import com.fifokit.app.ui.finance.FinanceToolsScreen
-import com.fifokit.app.ui.finance.PayCalculatorScreen
-import com.fifokit.app.ui.finance.AnnualEarningsScreen
-import com.fifokit.app.ui.finance.FinancialGoalScreen
-import androidx.activity.compose.BackHandler
-import com.fifokit.app.ui.pro.ProScreen
-import com.fifokit.app.domain.pro.ProAccess
-import com.fifokit.app.domain.pro.ProFeature
+import com.fifokit.app.ui.sharing.RosterInviteAcceptScreen
+import com.fifokit.app.ui.sharing.RosterInviteScreen
+import com.fifokit.app.ui.sharing.SharedRosterCalendarScreen
+import com.fifokit.app.ui.sharing.SharedRostersScreen
+import com.fifokit.app.ui.sharing.TogetherRosterCalendarScreen
 import com.google.firebase.analytics.FirebaseAnalytics
 import com.google.firebase.analytics.logEvent
-import androidx.compose.ui.platform.LocalContext
-import com.fifokit.app.ui.auth.AccountScreen
-import com.fifokit.app.ui.auth.AuthViewModel
-import androidx.compose.runtime.LaunchedEffect
-import com.fifokit.app.ui.sharing.RosterInviteScreen
-import com.fifokit.app.ui.sharing.RosterInviteAcceptScreen
-import com.fifokit.app.ui.sharing.SharedRostersScreen
-import com.fifokit.app.domain.sharing.SharedRoster
-import com.fifokit.app.ui.sharing.SharedRosterCalendarScreen
-import com.fifokit.app.ui.sharing.TogetherRosterCalendarScreen
 
 @Composable
 fun FIFOKITApp(
-    inviteId: String? = null
+    inviteId: String? = null,
+    initialShowPro: Boolean = false
 ) {
-
     val context = LocalContext.current
     val analytics = FirebaseAnalytics.getInstance(context)
 
     val rosterSetupViewModel: RosterSetupViewModel = viewModel()
-
     val authViewModel: AuthViewModel = viewModel()
 
     var screenOverride by remember {
@@ -55,62 +54,31 @@ fun FIFOKITApp(
 
     LaunchedEffect(authViewModel) {
         authViewModel.syncCompleted.collect {
-
             rosterSetupViewModel.refreshFromLocalStorage()
-
-            // Return navigation control to the actual saved-roster state.
             screenOverride = null
         }
     }
 
-    var showSharedRosters by remember {
-        mutableStateOf(false)
-    }
-
-    var selectedSharedRoster by remember {
-        mutableStateOf<SharedRoster?>(null)
-    }
+    var showSharedRosters by remember { mutableStateOf(false) }
+    var selectedSharedRoster by remember { mutableStateOf<SharedRoster?>(null) }
 
     val showCalendar =
         screenOverride ?: (rosterSetupViewModel.hasSavedRoster == true)
 
-    var showSettings by remember {
-        mutableStateOf(false)
+    var showSettings by remember { mutableStateOf(false) }
+    var showFinance by remember { mutableStateOf(false) }
+    var showPayCalculator by remember { mutableStateOf(false) }
+    var showAnnualEarnings by remember { mutableStateOf(false) }
+    var showFinancialGoal by remember { mutableStateOf(false) }
+    var showPro by remember(initialShowPro) {
+        mutableStateOf(initialShowPro)
     }
-    var showFinance by remember {
-        mutableStateOf(false)
-    }
-
-    var showPayCalculator by remember {
-        mutableStateOf(false)
-    }
-    var showAnnualEarnings by remember {
-        mutableStateOf(false)
-    }
-
-    var showFinancialGoal by remember {
-        mutableStateOf(false)
-    }
-
-    var showPro by remember {
-        mutableStateOf(false)
-    }
-
-    var showAccount by remember {
-        mutableStateOf(false)
-    }
-
-    var showShareRoster by remember {
-        mutableStateOf(false)
-    }
-
+    var showAccount by remember { mutableStateOf(false) }
+    var showShareRoster by remember { mutableStateOf(false) }
     var showAcceptInvite by remember(inviteId) {
         mutableStateOf(inviteId != null)
     }
-
-    var showTogetherRoster by remember {
-        mutableStateOf(false)
-    }
+    var showTogetherRoster by remember { mutableStateOf(false) }
 
     BackHandler(
         enabled =
@@ -119,12 +87,13 @@ fun FIFOKITApp(
             showSharedRosters ||
             showAcceptInvite ||
             showShareRoster ||
+            showPro ||
             showAccount ||
-                    showFinancialGoal ||
-                    showAnnualEarnings ||
-                    showPayCalculator ||
-                    showFinance ||
-                    showSettings
+            showFinancialGoal ||
+            showAnnualEarnings ||
+            showPayCalculator ||
+            showFinance ||
+            showSettings
     ) {
         when {
             showTogetherRoster ->
@@ -144,11 +113,12 @@ fun FIFOKITApp(
                 selectedSharedRoster = null
             }
 
+            showPro ->
+                showPro = false
+
             showAccount -> {
                 showAccount = false
-
                 rosterSetupViewModel.refreshFromLocalStorage()
-
                 screenOverride = null
             }
 
@@ -178,7 +148,6 @@ fun FIFOKITApp(
                 .fillMaxSize()
                 .safeDrawingPadding()
         ) {
-
             val activeCloudRosterId =
                 rosterSetupViewModel.rosters
                     .firstOrNull {
@@ -190,7 +159,6 @@ fun FIFOKITApp(
                 showTogetherRoster &&
                 selectedSharedRoster != null
             ) {
-
                 TogetherRosterCalendarScreen(
                     viewModel = rosterSetupViewModel,
                     sharedRoster = selectedSharedRoster!!,
@@ -203,9 +171,7 @@ fun FIFOKITApp(
                         showTogetherRoster = false
                     }
                 )
-
             } else if (selectedSharedRoster != null) {
-
                 SharedRosterCalendarScreen(
                     sharedRoster = selectedSharedRoster!!,
                     onBack = {
@@ -215,16 +181,13 @@ fun FIFOKITApp(
                         showTogetherRoster = true
                     }
                 )
-
             } else if (showSharedRosters) {
-
                 SharedRostersScreen(
                     onBack = {
                         showSharedRosters = false
                         selectedSharedRoster = null
                     },
                     onRosterSelected = { sharedRoster ->
-
                         analytics.logEvent("shared_roster_selected") {
                             param(
                                 "roster_id",
@@ -235,12 +198,10 @@ fun FIFOKITApp(
                         selectedSharedRoster = sharedRoster
                     }
                 )
-
             } else if (
                 showAcceptInvite &&
                 inviteId != null
             ) {
-
                 RosterInviteAcceptScreen(
                     inviteId = inviteId,
                     onAccepted = {
@@ -248,12 +209,10 @@ fun FIFOKITApp(
                         screenOverride = true
                     }
                 )
-
             } else if (
                 showShareRoster &&
                 rosterSetupViewModel.activeRosterId != null
             ) {
-
                 RosterInviteScreen(
                     rosterId = activeCloudRosterId!!,
                     rosterName = rosterSetupViewModel.rosterName,
@@ -261,25 +220,19 @@ fun FIFOKITApp(
                         showShareRoster = false
                     }
                 )
-
             } else if (showPro) {
-
                 ProScreen(
                     onBack = {
                         showPro = false
                     }
                 )
-
             } else if (showFinancialGoal) {
-
                 FinancialGoalScreen(
                     onBack = {
                         showFinancialGoal = false
                     }
                 )
-
             } else if (showAnnualEarnings) {
-
                 AnnualEarningsScreen(
                     selectedPattern = rosterSetupViewModel.selectedPattern,
                     isCustomRoster = rosterSetupViewModel.isCustomRoster,
@@ -290,9 +243,7 @@ fun FIFOKITApp(
                         showAnnualEarnings = false
                     }
                 )
-
             } else if (showPayCalculator) {
-
                 PayCalculatorScreen(
                     selectedPattern = rosterSetupViewModel.selectedPattern,
                     isCustomRoster = rosterSetupViewModel.isCustomRoster,
@@ -303,9 +254,7 @@ fun FIFOKITApp(
                         showPayCalculator = false
                     }
                 )
-
             } else if (showFinance) {
-
                 FinanceToolsScreen(
                     selectedPattern = rosterSetupViewModel.selectedPattern,
                     isCustomRoster = rosterSetupViewModel.isCustomRoster,
@@ -336,9 +285,7 @@ fun FIFOKITApp(
                         showFinancialGoal = true
                     }
                 )
-
             } else if (showAccount) {
-
                 AccountScreen(
                     authViewModel = authViewModel
                 )
@@ -370,7 +317,6 @@ fun FIFOKITApp(
                         rosterSetupViewModel::updateReminderTime,
                     sharedTimeRemindersEnabled =
                         rosterSetupViewModel.sharedTimeRemindersEnabled,
-
                     onSharedTimeRemindersEnabledChange =
                         rosterSetupViewModel::updateSharedTimeRemindersEnabled
                 )
