@@ -2,6 +2,9 @@ package com.fifokit.app.ui.export
 
 import android.content.Context
 import android.content.Intent
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -9,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.OutlinedButton
@@ -39,6 +43,48 @@ import kotlinx.coroutines.withContext
 import java.io.File
 import java.time.YearMonth
 
+private enum class ExportKind(
+    val label: String,
+    val format: String,
+    val mimeType: String,
+    val monthCount: Int
+) {
+    MONTH_IMAGE(
+        label = "This month image",
+        format = "png",
+        mimeType = "image/png",
+        monthCount = 1
+    ),
+    THREE_MONTH_PDF(
+        label = "3-month PDF",
+        format = "pdf",
+        mimeType = "application/pdf",
+        monthCount = 3
+    ),
+    SIX_MONTH_PDF(
+        label = "6-month PDF",
+        format = "pdf",
+        mimeType = "application/pdf",
+        monthCount = 6
+    ),
+    ANNUAL_PDF(
+        label = "Annual PDF",
+        format = "pdf",
+        mimeType = "application/pdf",
+        monthCount = 12
+    )
+}
+
+private enum class ExportAction {
+    SAVE,
+    SHARE
+}
+
+private data class GeneratedExport(
+    val file: File,
+    val kind: ExportKind
+)
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RosterExportScreen(
@@ -52,6 +98,14 @@ fun RosterExportScreen(
 
     val analytics = remember(context) {
         FirebaseAnalytics.getInstance(context)
+    }
+
+    var selectedExport by remember {
+        mutableStateOf<ExportKind?>(null)
+    }
+
+    var pendingSave by remember {
+        mutableStateOf<GeneratedExport?>(null)
     }
 
     var isExporting by remember {
@@ -68,12 +122,179 @@ fun RosterExportScreen(
         ) {}
     }
 
-    fun runExport(
-        format: String,
-        monthCount: Int,
-        exporter: suspend () -> File
+    fun saveToUri(
+        uri: Uri
     ) {
-        if (isExporting) return
+        val generated =
+            pendingSave
+                ?: return
+
+        scope.launch {
+            try {
+                withContext(
+                    Dispatchers.IO
+                ) {
+                    context
+                        .contentResolver
+                        .openOutputStream(uri)
+                        ?.use { output ->
+                            generated
+                                .file
+                                .inputStream()
+                                .use { input ->
+                                    input.copyTo(output)
+                                }
+                        }
+                        ?: error(
+                            "Unable to open save destination"
+                        )
+                }
+
+                analytics.logEvent(
+                    "roster_export_saved"
+                ) {
+                    param(
+                        "format",
+                        generated.kind.format
+                    )
+                    param(
+                        "month_count",
+                        generated
+                            .kind
+                            .monthCount
+                            .toLong()
+                    )
+                }
+
+            } catch (_: Exception) {
+                errorMessage =
+                    "Unable to save roster export."
+            } finally {
+                pendingSave = null
+            }
+        }
+    }
+
+    val imageSaveLauncher =
+        rememberLauncherForActivityResult(
+            contract =
+                ActivityResultContracts
+                    .CreateDocument(
+                        "image/png"
+                    ),
+            onResult = { uri ->
+                if (uri != null) {
+                    saveToUri(uri)
+                } else {
+                    pendingSave = null
+                }
+            }
+        )
+
+    val pdfSaveLauncher =
+        rememberLauncherForActivityResult(
+            contract =
+                ActivityResultContracts
+                    .CreateDocument(
+                        "application/pdf"
+                    ),
+            onResult = { uri ->
+                if (uri != null) {
+                    saveToUri(uri)
+                } else {
+                    pendingSave = null
+                }
+            }
+        )
+
+    suspend fun generateExport(
+        kind: ExportKind
+    ): File {
+        return withContext(
+            Dispatchers.IO
+        ) {
+            when (kind) {
+                ExportKind.MONTH_IMAGE ->
+                    RosterExportManager
+                        .exportMonthImage(
+                            context = context,
+                            data = data,
+                            month = startMonth
+                        )
+
+                ExportKind.THREE_MONTH_PDF -> {
+                    val months =
+                        List(3) { index ->
+                            startMonth
+                                .plusMonths(
+                                    index.toLong()
+                                )
+                        }
+
+                    RosterExportManager
+                        .exportPdf(
+                            context = context,
+                            data = data,
+                            months = months,
+                            fileName =
+                                "fifokit_roster_3_months.pdf"
+                        )
+                }
+
+                ExportKind.SIX_MONTH_PDF -> {
+                    val months =
+                        List(6) { index ->
+                            startMonth
+                                .plusMonths(
+                                    index.toLong()
+                                )
+                        }
+
+                    RosterExportManager
+                        .exportPdf(
+                            context = context,
+                            data = data,
+                            months = months,
+                            fileName =
+                                "fifokit_roster_6_months.pdf"
+                        )
+                }
+
+                ExportKind.ANNUAL_PDF -> {
+                    val firstMonth =
+                        YearMonth.of(
+                            startMonth.year,
+                            1
+                        )
+
+                    val months =
+                        List(12) { index ->
+                            firstMonth
+                                .plusMonths(
+                                    index.toLong()
+                                )
+                        }
+
+                    RosterExportManager
+                        .exportPdf(
+                            context = context,
+                            data = data,
+                            months = months,
+                            fileName =
+                                "fifokit_roster_${startMonth.year}.pdf"
+                        )
+                }
+            }
+        }
+    }
+
+    fun runExport(
+        kind: ExportKind,
+        action: ExportAction
+    ) {
+        if (isExporting) {
+            return
+        }
 
         isExporting = true
         errorMessage = null
@@ -81,47 +302,66 @@ fun RosterExportScreen(
         scope.launch {
             try {
                 val file =
-                    withContext(
-                        Dispatchers.IO
-                    ) {
-                        exporter()
-                    }
+                    generateExport(kind)
 
                 analytics.logEvent(
                     "roster_export_created"
                 ) {
                     param(
                         "format",
-                        format
+                        kind.format
                     )
                     param(
                         "month_count",
-                        monthCount.toLong()
+                        kind
+                            .monthCount
+                            .toLong()
                     )
                 }
 
-                shareFile(
-                    context = context,
-                    file = file,
-                    mimeType =
-                        if (format == "png") {
-                            "image/png"
-                        } else {
-                            "application/pdf"
-                        }
-                )
+                when (action) {
+                    ExportAction.SHARE -> {
+                        shareFile(
+                            context = context,
+                            file = file,
+                            mimeType =
+                                kind.mimeType
+                        )
 
-                analytics.logEvent(
-                    "roster_export_shared"
-                ) {
-                    param(
-                        "format",
-                        format
-                    )
-                    param(
-                        "month_count",
-                        monthCount.toLong()
-                    )
+                        analytics.logEvent(
+                            "roster_export_shared"
+                        ) {
+                            param(
+                                "format",
+                                kind.format
+                            )
+                            param(
+                                "month_count",
+                                kind
+                                    .monthCount
+                                    .toLong()
+                            )
+                        }
+                    }
+
+                    ExportAction.SAVE -> {
+                        pendingSave =
+                            GeneratedExport(
+                                file = file,
+                                kind = kind
+                            )
+
+                        if (
+                            kind ==
+                            ExportKind.MONTH_IMAGE
+                        ) {
+                            imageSaveLauncher
+                                .launch(file.name)
+                        } else {
+                            pdfSaveLauncher
+                                .launch(file.name)
+                        }
+                    }
                 }
 
             } catch (_: Exception) {
@@ -131,6 +371,52 @@ fun RosterExportScreen(
                 isExporting = false
             }
         }
+    }
+
+    selectedExport?.let { exportKind ->
+        AlertDialog(
+            onDismissRequest = {
+                selectedExport = null
+            },
+            title = {
+                Text(exportKind.label)
+            },
+            text = {
+                Text(
+                    "Would you like to save this file or share it?"
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        selectedExport = null
+
+                        runExport(
+                            kind = exportKind,
+                            action =
+                                ExportAction.SHARE
+                        )
+                    }
+                ) {
+                    Text("Share")
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = {
+                        selectedExport = null
+
+                        runExport(
+                            kind = exportKind,
+                            action =
+                                ExportAction.SAVE
+                        )
+                    }
+                ) {
+                    Text("Save")
+                }
+            }
+        )
     }
 
     Scaffold(
@@ -171,22 +457,14 @@ fun RosterExportScreen(
                     Modifier.fillMaxWidth(),
                 enabled = !isExporting,
                 onClick = {
-                    runExport(
-                        format = "png",
-                        monthCount = 1
-                    ) {
-                        RosterExportManager
-                            .exportMonthImage(
-                                context = context,
-                                data = data,
-                                month =
-                                    startMonth
-                            )
-                    }
+                    selectedExport =
+                        ExportKind.MONTH_IMAGE
                 }
             ) {
                 Text(
-                    "Share this month image"
+                    ExportKind
+                        .MONTH_IMAGE
+                        .label
                 )
             }
 
@@ -199,7 +477,9 @@ fun RosterExportScreen(
 
             ProExportButton(
                 text =
-                    "Share 3-month PDF",
+                    ExportKind
+                        .THREE_MONTH_PDF
+                        .label,
                 feature =
                     ProFeature.ROSTER_MULTI_MONTH_EXPORT,
                 featureName =
@@ -208,35 +488,17 @@ fun RosterExportScreen(
                 onProRequested =
                     onProRequested,
                 onExport = {
-                    val months =
-                        List(3) { index ->
-                            startMonth
-                                .plusMonths(
-                                    index.toLong()
-                                )
-                        }
-
-                    runExport(
-                        format = "pdf",
-                        monthCount = 3
-                    ) {
-                        RosterExportManager
-                            .exportPdf(
-                                context =
-                                    context,
-                                data = data,
-                                months =
-                                    months,
-                                fileName =
-                                    "fifokit_roster_3_months.pdf"
-                            )
-                    }
+                    selectedExport =
+                        ExportKind
+                            .THREE_MONTH_PDF
                 }
             )
 
             ProExportButton(
                 text =
-                    "Share 6-month PDF",
+                    ExportKind
+                        .SIX_MONTH_PDF
+                        .label,
                 feature =
                     ProFeature.ROSTER_MULTI_MONTH_EXPORT,
                 featureName =
@@ -245,35 +507,17 @@ fun RosterExportScreen(
                 onProRequested =
                     onProRequested,
                 onExport = {
-                    val months =
-                        List(6) { index ->
-                            startMonth
-                                .plusMonths(
-                                    index.toLong()
-                                )
-                        }
-
-                    runExport(
-                        format = "pdf",
-                        monthCount = 6
-                    ) {
-                        RosterExportManager
-                            .exportPdf(
-                                context =
-                                    context,
-                                data = data,
-                                months =
-                                    months,
-                                fileName =
-                                    "fifokit_roster_6_months.pdf"
-                            )
-                    }
+                    selectedExport =
+                        ExportKind
+                            .SIX_MONTH_PDF
                 }
             )
 
             ProExportButton(
                 text =
-                    "Share annual PDF",
+                    ExportKind
+                        .ANNUAL_PDF
+                        .label,
                 feature =
                     ProFeature.ROSTER_ANNUAL_EXPORT,
                 featureName =
@@ -282,35 +526,9 @@ fun RosterExportScreen(
                 onProRequested =
                     onProRequested,
                 onExport = {
-                    val firstMonth =
-                        YearMonth.of(
-                            startMonth.year,
-                            1
-                        )
-
-                    val months =
-                        List(12) { index ->
-                            firstMonth
-                                .plusMonths(
-                                    index.toLong()
-                                )
-                        }
-
-                    runExport(
-                        format = "pdf",
-                        monthCount = 12
-                    ) {
-                        RosterExportManager
-                            .exportPdf(
-                                context =
-                                    context,
-                                data = data,
-                                months =
-                                    months,
-                                fileName =
-                                    "fifokit_roster_${startMonth.year}.pdf"
-                            )
-                    }
+                    selectedExport =
+                        ExportKind
+                            .ANNUAL_PDF
                 }
             )
 
@@ -335,7 +553,8 @@ private fun ProExportButton(
     onExport: () -> Unit
 ) {
     OutlinedButton(
-        modifier = Modifier.fillMaxWidth(),
+        modifier =
+            Modifier.fillMaxWidth(),
         enabled = enabled,
         onClick = {
             if (
