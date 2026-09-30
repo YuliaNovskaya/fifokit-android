@@ -63,6 +63,8 @@ import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import com.fifokit.app.domain.pro.ProAccess
 import com.fifokit.app.domain.pro.ProFeature
+import com.fifokit.app.analytics.AnalyticsEvents
+import com.fifokit.app.analytics.AnalyticsParams
 import com.fifokit.app.growth.GrowthEngagementTracker
 import com.fifokit.app.growth.InAppReviewLauncher
 
@@ -91,16 +93,16 @@ fun RosterCalendarScreen(
             contract = ActivityResultContracts.RequestPermission(),
             onResult = { granted ->
                 if (granted) {
-                    analytics.logEvent("notification_enabled", null)
+                    analytics.logEvent(AnalyticsEvents.NOTIFICATION_ENABLED, null)
                 } else {
-                    analytics.logEvent("notification_denied", null)
+                    analytics.logEvent(AnalyticsEvents.NOTIFICATION_DENIED, null)
                 }
             }
         )
 
     LaunchedEffect(Unit) {
         RosterNotificationManager.createChannel(context)
-        analytics.logEvent("calendar_viewed", null)
+        analytics.logEvent(AnalyticsEvents.CALENDAR_VIEWED, null)
     }
     var month by remember {
         mutableStateOf(YearMonth.now())
@@ -127,7 +129,7 @@ fun RosterCalendarScreen(
         ) {
             growthTracker.markPromptShown()
             analytics.logEvent(
-                "review_prompt_shown",
+                AnalyticsEvents.REVIEW_PROMPT_SHOWN,
                 null
             )
             showReviewPrompt = true
@@ -143,7 +145,7 @@ fun RosterCalendarScreen(
             onDismissRequest = {
                 growthTracker.markReviewDismissed()
                 analytics.logEvent(
-                    "review_prompt_dismissed",
+                    AnalyticsEvents.REVIEW_PROMPT_DISMISSED,
                     null
                 )
                 showReviewPrompt = false
@@ -161,7 +163,7 @@ fun RosterCalendarScreen(
                     onClick = {
                         growthTracker.markReviewAccepted()
                         analytics.logEvent(
-                            "review_prompt_accepted",
+                            AnalyticsEvents.REVIEW_PROMPT_ACCEPTED,
                             null
                         )
                         showReviewPrompt = false
@@ -184,7 +186,7 @@ fun RosterCalendarScreen(
                     onClick = {
                         growthTracker.markReviewDismissed()
                         analytics.logEvent(
-                            "review_prompt_dismissed",
+                            AnalyticsEvents.REVIEW_PROMPT_DISMISSED,
                             null
                         )
                         showReviewPrompt = false
@@ -206,10 +208,10 @@ fun RosterCalendarScreen(
                     TextButton(
                         onClick = {
                             analytics.logEvent(
-                                "feature_discovery_opened"
+                                AnalyticsEvents.FEATURE_OPENED
                             ) {
                                 param(
-                                    "feature",
+                                    AnalyticsParams.FEATURE,
                                     "finance_tools"
                                 )
                             }
@@ -234,10 +236,10 @@ fun RosterCalendarScreen(
                     TextButton(
                         onClick = {
                             analytics.logEvent(
-                                "feature_discovery_opened"
+                                AnalyticsEvents.FEATURE_OPENED
                             ) {
                                 param(
-                                    "feature",
+                                    AnalyticsParams.FEATURE,
                                     "partner_sharing"
                                 )
                             }
@@ -345,10 +347,10 @@ fun RosterCalendarScreen(
                         modifier = Modifier.weight(1f),
                         onClick = {
                             analytics.logEvent(
-                                "feature_discovery_opened"
+                                AnalyticsEvents.FEATURE_OPENED
                             ) {
                                 param(
-                                    "feature",
+                                    AnalyticsParams.FEATURE,
                                     "year_view"
                                 )
                             }
@@ -362,10 +364,10 @@ fun RosterCalendarScreen(
                         modifier = Modifier.weight(1f),
                         onClick = {
                             analytics.logEvent(
-                                "feature_discovery_opened"
+                                AnalyticsEvents.FEATURE_OPENED
                             ) {
                                 param(
-                                    "feature",
+                                    AnalyticsParams.FEATURE,
                                     "year_view"
                                 )
                             }

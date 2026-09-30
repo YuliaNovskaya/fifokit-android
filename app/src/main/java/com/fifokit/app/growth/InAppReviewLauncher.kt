@@ -3,6 +3,7 @@ package com.fifokit.app.growth
 import android.app.Activity
 import com.google.android.play.core.review.ReviewManagerFactory
 import com.google.firebase.analytics.FirebaseAnalytics
+import com.fifokit.app.analytics.AnalyticsEvents
 
 object InAppReviewLauncher {
 
@@ -26,7 +27,7 @@ object InAppReviewLauncher {
             }
 
             analytics.logEvent(
-                "review_flow_triggered",
+                AnalyticsEvents.REVIEW_FLOW_TRIGGERED,
                 null
             )
 

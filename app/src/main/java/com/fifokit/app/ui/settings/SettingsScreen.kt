@@ -33,6 +33,8 @@ import android.content.pm.ApplicationInfo
 import com.fifokit.app.data.billing.ProEntitlementStore
 import com.fifokit.app.widgets.RosterWidgetUpdater
 import com.fifokit.app.growth.GrowthEngagementTracker
+import com.fifokit.app.analytics.AnalyticsEvents
+import com.fifokit.app.analytics.AnalyticsParams
 import com.google.firebase.analytics.FirebaseAnalytics
 import com.google.firebase.analytics.logEvent
 
@@ -137,8 +139,8 @@ fun SettingsScreen(
                             )
                         }
 
-                    analytics.logEvent("app_shared") {
-                        param("surface", "settings")
+                    analytics.logEvent(AnalyticsEvents.APP_SHARED) {
+                        param(AnalyticsParams.SURFACE, "settings")
                     }
 
                     context.startActivity(

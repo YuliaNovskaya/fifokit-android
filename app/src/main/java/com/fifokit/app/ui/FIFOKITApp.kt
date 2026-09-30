@@ -16,6 +16,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.fifokit.app.deeplink.AppLinkDestination
+import com.fifokit.app.analytics.AnalyticsEvents
+import com.fifokit.app.analytics.AnalyticsParams
 import com.fifokit.app.domain.pro.ProAccess
 import com.fifokit.app.domain.pro.ProFeature
 import com.fifokit.app.domain.sharing.SharedRoster
@@ -278,12 +280,10 @@ fun FIFOKITApp(
                         selectedSharedRoster = null
                     },
                     onRosterSelected = { sharedRoster ->
-                        analytics.logEvent("shared_roster_selected") {
-                            param(
-                                "roster_id",
-                                sharedRoster.roster.id
-                            )
-                        }
+                        analytics.logEvent(
+                            AnalyticsEvents.SHARED_ROSTER_SELECTED,
+                            null
+                        )
 
                         selectedSharedRoster = sharedRoster
                     }
@@ -311,10 +311,10 @@ fun FIFOKITApp(
                     },
                     onProRequested = { feature ->
                         analytics.logEvent(
-                            "pro_feature_locked"
+                            AnalyticsEvents.PRO_FEATURE_LOCKED
                         ) {
                             param(
-                                "feature",
+                                AnalyticsParams.FEATURE,
                                 feature
                             )
                         }
@@ -390,8 +390,8 @@ fun FIFOKITApp(
                         ) {
                             showAnnualEarnings = true
                         } else {
-                            analytics.logEvent("pro_feature_locked") {
-                                param("feature", "annual_earnings")
+                            analytics.logEvent(AnalyticsEvents.PRO_FEATURE_LOCKED) {
+                                param(AnalyticsParams.FEATURE, "annual_earnings")
                             }
                             showPro = true
                         }
@@ -458,8 +458,8 @@ fun FIFOKITApp(
                         showSharedRosters = true
                     },
                     onProRequested = { feature ->
-                        analytics.logEvent("pro_feature_locked") {
-                            param("feature", feature)
+                        analytics.logEvent(AnalyticsEvents.PRO_FEATURE_LOCKED) {
+                            param(AnalyticsParams.FEATURE, feature)
                         }
                         showPro = true
                     }
@@ -474,8 +474,8 @@ fun FIFOKITApp(
                         showSettings = true
                     },
                     onProRequested = { feature ->
-                        analytics.logEvent("pro_feature_locked") {
-                            param("feature", feature)
+                        analytics.logEvent(AnalyticsEvents.PRO_FEATURE_LOCKED) {
+                            param(AnalyticsParams.FEATURE, feature)
                         }
                         showPro = true
                     }
