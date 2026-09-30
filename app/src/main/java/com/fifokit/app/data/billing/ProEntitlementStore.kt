@@ -14,22 +14,47 @@ class ProEntitlementStore(
 
     fun save(entitlement: ProEntitlement) {
         preferences.edit()
-            .putBoolean("is_pro", entitlement.isPro)
-            .putString("product_id", entitlement.productId)
-            .putString("base_plan_id", entitlement.basePlanId)
-            .putBoolean("auto_renewing", entitlement.autoRenewing)
-            .apply()
+            .putBoolean(
+                "is_pro",
+                entitlement.isPro
+            )
+            .putString(
+                "product_id",
+                entitlement.productId
+            )
+            .putString(
+                "base_plan_id",
+                entitlement.basePlanId
+            )
+            .putBoolean(
+                "auto_renewing",
+                entitlement.autoRenewing
+            )
+            .commit()
     }
 
     fun load(): ProEntitlement {
         return ProEntitlement(
-            isPro = preferences.getBoolean("is_pro", false),
-            productId = preferences.getString("product_id", null),
-            basePlanId = preferences.getString("base_plan_id", null),
-            autoRenewing = preferences.getBoolean(
-                "auto_renewing",
-                false
-            )
+            isPro =
+                preferences.getBoolean(
+                    "is_pro",
+                    false
+                ),
+            productId =
+                preferences.getString(
+                    "product_id",
+                    null
+                ),
+            basePlanId =
+                preferences.getString(
+                    "base_plan_id",
+                    null
+                ),
+            autoRenewing =
+                preferences.getBoolean(
+                    "auto_renewing",
+                    false
+                )
         )
     }
 }
