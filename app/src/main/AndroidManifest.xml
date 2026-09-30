@@ -36,12 +36,12 @@
                 <data
                     android:scheme="https"
                     android:host="fifokit.com"
-                    android:path="/app/roster" />
+                    android:pathPrefix="/app/roster" />
 
                 <data
                     android:scheme="https"
                     android:host="fifokit.com"
-                    android:path="/app/finance" />
+                    android:pathPrefix="/app/finance" />
             </intent-filter>
         </activity>
 
