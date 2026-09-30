@@ -5,11 +5,14 @@ import com.fifokit.app.data.RosterMigration
 import com.fifokit.app.data.RosterPreferences
 import com.fifokit.app.data.RosterRepository
 import com.fifokit.app.data.local.RosterDatabase
+import com.fifokit.app.data.local.RosterEntity
 import com.fifokit.app.domain.model.RosterPattern
 import com.fifokit.app.domain.roster.AustralianState
 import com.fifokit.app.domain.roster.PublicHolidayProvider
 import com.fifokit.app.domain.roster.RosterCalculator
-import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
 import java.time.LocalDate
 import java.time.YearMonth
 import java.time.temporal.ChronoUnit
@@ -20,7 +23,8 @@ data class WidgetRoster(
     val startDate: LocalDate,
     val workDays: Int,
     val offDays: Int,
-    val selectedStates: Set<AustralianState> = setOf(AustralianState.WA)
+    val selectedStates: Set<AustralianState> =
+        setOf(AustralianState.WA)
 )
 
 data class SwingStatus(
@@ -42,12 +46,16 @@ class RosterWidgetDataSource(
     context: Context
 ) {
     private val rosterPreferences =
-        RosterPreferences(context.applicationContext)
+        RosterPreferences(
+            context.applicationContext
+        )
 
     private val rosterRepository =
         RosterRepository(
             RosterDatabase
-                .getInstance(context.applicationContext)
+                .getInstance(
+                    context.applicationContext
+                )
                 .rosterDao()
         )
 
@@ -57,79 +65,96 @@ class RosterWidgetDataSource(
             rosterPreferences = rosterPreferences
         )
 
-    suspend fun loadActiveRoster(): WidgetRoster? {
-        rosterMigration.migrateLegacyRosterIfNeeded()
+    suspend fun prepare() {
+        rosterMigration
+            .migrateLegacyRosterIfNeeded()
+    }
 
-        val activeRosterId =
-            rosterPreferences.activeRosterId.first()
+    fun observeActiveRoster():
+            Flow<WidgetRoster?> {
 
-        var roster =
-            activeRosterId?.let { id ->
-                rosterRepository.getRosterById(id)
-            }
+        return combine(
+            rosterRepository.observeAllRosters(),
+            rosterPreferences.activeRosterId,
+            rosterPreferences.selectedStates
+        ) { rosters, activeRosterId, selectedStateNames ->
 
-        if (roster == null) {
-            roster =
-                rosterRepository
-                    .getAllRosters()
-                    .firstOrNull()
+            val roster =
+                rosters.firstOrNull {
+                    it.id == activeRosterId
+                } ?: rosters.firstOrNull()
 
-            if (roster != null) {
-                rosterPreferences.setActiveRosterId(
-                    roster.id
-                )
-            }
-        }
+            roster?.toWidgetRoster(
+                selectedStateNames
+            )
+        }.distinctUntilChanged()
+    }
 
-        roster ?: return null
+    private fun RosterEntity.toWidgetRoster(
+        selectedStateNames: Set<String>
+    ): WidgetRoster? {
 
-        val startDate =
+        val parsedStartDate =
             runCatching {
-                LocalDate.parse(roster.startDate)
+                LocalDate.parse(startDate)
             }.getOrNull()
                 ?: return null
 
-        val workDays: Int
-        val offDays: Int
+        val resolvedWorkDays: Int
+        val resolvedOffDays: Int
 
-        if (roster.isCustomRoster) {
-            workDays = roster.customWorkDays
-            offDays = roster.customOffDays
+        if (isCustomRoster) {
+            resolvedWorkDays =
+                customWorkDays
+
+            resolvedOffDays =
+                customOffDays
         } else {
-            val pattern =
+            val rosterPattern =
                 runCatching {
-                    RosterPattern.valueOf(roster.pattern)
+                    RosterPattern.valueOf(
+                        pattern
+                    )
                 }.getOrNull()
                     ?: return null
 
-            workDays = pattern.workDays
-            offDays = pattern.offDays
+            resolvedWorkDays =
+                rosterPattern.workDays
+
+            resolvedOffDays =
+                rosterPattern.offDays
         }
 
-        if (workDays <= 0 || offDays <= 0) {
+        if (
+            resolvedWorkDays <= 0 ||
+            resolvedOffDays <= 0
+        ) {
             return null
         }
 
-        val selectedStates =
-            rosterPreferences.selectedStates
-                .first()
+        val states =
+            selectedStateNames
                 .mapNotNull { stateName ->
                     runCatching {
-                        AustralianState.valueOf(stateName)
+                        AustralianState.valueOf(
+                            stateName
+                        )
                     }.getOrNull()
                 }
                 .toSet()
                 .ifEmpty {
-                    setOf(AustralianState.WA)
+                    setOf(
+                        AustralianState.WA
+                    )
                 }
 
         return WidgetRoster(
-            id = roster.id,
-            name = roster.name,
-            startDate = startDate,
-            workDays = workDays,
-            offDays = offDays,
-            selectedStates = selectedStates
+            id = id,
+            name = name,
+            startDate = parsedStartDate,
+            workDays = resolvedWorkDays,
+            offDays = resolvedOffDays,
+            selectedStates = states
         )
     }
 }
@@ -145,7 +170,9 @@ object SwingStatusCalculator {
         require(workDays > 0)
         require(offDays > 0)
 
-        val cycleLength = workDays + offDays
+        val cycleLength =
+            workDays + offDays
+
         val daysFromStart =
             ChronoUnit.DAYS.between(
                 startDate,
@@ -165,7 +192,8 @@ object SwingStatusCalculator {
             if (isWorkDay) {
                 positionInCycle
             } else {
-                positionInCycle - workDays
+                positionInCycle -
+                        workDays
             }
 
         val periodLength =
@@ -176,16 +204,21 @@ object SwingStatusCalculator {
             }
 
         val daysUntilTransition =
-            periodLength - positionInPeriod
+            periodLength -
+                    positionInPeriod
 
         return SwingStatus(
             isWorkDay = isWorkDay,
-            dayInPeriod = positionInPeriod + 1,
-            periodLength = periodLength,
-            daysUntilTransition = daysUntilTransition,
+            dayInPeriod =
+                positionInPeriod + 1,
+            periodLength =
+                periodLength,
+            daysUntilTransition =
+                daysUntilTransition,
             nextTransitionDate =
                 date.plusDays(
-                    daysUntilTransition.toLong()
+                    daysUntilTransition
+                        .toLong()
                 )
         )
     }
@@ -198,37 +231,58 @@ object CompactRosterCalendarCalculator {
         roster: WidgetRoster,
         today: LocalDate
     ): List<WidgetCalendarDay?> {
+
         val cells =
-            mutableListOf<WidgetCalendarDay?>()
+            mutableListOf<
+                    WidgetCalendarDay?
+                    >()
 
         repeat(
-            month.atDay(1).dayOfWeek.value - 1
+            month
+                .atDay(1)
+                .dayOfWeek
+                .value - 1
         ) {
             cells += null
         }
 
-        for (day in 1..month.lengthOfMonth()) {
-            val date = month.atDay(day)
+        for (
+            day in
+            1..month.lengthOfMonth()
+        ) {
+            val date =
+                month.atDay(day)
 
-            cells += WidgetCalendarDay(
-                date = date,
-                isWorkDay =
-                    RosterCalculator.isWorkDay(
-                        date = date,
-                        startDate = roster.startDate,
-                        workDays = roster.workDays,
-                        offDays = roster.offDays
-                    ),
-                isToday = date == today,
-                isPublicHoliday =
-                    PublicHolidayProvider.isPublicHoliday(
-                        date = date,
-                        states = roster.selectedStates
-                    )
-            )
+            cells +=
+                WidgetCalendarDay(
+                    date = date,
+                    isWorkDay =
+                        RosterCalculator
+                            .isWorkDay(
+                                date = date,
+                                startDate =
+                                    roster.startDate,
+                                workDays =
+                                    roster.workDays,
+                                offDays =
+                                    roster.offDays
+                            ),
+                    isToday =
+                        date == today,
+                    isPublicHoliday =
+                        PublicHolidayProvider
+                            .isPublicHoliday(
+                                date = date,
+                                states =
+                                    roster
+                                        .selectedStates
+                            )
+                )
         }
 
-        while (cells.size % 7 != 0) {
+        while (
+            cells.size % 7 != 0
+        ) {
             cells += null
         }
 

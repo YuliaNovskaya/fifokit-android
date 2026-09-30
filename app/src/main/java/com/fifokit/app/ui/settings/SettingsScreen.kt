@@ -28,6 +28,8 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import com.fifokit.app.domain.pro.ProEntitlementManager
 import android.content.pm.ApplicationInfo
+import com.fifokit.app.data.billing.ProEntitlementStore
+import com.fifokit.app.widgets.RosterWidgetUpdater
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -114,6 +116,19 @@ fun SettingsScreen(
                         ProEntitlementManager.setDebugPro(
                             !entitlement.isPro
                         )
+
+                        ProEntitlementStore(
+                            context
+                        ).save(
+                            ProEntitlementManager
+                                .entitlement
+                                .value
+                        )
+
+                        RosterWidgetUpdater
+                            .updateAll(
+                                context
+                            )
                     }
                 ) {
                     Text(

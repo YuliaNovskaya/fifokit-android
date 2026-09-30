@@ -4,6 +4,8 @@ import android.content.Context
 import android.content.Intent
 import android.util.Log
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -41,33 +43,51 @@ class CompactRosterCalendarWidget :
         context: Context,
         id: GlanceId
     ) {
-        val roster =
-            withContext(Dispatchers.IO) {
-                RosterWidgetDataSource(context)
-                    .loadActiveRoster()
-            }
+        val dataSource =
+            RosterWidgetDataSource(
+                context
+            )
 
-        val isPro =
-            ProEntitlementManager.isPro
-
-        val today = LocalDate.now()
-        val month = YearMonth.from(today)
-
-        Log.d(
-            "FIFOKITWidget",
-            "Render Calendar isPro=" +
-                    isPro +
-                    " roster=" +
-                    (roster?.name ?: "none") +
-                    " id=" +
-                    (roster?.id ?: -1L)
-        )
+        withContext(Dispatchers.IO) {
+            dataSource.prepare()
+        }
 
         provideContent {
+            val roster by
+                dataSource
+                    .observeActiveRoster()
+                    .collectAsState(
+                        initial = null
+                    )
+
+            val entitlement by
+                ProEntitlementManager
+                    .entitlement
+                    .collectAsState()
+
+            val today =
+                LocalDate.now()
+
+            val month =
+                YearMonth.from(today)
+
+            Log.d(
+                "FIFOKITWidget",
+                "Compose Calendar isPro=" +
+                        entitlement.isPro +
+                        " roster=" +
+                        (roster?.name
+                            ?: "none") +
+                        " id=" +
+                        (roster?.id
+                            ?: -1L)
+            )
+
             CompactRosterCalendarContent(
                 context = context,
                 roster = roster,
-                isPro = isPro,
+                isPro =
+                    entitlement.isPro,
                 month = month,
                 today = today
             )
@@ -76,22 +96,34 @@ class CompactRosterCalendarWidget :
 }
 
 private val compactBackground =
-    ColorProvider(Color(0xFF111111))
+    ColorProvider(
+        Color(0xFF111111)
+    )
 
 private val compactSurface =
-    ColorProvider(Color(0xFF242424))
+    ColorProvider(
+        Color(0xFF242424)
+    )
 
 private val compactOrange =
-    ColorProvider(Color(0xFFF5A623))
+    ColorProvider(
+        Color(0xFFF5A623)
+    )
 
 private val compactWhite =
-    ColorProvider(Color(0xFFFFFFFF))
+    ColorProvider(
+        Color(0xFFFFFFFF)
+    )
 
 private val compactDark =
-    ColorProvider(Color(0xFF111111))
+    ColorProvider(
+        Color(0xFF111111)
+    )
 
 private val compactSecondary =
-    ColorProvider(Color(0xFFB3B3B3))
+    ColorProvider(
+        Color(0xFFB3B3B3)
+    )
 
 @Composable
 private fun CompactRosterCalendarContent(
@@ -107,71 +139,94 @@ private fun CompactRosterCalendarContent(
             MainActivity::class.java
         )
             .putExtra(
-                MainActivity.EXTRA_WIDGET_TYPE,
-                MainActivity.WIDGET_TYPE_COMPACT_CALENDAR
+                MainActivity
+                    .EXTRA_WIDGET_TYPE,
+                MainActivity
+                    .WIDGET_TYPE_COMPACT_CALENDAR
             )
 
     if (!isPro) {
         openIntent.putExtra(
-            MainActivity.EXTRA_WIDGET_DESTINATION,
-            MainActivity.WIDGET_DESTINATION_PRO
+            MainActivity
+                .EXTRA_WIDGET_DESTINATION,
+            MainActivity
+                .WIDGET_DESTINATION_PRO
         )
     }
 
     val openAction =
-        actionStartActivity(openIntent)
+        actionStartActivity(
+            openIntent
+        )
 
     Column(
         modifier = GlanceModifier
             .fillMaxSize()
-            .background(compactBackground)
-            .clickable(openAction)
+            .background(
+                compactBackground
+            )
+            .clickable(
+                openAction
+            )
             .padding(12.dp)
     ) {
         Text(
             text = "FIFOKIT",
             style = TextStyle(
-                color = compactOrange,
+                color =
+                    compactOrange,
                 fontSize = 11.sp,
-                fontWeight = FontWeight.Bold
+                fontWeight =
+                    FontWeight.Bold
             )
         )
 
         when {
             !isPro -> {
                 Text(
-                    text = "ROSTER CALENDAR",
+                    text =
+                        "ROSTER CALENDAR",
                     style = TextStyle(
-                        color = compactWhite,
+                        color =
+                            compactWhite,
                         fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold
+                        fontWeight =
+                            FontWeight.Bold
                     )
                 )
 
                 Text(
-                    text = "FIFOKIT Pro · Tap to unlock",
+                    text =
+                        "FIFOKIT Pro · Tap to unlock",
                     style = TextStyle(
-                        color = compactOrange,
+                        color =
+                            compactOrange,
                         fontSize = 12.sp,
-                        fontWeight = FontWeight.Bold
+                        fontWeight =
+                            FontWeight.Bold
                     )
                 )
             }
 
             roster == null -> {
                 Text(
-                    text = "No active roster",
+                    text =
+                        "No active roster",
                     style = TextStyle(
-                        color = compactWhite,
+                        color =
+                            compactWhite,
                         fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold
+                        fontWeight =
+                            FontWeight.Bold
                     )
                 )
 
                 Text(
-                    text = "Open FIFOKIT to create a roster",
+                    text =
+                        "Open FIFOKIT to create a roster",
                     style = TextStyle(
-                        color = compactSecondary,
+                        color =
+                            compactSecondary,
                         fontSize = 11.sp
                     )
                 )
@@ -180,23 +235,29 @@ private fun CompactRosterCalendarContent(
             else -> {
                 Text(
                     text =
-                        month.month.getDisplayName(
-                            JavaTextStyle.FULL,
-                            Locale.getDefault()
-                        ) +
+                        month.month
+                            .getDisplayName(
+                                JavaTextStyle
+                                    .FULL,
+                                Locale
+                                    .getDefault()
+                            ) +
                                 " " +
                                 month.year,
                     style = TextStyle(
-                        color = compactWhite,
+                        color =
+                            compactWhite,
                         fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold
+                        fontWeight =
+                            FontWeight.Bold
                     )
                 )
 
                 Text(
                     text = roster.name,
                     style = TextStyle(
-                        color = compactSecondary,
+                        color =
+                            compactSecondary,
                         fontSize = 10.sp
                     ),
                     maxLines = 1
@@ -209,7 +270,8 @@ private fun CompactRosterCalendarContent(
                         CompactRosterCalendarCalculator
                             .monthCells(
                                 month = month,
-                                roster = roster,
+                                roster =
+                                    roster,
                                 today = today
                             )
                 )
@@ -218,7 +280,8 @@ private fun CompactRosterCalendarContent(
                     text =
                         "Orange WORK · • Today · P Public holiday",
                     style = TextStyle(
-                        color = compactSecondary,
+                        color =
+                            compactSecondary,
                         fontSize = 9.sp
                     ),
                     maxLines = 1
@@ -231,89 +294,153 @@ private fun CompactRosterCalendarContent(
 @Composable
 private fun WeekdayRow() {
     Row(
-        modifier = GlanceModifier.fillMaxWidth()
+        modifier =
+            GlanceModifier
+                .fillMaxWidth()
     ) {
-        listOf("M", "T", "W", "T", "F", "S", "S")
-            .forEach { day ->
-                Text(
-                    text = day,
-                    modifier =
-                        GlanceModifier
-                            .width(30.dp)
-                            .padding(1.dp),
-                    style = TextStyle(
-                        color = compactSecondary,
-                        fontSize = 9.sp,
-                        fontWeight = FontWeight.Bold,
-                        textAlign = TextAlign.Center
-                    )
+        listOf(
+            "M",
+            "T",
+            "W",
+            "T",
+            "F",
+            "S",
+            "S"
+        ).forEach { day ->
+            Text(
+                text = day,
+                modifier =
+                    GlanceModifier
+                        .width(30.dp)
+                        .padding(1.dp),
+                style = TextStyle(
+                    color =
+                        compactSecondary,
+                    fontSize = 9.sp,
+                    fontWeight =
+                        FontWeight.Bold,
+                    textAlign =
+                        TextAlign.Center
                 )
-            }
+            )
+        }
     }
 }
 
 @Composable
 private fun CompactCalendarRows(
-    days: List<WidgetCalendarDay?>
+    days: List<
+            WidgetCalendarDay?
+            >
 ) {
     Column(
-        modifier = GlanceModifier.fillMaxWidth()
+        modifier =
+            GlanceModifier
+                .fillMaxWidth()
     ) {
-        days.chunked(7).forEach { week ->
-            Row(
-                modifier =
-                    GlanceModifier.fillMaxWidth()
-            ) {
-                week.forEach { day ->
-                    if (day == null) {
-                        Text(
-                            text = "",
-                            modifier =
-                                GlanceModifier
-                                    .width(30.dp)
-                                    .padding(2.dp)
-                        )
-                    } else {
-                        Text(
-                            text =
-                                (if (day.isToday) "•" else "") +
-                                        day.date.dayOfMonth +
-                                        (if (day.isPublicHoliday) "P" else ""),
-                            modifier =
-                                GlanceModifier
-                                    .width(30.dp)
-                                    .padding(2.dp)
-                                    .background(
-                                        if (day.isWorkDay) {
-                                            compactOrange
+        days
+            .chunked(7)
+            .forEach { week ->
+                Row(
+                    modifier =
+                        GlanceModifier
+                            .fillMaxWidth()
+                ) {
+                    week.forEach { day ->
+                        if (
+                            day == null
+                        ) {
+                            Text(
+                                text = "",
+                                modifier =
+                                    GlanceModifier
+                                        .width(
+                                            30.dp
+                                        )
+                                        .padding(
+                                            2.dp
+                                        )
+                            )
+                        } else {
+                            Text(
+                                text =
+                                    (
+                                        if (
+                                            day.isToday
+                                        ) {
+                                            "•"
                                         } else {
-                                            compactSurface
+                                            ""
                                         }
-                                    )
-                                    .padding(
-                                        vertical = 3.dp
+                                    ) +
+                                            day
+                                                .date
+                                                .dayOfMonth +
+                                            (
+                                                if (
+                                                    day
+                                                        .isPublicHoliday
+                                                ) {
+                                                    "P"
+                                                } else {
+                                                    ""
+                                                }
+                                            ),
+                                modifier =
+                                    GlanceModifier
+                                        .width(
+                                            30.dp
+                                        )
+                                        .padding(
+                                            2.dp
+                                        )
+                                        .background(
+                                            if (
+                                                day
+                                                    .isWorkDay
+                                            ) {
+                                                compactOrange
+                                            } else {
+                                                compactSurface
+                                            }
+                                        )
+                                        .padding(
+                                            vertical =
+                                                3.dp
+                                        ),
+                                style =
+                                    TextStyle(
+                                        color =
+                                            if (
+                                                day
+                                                    .isWorkDay
+                                            ) {
+                                                compactDark
+                                            } else {
+                                                compactWhite
+                                            },
+                                        fontSize =
+                                            10.sp,
+                                        fontWeight =
+                                            if (
+                                                day
+                                                    .isToday
+                                            ) {
+                                                FontWeight
+                                                    .Bold
+                                            } else {
+                                                FontWeight
+                                                    .Normal
+                                            },
+                                        textAlign =
+                                            TextAlign
+                                                .Center
                                     ),
-                            style = TextStyle(
-                                color =
-                                    if (day.isWorkDay) {
-                                        compactDark
-                                    } else {
-                                        compactWhite
-                                    },
-                                fontSize = 10.sp,
-                                fontWeight =
-                                    if (day.isToday) {
-                                        FontWeight.Bold
-                                    } else {
-                                        FontWeight.Normal
-                                    },
-                                textAlign = TextAlign.Center
-                            ),
-                            maxLines = 1
-                        )
+                                maxLines = 1
+                            )
+                        }
                     }
                 }
             }
-        }
     }
 }

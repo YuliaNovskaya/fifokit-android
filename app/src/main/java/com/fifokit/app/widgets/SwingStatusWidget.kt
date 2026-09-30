@@ -4,6 +4,8 @@ import android.content.Context
 import android.content.Intent
 import android.util.Log
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -29,29 +31,43 @@ import kotlinx.coroutines.withContext
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
-class SwingStatusWidget : GlanceAppWidget() {
+class SwingStatusWidget :
+    GlanceAppWidget() {
 
     override suspend fun provideGlance(
         context: Context,
         id: GlanceId
     ) {
-        val roster =
-            withContext(Dispatchers.IO) {
-                RosterWidgetDataSource(context)
-                    .loadActiveRoster()
-            }
+        val dataSource =
+            RosterWidgetDataSource(
+                context
+            )
 
-        val today = LocalDate.now()
-
-        Log.d(
-            "FIFOKITWidget",
-            "Render Swing roster=" +
-                    (roster?.name ?: "none") +
-                    " id=" +
-                    (roster?.id ?: -1L)
-        )
+        withContext(Dispatchers.IO) {
+            dataSource.prepare()
+        }
 
         provideContent {
+            val roster by
+                dataSource
+                    .observeActiveRoster()
+                    .collectAsState(
+                        initial = null
+                    )
+
+            val today =
+                LocalDate.now()
+
+            Log.d(
+                "FIFOKITWidget",
+                "Compose Swing roster=" +
+                        (roster?.name
+                            ?: "none") +
+                        " id=" +
+                        (roster?.id
+                            ?: -1L)
+            )
+
             SwingStatusContent(
                 context = context,
                 roster = roster,
@@ -62,19 +78,28 @@ class SwingStatusWidget : GlanceAppWidget() {
 }
 
 private val widgetBackground =
-    ColorProvider(Color(0xFF111111))
+    ColorProvider(
+        Color(0xFF111111)
+    )
 
 private val widgetOrange =
-    ColorProvider(Color(0xFFF5A623))
+    ColorProvider(
+        Color(0xFFF5A623)
+    )
 
 private val widgetWhite =
-    ColorProvider(Color(0xFFFFFFFF))
+    ColorProvider(
+        Color(0xFFFFFFFF)
+    )
 
 private val widgetSecondary =
-    ColorProvider(Color(0xFFB3B3B3))
+    ColorProvider(
+        Color(0xFFB3B3B3)
+    )
 
 private val widgetDateFormatter =
-    DateTimeFormatter.ofPattern("d MMM")
+    DateTimeFormatter
+        .ofPattern("d MMM")
 
 @Composable
 private fun SwingStatusContent(
@@ -87,18 +112,26 @@ private fun SwingStatusContent(
             context,
             MainActivity::class.java
         ).putExtra(
-            MainActivity.EXTRA_WIDGET_TYPE,
-            MainActivity.WIDGET_TYPE_SWING_STATUS
+            MainActivity
+                .EXTRA_WIDGET_TYPE,
+            MainActivity
+                .WIDGET_TYPE_SWING_STATUS
         )
 
     val openAppAction =
-        actionStartActivity(openAppIntent)
+        actionStartActivity(
+            openAppIntent
+        )
 
     Column(
         modifier = GlanceModifier
             .fillMaxSize()
-            .background(widgetBackground)
-            .clickable(openAppAction)
+            .background(
+                widgetBackground
+            )
+            .clickable(
+                openAppAction
+            )
             .padding(16.dp)
     ) {
         Text(
@@ -106,53 +139,70 @@ private fun SwingStatusContent(
             style = TextStyle(
                 color = widgetOrange,
                 fontSize = 12.sp,
-                fontWeight = FontWeight.Bold
+                fontWeight =
+                    FontWeight.Bold
             )
         )
 
         Spacer(
-            modifier = GlanceModifier.height(6.dp)
+            modifier =
+                GlanceModifier
+                    .height(6.dp)
         )
 
         if (roster == null) {
             Text(
-                text = "No active roster",
+                text =
+                    "No active roster",
                 style = TextStyle(
                     color = widgetWhite,
                     fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold
+                    fontWeight =
+                        FontWeight.Bold
                 )
             )
 
             Spacer(
-                modifier = GlanceModifier.height(4.dp)
+                modifier =
+                    GlanceModifier
+                        .height(4.dp)
             )
 
             Text(
-                text = "Open FIFOKIT to create a roster",
+                text =
+                    "Open FIFOKIT to create a roster",
                 style = TextStyle(
-                    color = widgetSecondary,
+                    color =
+                        widgetSecondary,
                     fontSize = 12.sp
                 )
             )
         } else {
             val status =
-                SwingStatusCalculator.calculate(
-                    date = today,
-                    startDate = roster.startDate,
-                    workDays = roster.workDays,
-                    offDays = roster.offDays
-                )
+                SwingStatusCalculator
+                    .calculate(
+                        date = today,
+                        startDate =
+                            roster.startDate,
+                        workDays =
+                            roster.workDays,
+                        offDays =
+                            roster.offDays
+                    )
 
             val statusLabel =
-                if (status.isWorkDay) {
+                if (
+                    status.isWorkDay
+                ) {
                     "ON SWING"
                 } else {
                     "OFF SWING"
                 }
 
             val nextLabel =
-                if (status.isWorkDay) {
+                if (
+                    status.isWorkDay
+                ) {
                     "R&R starts"
                 } else {
                     "Work starts"
@@ -163,62 +213,80 @@ private fun SwingStatusContent(
                 style = TextStyle(
                     color = widgetWhite,
                     fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold
+                    fontWeight =
+                        FontWeight.Bold
                 )
             )
 
             Spacer(
-                modifier = GlanceModifier.height(4.dp)
+                modifier =
+                    GlanceModifier
+                        .height(4.dp)
             )
 
             Text(
                 text =
                     "Day " +
-                            status.dayInPeriod +
+                            status
+                                .dayInPeriod +
                             " of " +
-                            status.periodLength,
+                            status
+                                .periodLength,
                 style = TextStyle(
-                    color = widgetSecondary,
+                    color =
+                        widgetSecondary,
                     fontSize = 13.sp
                 )
             )
 
             Text(
                 text =
-                    status.daysUntilTransition
+                    status
+                        .daysUntilTransition
                         .toString() +
                             " days until change",
                 style = TextStyle(
-                    color = widgetSecondary,
+                    color =
+                        widgetSecondary,
                     fontSize = 13.sp
                 )
             )
 
             Spacer(
-                modifier = GlanceModifier.height(6.dp)
+                modifier =
+                    GlanceModifier
+                        .height(6.dp)
             )
 
             Text(
                 text =
                     nextLabel +
                             " " +
-                            status.nextTransitionDate
-                                .format(widgetDateFormatter),
+                            status
+                                .nextTransitionDate
+                                .format(
+                                    widgetDateFormatter
+                                ),
                 style = TextStyle(
-                    color = widgetOrange,
+                    color =
+                        widgetOrange,
                     fontSize = 13.sp,
-                    fontWeight = FontWeight.Bold
+                    fontWeight =
+                        FontWeight.Bold
                 )
             )
 
             Spacer(
-                modifier = GlanceModifier.height(4.dp)
+                modifier =
+                    GlanceModifier
+                        .height(4.dp)
             )
 
             Text(
                 text = roster.name,
                 style = TextStyle(
-                    color = widgetSecondary,
+                    color =
+                        widgetSecondary,
                     fontSize = 11.sp
                 ),
                 maxLines = 1
