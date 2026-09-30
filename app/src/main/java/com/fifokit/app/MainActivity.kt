@@ -13,6 +13,8 @@ import androidx.core.view.WindowCompat
 import com.fifokit.app.deeplink.AppLinkDestination
 import com.fifokit.app.deeplink.AppLinkRequest
 import com.fifokit.app.deeplink.AppLinkRouter
+import com.fifokit.app.analytics.AnalyticsEvents
+import com.fifokit.app.analytics.AnalyticsParams
 import com.fifokit.app.ui.FIFOKITApp
 import com.fifokit.app.ui.theme.FIFOKITTheme
 import com.google.firebase.analytics.FirebaseAnalytics
@@ -122,10 +124,10 @@ class MainActivity : ComponentActivity() {
             FirebaseAnalytics
                 .getInstance(this)
                 .logEvent(
-                    "widget_opened"
+                    AnalyticsEvents.WIDGET_OPENED
                 ) {
                     param(
-                        "widget_type",
+                        AnalyticsParams.WIDGET_TYPE,
                         widgetType
                     )
                 }
@@ -140,10 +142,10 @@ class MainActivity : ComponentActivity() {
             FirebaseAnalytics
                 .getInstance(this)
                 .logEvent(
-                    "widget_pro_locked"
+                    AnalyticsEvents.WIDGET_PRO_LOCKED
                 ) {
                     param(
-                        "widget_type",
+                        AnalyticsParams.WIDGET_TYPE,
                         widgetType
                     )
                 }
@@ -163,9 +165,9 @@ class MainActivity : ComponentActivity() {
                         uri.getQueryParameter(
                             "utm_source"
                         ),
-                "source" to
+                AnalyticsParams.SOURCE to
                         uri.getQueryParameter(
-                            "source"
+                            AnalyticsParams.SOURCE
                         ),
                 "utm_medium" to
                         uri.getQueryParameter(
@@ -196,10 +198,10 @@ class MainActivity : ComponentActivity() {
         FirebaseAnalytics
             .getInstance(this)
             .logEvent(
-                "deep_link_opened"
+                AnalyticsEvents.DEEP_LINK_OPENED
             ) {
                 param(
-                    "destination",
+                    AnalyticsParams.DESTINATION,
                     request.destination
                         .name
                         .lowercase()
@@ -209,7 +211,7 @@ class MainActivity : ComponentActivity() {
                     ?.take(100)
                     ?.let {
                         param(
-                            "source",
+                            AnalyticsParams.SOURCE,
                             it
                         )
                     }
@@ -218,7 +220,7 @@ class MainActivity : ComponentActivity() {
                     ?.take(100)
                     ?.let {
                         param(
-                            "medium",
+                            AnalyticsParams.MEDIUM,
                             it
                         )
                     }
@@ -227,7 +229,7 @@ class MainActivity : ComponentActivity() {
                     ?.take(100)
                     ?.let {
                         param(
-                            "campaign",
+                            AnalyticsParams.CAMPAIGN,
                             it
                         )
                     }
@@ -236,7 +238,7 @@ class MainActivity : ComponentActivity() {
                     ?.take(100)
                     ?.let {
                         param(
-                            "content",
+                            AnalyticsParams.CONTENT,
                             it
                         )
                     }
@@ -245,7 +247,7 @@ class MainActivity : ComponentActivity() {
 
     companion object {
         const val EXTRA_WIDGET_TYPE =
-            "widget_type"
+            AnalyticsParams.WIDGET_TYPE
 
         const val EXTRA_WIDGET_DESTINATION =
             "widget_destination"

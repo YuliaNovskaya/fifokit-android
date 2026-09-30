@@ -5,6 +5,9 @@ import android.os.Bundle
 import com.android.installreferrer.api.InstallReferrerClient
 import com.android.installreferrer.api.InstallReferrerStateListener
 import com.google.firebase.analytics.FirebaseAnalytics
+import com.fifokit.app.analytics.AnalyticsEvents
+import com.fifokit.app.analytics.AnalyticsParams
+import com.fifokit.app.analytics.AnalyticsUserProperties
 
 class InstallAttributionTracker(
     context: Context
@@ -104,7 +107,7 @@ class InstallAttributionTracker(
             AcquisitionAttribution
     ) {
         analytics.setUserProperty(
-            "acq_source",
+            AnalyticsUserProperties.ACQ_SOURCE,
             attribution.source
                 .take(
                     USER_PROPERTY_VALUE_MAX
@@ -112,7 +115,7 @@ class InstallAttributionTracker(
         )
 
         analytics.setUserProperty(
-            "acq_medium",
+            AnalyticsUserProperties.ACQ_MEDIUM,
             attribution.medium
                 ?.take(
                     USER_PROPERTY_VALUE_MAX
@@ -120,7 +123,7 @@ class InstallAttributionTracker(
         )
 
         analytics.setUserProperty(
-            "acq_campaign",
+            AnalyticsUserProperties.ACQ_CAMPAIGN,
             attribution.campaign
                 ?.take(
                     USER_PROPERTY_VALUE_MAX
@@ -128,7 +131,7 @@ class InstallAttributionTracker(
         )
 
         analytics.setUserProperty(
-            "acq_content",
+            AnalyticsUserProperties.ACQ_CONTENT,
             attribution.content
                 ?.take(
                     USER_PROPERTY_VALUE_MAX
@@ -138,14 +141,14 @@ class InstallAttributionTracker(
         analytics.setDefaultEventParameters(
             Bundle().apply {
                 putString(
-                    "acq_source",
+                    AnalyticsUserProperties.ACQ_SOURCE,
                     attribution.source
                 )
 
                 attribution.medium
                     ?.let {
                         putString(
-                            "acq_medium",
+                            AnalyticsUserProperties.ACQ_MEDIUM,
                             it
                         )
                     }
@@ -153,7 +156,7 @@ class InstallAttributionTracker(
                 attribution.campaign
                     ?.let {
                         putString(
-                            "acq_campaign",
+                            AnalyticsUserProperties.ACQ_CAMPAIGN,
                             it
                         )
                     }
@@ -161,7 +164,7 @@ class InstallAttributionTracker(
                 attribution.content
                     ?.let {
                         putString(
-                            "acq_content",
+                            AnalyticsUserProperties.ACQ_CONTENT,
                             it
                         )
                     }
@@ -176,17 +179,17 @@ class InstallAttributionTracker(
         installTimestamp: Long
     ) {
         analytics.logEvent(
-            "install_attribution",
+            AnalyticsEvents.INSTALL_ATTRIBUTION,
             Bundle().apply {
                 putString(
-                    "source",
+                    AnalyticsParams.SOURCE,
                     attribution.source
                 )
 
                 attribution.medium
                     ?.let {
                         putString(
-                            "medium",
+                            AnalyticsParams.MEDIUM,
                             it
                         )
                     }
@@ -194,7 +197,7 @@ class InstallAttributionTracker(
                 attribution.campaign
                     ?.let {
                         putString(
-                            "campaign",
+                            AnalyticsParams.CAMPAIGN,
                             it
                         )
                     }
@@ -202,18 +205,18 @@ class InstallAttributionTracker(
                 attribution.content
                     ?.let {
                         putString(
-                            "content",
+                            AnalyticsParams.CONTENT,
                             it
                         )
                     }
 
                 putLong(
-                    "referrer_click_ts",
+                    AnalyticsParams.REFERRER_CLICK_TS,
                     clickTimestamp
                 )
 
                 putLong(
-                    "install_begin_ts",
+                    AnalyticsParams.INSTALL_BEGIN_TS,
                     installTimestamp
                 )
             }
@@ -249,7 +252,7 @@ private class AcquisitionAttributionStore(
 
         val source =
             preferences.getString(
-                "source",
+                AnalyticsParams.SOURCE,
                 null
             )
                 ?: return null
@@ -258,17 +261,17 @@ private class AcquisitionAttributionStore(
             source = source,
             medium =
                 preferences.getString(
-                    "medium",
+                    AnalyticsParams.MEDIUM,
                     null
                 ),
             campaign =
                 preferences.getString(
-                    "campaign",
+                    AnalyticsParams.CAMPAIGN,
                     null
                 ),
             content =
                 preferences.getString(
-                    "content",
+                    AnalyticsParams.CONTENT,
                     null
                 )
         )
@@ -285,19 +288,19 @@ private class AcquisitionAttributionStore(
                 true
             )
             .putString(
-                "source",
+                AnalyticsParams.SOURCE,
                 attribution.source
             )
             .putString(
-                "medium",
+                AnalyticsParams.MEDIUM,
                 attribution.medium
             )
             .putString(
-                "campaign",
+                AnalyticsParams.CAMPAIGN,
                 attribution.campaign
             )
             .putString(
-                "content",
+                AnalyticsParams.CONTENT,
                 attribution.content
             )
             .apply()

@@ -6,6 +6,8 @@ import android.util.Log
 import androidx.glance.appwidget.GlanceAppWidget
 import androidx.glance.appwidget.GlanceAppWidgetReceiver
 import com.fifokit.app.MainActivity
+import com.fifokit.app.analytics.AnalyticsEvents
+import com.fifokit.app.analytics.AnalyticsParams
 import com.google.firebase.analytics.FirebaseAnalytics
 import com.google.firebase.analytics.logEvent
 
@@ -38,9 +40,9 @@ class SwingStatusWidgetReceiver :
 
         FirebaseAnalytics
             .getInstance(context)
-            .logEvent("widget_added") {
+            .logEvent(AnalyticsEvents.WIDGET_ADDED) {
                 param(
-                    "widget_type",
+                    AnalyticsParams.WIDGET_TYPE,
                     MainActivity.WIDGET_TYPE_SWING_STATUS
                 )
             }

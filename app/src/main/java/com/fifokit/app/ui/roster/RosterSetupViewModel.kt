@@ -29,6 +29,8 @@ import com.fifokit.app.domain.pro.ProFeature
 import com.fifokit.app.notifications.SharedTimeReminderScheduler
 import com.fifokit.app.widgets.RosterWidgetUpdater
 import com.fifokit.app.export.RosterExportData
+import com.fifokit.app.analytics.AnalyticsEvents
+import com.fifokit.app.analytics.AnalyticsParams
 import com.fifokit.app.growth.GrowthEngagementTracker
 
 @Composable
@@ -254,7 +256,7 @@ class RosterSetupViewModel(
             )
 
             analytics.logEvent(
-                "roster_deleted",
+                AnalyticsEvents.ROSTER_DELETED,
                 null
             )
             onFinished(nextRoster != null)
@@ -404,9 +406,9 @@ class RosterSetupViewModel(
 
             val eventName =
                 if (isNewRoster) {
-                    "roster_created"
+                    AnalyticsEvents.ROSTER_CREATED
                 } else {
-                    "roster_updated"
+                    AnalyticsEvents.ROSTER_UPDATED
                 }
 
             growthTracker.recordMeaningfulAction()
@@ -414,9 +416,9 @@ class RosterSetupViewModel(
             analytics.logEvent(
                 eventName,
                 Bundle().apply {
-                    putString("pattern", selectedPattern.name)
+                    putString(AnalyticsParams.PATTERN, selectedPattern.name)
                     putLong(
-                        "state_count",
+                        AnalyticsParams.STATE_COUNT,
                         selectedStates.size.toLong()
                     )
                 }
