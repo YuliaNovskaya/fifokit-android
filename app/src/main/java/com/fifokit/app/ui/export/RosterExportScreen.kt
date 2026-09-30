@@ -35,6 +35,7 @@ import com.fifokit.app.domain.pro.ProAccess
 import com.fifokit.app.domain.pro.ProFeature
 import com.fifokit.app.export.RosterExportData
 import com.fifokit.app.export.RosterExportManager
+import com.fifokit.app.growth.GrowthEngagementTracker
 import com.google.firebase.analytics.FirebaseAnalytics
 import com.google.firebase.analytics.logEvent
 import kotlinx.coroutines.Dispatchers
@@ -98,6 +99,10 @@ fun RosterExportScreen(
 
     val analytics = remember(context) {
         FirebaseAnalytics.getInstance(context)
+    }
+
+    val growthTracker = remember(context) {
+        GrowthEngagementTracker(context)
     }
 
     var selectedExport by remember {
@@ -303,6 +308,8 @@ fun RosterExportScreen(
             try {
                 val file =
                     generateExport(kind)
+
+                growthTracker.recordMeaningfulAction()
 
                 analytics.logEvent(
                     "roster_export_created"

@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -32,6 +33,9 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import java.time.format.DateTimeFormatter
 import android.Manifest
+import android.app.Activity
+import android.content.Context
+import android.content.ContextWrapper
 import android.content.pm.PackageManager
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -58,6 +62,8 @@ import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import com.fifokit.app.domain.pro.ProAccess
 import com.fifokit.app.domain.pro.ProFeature
+import com.fifokit.app.growth.GrowthEngagementTracker
+import com.fifokit.app.growth.InAppReviewLauncher
 
 private enum class CalendarViewMode {
     MONTH,
@@ -72,6 +78,7 @@ fun RosterCalendarScreen(
     onFinance: () -> Unit,
     onShareRoster: () -> Unit,
     onExportRoster: (YearMonth) -> Unit,
+    initialYearView: Boolean = false,
     onProRequested: (String) -> Unit,
     onSharedRosters: () -> Unit,
 ) {
@@ -99,12 +106,98 @@ fun RosterCalendarScreen(
         mutableStateOf(YearMonth.now())
     }
 
-    var calendarViewMode by remember {
-        mutableStateOf(CalendarViewMode.MONTH)
+    var calendarViewMode by remember(initialYearView) {
+        mutableStateOf(
+            if (initialYearView) {
+                CalendarViewMode.YEAR
+            } else {
+                CalendarViewMode.MONTH
+            }
+        )
+    }
+
+    val growthTracker =
+        remember(context) {
+            GrowthEngagementTracker(context)
+        }
+
+    var showReviewPrompt by remember {
+        mutableStateOf(false)
+    }
+
+    LaunchedEffect(Unit) {
+        if (
+            growthTracker.shouldShowReviewPrompt()
+        ) {
+            growthTracker.markPromptShown()
+            analytics.logEvent(
+                "review_prompt_shown",
+                null
+            )
+            showReviewPrompt = true
+        }
     }
 
     var rosterMenuExpanded by remember {
         mutableStateOf(false)
+    }
+
+    if (showReviewPrompt) {
+        AlertDialog(
+            onDismissRequest = {
+                growthTracker.markReviewDismissed()
+                analytics.logEvent(
+                    "review_prompt_dismissed",
+                    null
+                )
+                showReviewPrompt = false
+            },
+            title = {
+                Text("Enjoying FIFOKIT?")
+            },
+            text = {
+                Text(
+                    "If FIFOKIT is useful for your roster, would you like to review it on Google Play?"
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        growthTracker.markReviewAccepted()
+                        analytics.logEvent(
+                            "review_prompt_accepted",
+                            null
+                        )
+                        showReviewPrompt = false
+
+                        context
+                            .findActivity()
+                            ?.let { activity ->
+                                InAppReviewLauncher.launch(
+                                    activity = activity,
+                                    analytics = analytics
+                                )
+                            }
+                    }
+                ) {
+                    Text("Review app")
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = {
+                        growthTracker.markReviewDismissed()
+                        analytics.logEvent(
+                            "review_prompt_dismissed",
+                            null
+                        )
+                        showReviewPrompt = false
+                    }
+                ) {
+                    Text("Not now")
+                }
+            }
+        )
     }
 
     Scaffold(
@@ -877,4 +970,18 @@ private fun MiniCalendarDay(
             )
         }
     }
+}
+
+private fun Context.findActivity(): Activity? {
+    var current = this
+
+    while (current is ContextWrapper) {
+        if (current is Activity) {
+            return current
+        }
+
+        current = current.baseContext
+    }
+
+    return null
 }

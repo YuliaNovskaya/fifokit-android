@@ -71,6 +71,11 @@ fun FIFOKITApp(
         screenOverride ?: (rosterSetupViewModel.hasSavedRoster == true)
 
     var showSettings by remember { mutableStateOf(false) }
+
+    var requestYearView by remember {
+        mutableStateOf(false)
+    }
+
     var showFinance by remember {
         mutableStateOf(false)
     }
@@ -162,6 +167,18 @@ fun FIFOKITApp(
                     showAcceptInvite = true
                 }
             }
+        }
+    }
+
+    LaunchedEffect(
+        requestYearView,
+        showCalendar
+    ) {
+        if (
+            requestYearView &&
+            showCalendar
+        ) {
+            requestYearView = false
         }
     }
 
@@ -414,6 +431,26 @@ fun FIFOKITApp(
                     onAccount = {
                         showAccount = true
                     },
+                    onYearViewDiscovery = {
+                        analytics.logEvent(
+                            "feature_discovery_opened"
+                        ) {
+                            param(
+                                "feature",
+                                "year_view"
+                            )
+                        }
+                        requestYearView = true
+                        showSettings = false
+                    },
+                    onFinanceDiscovery = {
+                        showSettings = false
+                        showFinance = true
+                    },
+                    onPartnerDiscovery = {
+                        showSettings = false
+                        showSharedRosters = true
+                    },
                     selectedStates = rosterSetupViewModel.selectedStates,
                     onStateToggle = rosterSetupViewModel::toggleState,
                     remindersEnabled = rosterSetupViewModel.remindersEnabled,
@@ -447,6 +484,8 @@ fun FIFOKITApp(
                         exportStartMonth = month
                         showRosterExport = true
                     },
+                    initialYearView =
+                        requestYearView,
                     onSettings = {
                         showSettings = true
                     },

@@ -29,6 +29,7 @@ import com.fifokit.app.domain.pro.ProFeature
 import com.fifokit.app.notifications.SharedTimeReminderScheduler
 import com.fifokit.app.widgets.RosterWidgetUpdater
 import com.fifokit.app.export.RosterExportData
+import com.fifokit.app.growth.GrowthEngagementTracker
 
 @Composable
 fun RosterSetupRoute(
@@ -149,6 +150,9 @@ class RosterSetupViewModel(
         private set
 
     private val analytics = FirebaseAnalytics.getInstance(application)
+
+    private val growthTracker =
+        GrowthEngagementTracker(application)
     var selectedPattern by mutableStateOf(RosterPattern.TWO_ONE)
         private set
 
@@ -404,6 +408,8 @@ class RosterSetupViewModel(
                 } else {
                     "roster_updated"
                 }
+
+            growthTracker.recordMeaningfulAction()
 
             analytics.logEvent(
                 eventName,

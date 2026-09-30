@@ -30,6 +30,9 @@ import com.fifokit.app.domain.pro.ProEntitlementManager
 import android.content.pm.ApplicationInfo
 import com.fifokit.app.data.billing.ProEntitlementStore
 import com.fifokit.app.widgets.RosterWidgetUpdater
+import com.fifokit.app.growth.GrowthEngagementTracker
+import com.google.firebase.analytics.FirebaseAnalytics
+import com.google.firebase.analytics.logEvent
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -38,6 +41,9 @@ fun SettingsScreen(
     onBack: () -> Unit,
     onPro: () -> Unit = {},
     onAccount: () -> Unit = {},
+    onYearViewDiscovery: () -> Unit = {},
+    onFinanceDiscovery: () -> Unit = {},
+    onPartnerDiscovery: () -> Unit = {},
     selectedStates: Set<AustralianState> = setOf(AustralianState.WA),
     onStateToggle: (AustralianState) -> Unit = {},
     remindersEnabled: Boolean = true,
@@ -53,6 +59,7 @@ fun SettingsScreen(
     onReminderTimeChange: (Int, Int) -> Unit = { _, _ -> }
 ) {
     val context = LocalContext.current
+    val analytics = FirebaseAnalytics.getInstance(context)
     val notificationsEnabled =
         NotificationManagerCompat.from(context).areNotificationsEnabled()
 
@@ -106,6 +113,83 @@ fun SettingsScreen(
                 Text("Account & cloud sync")
             }
 
+            Spacer(modifier = Modifier.height(24.dp))
+
+            Text("Discover FIFOKIT")
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            OutlinedButton(
+                modifier = Modifier.fillMaxWidth(),
+                onClick = {
+                    analytics.logEvent("feature_discovery_opened") {
+                        param("feature", "year_view")
+                    }
+                    onYearViewDiscovery()
+                }
+            ) {
+                Text("Year view")
+            }
+
+            OutlinedButton(
+                modifier = Modifier.fillMaxWidth(),
+                onClick = {
+                    analytics.logEvent("feature_discovery_opened") {
+                        param("feature", "finance_tools")
+                    }
+                    onFinanceDiscovery()
+                }
+            ) {
+                Text("Finance tools")
+            }
+
+            OutlinedButton(
+                modifier = Modifier.fillMaxWidth(),
+                onClick = {
+                    analytics.logEvent("feature_discovery_opened") {
+                        param("feature", "partner_sharing")
+                    }
+                    onPartnerDiscovery()
+                }
+            ) {
+                Text("Partner sharing")
+            }
+
+            OutlinedButton(
+                modifier = Modifier.fillMaxWidth(),
+                onClick = {
+                    val storeUrl =
+                        "https://play.google.com/store/apps/details" +
+                                "?id=com.fifokit.app" +
+                                "&referrer=utm_source%3Dfifokit_app" +
+                                "%26utm_medium%3Dshare" +
+                                "%26utm_campaign%3Dorganic_growth" +
+                                "%26utm_content%3Dshare_app"
+
+                    val intent =
+                        Intent(Intent.ACTION_SEND).apply {
+                            type = "text/plain"
+                            putExtra(
+                                Intent.EXTRA_TEXT,
+                                "Plan your FIFO roster with FIFOKIT: $storeUrl"
+                            )
+                        }
+
+                    analytics.logEvent("app_shared") {
+                        param("surface", "settings")
+                    }
+
+                    context.startActivity(
+                        Intent.createChooser(
+                            intent,
+                            "Share FIFOKIT"
+                        )
+                    )
+                }
+            ) {
+                Text("Share FIFOKIT")
+            }
+
             if (isDebugBuild) {
 
                 Spacer(modifier = Modifier.height(12.dp))
@@ -138,6 +222,19 @@ fun SettingsScreen(
                             "Debug: Set Pro"
                         }
                     )
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                OutlinedButton(
+                    modifier = Modifier.fillMaxWidth(),
+                    onClick = {
+                        GrowthEngagementTracker(
+                            context
+                        ).makeReviewEligibleForDebug()
+                    }
+                ) {
+                    Text("Debug: Make review eligible")
                 }
             }
 

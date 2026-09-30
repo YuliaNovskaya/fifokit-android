@@ -28,6 +28,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.ui.platform.LocalContext
 import com.google.firebase.analytics.FirebaseAnalytics
 import com.google.firebase.analytics.logEvent
+import com.fifokit.app.growth.GrowthEngagementTracker
 
 @Composable
 fun RosterInviteScreen(
@@ -39,6 +40,7 @@ fun RosterInviteScreen(
 ) {
     val context = LocalContext.current
     val analytics = FirebaseAnalytics.getInstance(context)
+    val growthTracker = GrowthEngagementTracker(context)
     val state by viewModel.uiState.collectAsState()
 
     LaunchedEffect(state.inviteId) {
@@ -136,6 +138,13 @@ fun RosterInviteScreen(
                                 intent,
                                 "Share FIFOKIT roster"
                             )
+                        )
+
+                        growthTracker.recordMeaningfulAction()
+
+                        analytics.logEvent(
+                            "roster_invite_shared",
+                            null
                         )
                     }
                 ) {
