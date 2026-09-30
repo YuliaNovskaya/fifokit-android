@@ -72,10 +72,6 @@ fun FIFOKITApp(
 
     var showSettings by remember { mutableStateOf(false) }
 
-    var requestYearView by remember {
-        mutableStateOf(false)
-    }
-
     var showFinance by remember {
         mutableStateOf(false)
     }
@@ -419,18 +415,6 @@ fun FIFOKITApp(
                     onAccount = {
                         showAccount = true
                     },
-                    onYearViewDiscovery = {
-                        requestYearView = true
-                        showSettings = false
-                    },
-                    onFinanceDiscovery = {
-                        showSettings = false
-                        showFinance = true
-                    },
-                    onPartnerDiscovery = {
-                        showSettings = false
-                        showSharedRosters = true
-                    },
                     selectedStates = rosterSetupViewModel.selectedStates,
                     onStateToggle = rosterSetupViewModel::toggleState,
                     remindersEnabled = rosterSetupViewModel.remindersEnabled,
@@ -463,11 +447,6 @@ fun FIFOKITApp(
                     onExportRoster = { month ->
                         exportStartMonth = month
                         showRosterExport = true
-                    },
-                    initialYearView =
-                        requestYearView,
-                    onInitialYearViewConsumed = {
-                        requestYearView = false
                     },
                     onSettings = {
                         showSettings = true

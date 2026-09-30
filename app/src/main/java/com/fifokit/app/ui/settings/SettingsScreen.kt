@@ -43,9 +43,6 @@ fun SettingsScreen(
     onBack: () -> Unit,
     onPro: () -> Unit = {},
     onAccount: () -> Unit = {},
-    onYearViewDiscovery: () -> Unit = {},
-    onFinanceDiscovery: () -> Unit = {},
-    onPartnerDiscovery: () -> Unit = {},
     selectedStates: Set<AustralianState> = setOf(AustralianState.WA),
     onStateToggle: (AustralianState) -> Unit = {},
     remindersEnabled: Boolean = true,
@@ -119,46 +116,6 @@ fun SettingsScreen(
             }
 
             Spacer(modifier = Modifier.height(24.dp))
-
-            Text("Discover FIFOKIT")
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            OutlinedButton(
-                modifier = Modifier.fillMaxWidth(),
-                onClick = {
-                    analytics.logEvent("feature_discovery_opened") {
-                        param("feature", "year_view")
-                    }
-                    onYearViewDiscovery()
-                }
-            ) {
-                Text("Year view")
-            }
-
-            OutlinedButton(
-                modifier = Modifier.fillMaxWidth(),
-                onClick = {
-                    analytics.logEvent("feature_discovery_opened") {
-                        param("feature", "finance_tools")
-                    }
-                    onFinanceDiscovery()
-                }
-            ) {
-                Text("Finance tools")
-            }
-
-            OutlinedButton(
-                modifier = Modifier.fillMaxWidth(),
-                onClick = {
-                    analytics.logEvent("feature_discovery_opened") {
-                        param("feature", "partner_sharing")
-                    }
-                    onPartnerDiscovery()
-                }
-            ) {
-                Text("Partner sharing")
-            }
 
             OutlinedButton(
                 modifier = Modifier.fillMaxWidth(),

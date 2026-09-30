@@ -78,8 +78,6 @@ fun RosterCalendarScreen(
     onFinance: () -> Unit,
     onShareRoster: () -> Unit,
     onExportRoster: (YearMonth) -> Unit,
-    initialYearView: Boolean = false,
-    onInitialYearViewConsumed: () -> Unit = {},
     onProRequested: (String) -> Unit,
     onSharedRosters: () -> Unit,
 ) {
@@ -111,15 +109,6 @@ fun RosterCalendarScreen(
         mutableStateOf(
             CalendarViewMode.MONTH
         )
-    }
-
-    LaunchedEffect(initialYearView) {
-        if (initialYearView) {
-            calendarViewMode =
-                CalendarViewMode.YEAR
-
-            onInitialYearViewConsumed()
-        }
     }
 
     val growthTracker =
@@ -214,7 +203,17 @@ fun RosterCalendarScreen(
                 },
                 actions = {
                     TextButton(
-                        onClick = onFinance
+                        onClick = {
+                            analytics.logEvent(
+                                "feature_discovery_opened"
+                            ) {
+                                param(
+                                    "feature",
+                                    "finance_tools"
+                                )
+                            }
+                            onFinance()
+                        }
                     ) {
                         Text("Tools")
                     }
@@ -232,7 +231,17 @@ fun RosterCalendarScreen(
                         Text("Share")
                     }
                     TextButton(
-                        onClick = onSharedRosters
+                        onClick = {
+                            analytics.logEvent(
+                                "feature_discovery_opened"
+                            ) {
+                                param(
+                                    "feature",
+                                    "partner_sharing"
+                                )
+                            }
+                            onSharedRosters()
+                        }
                     ) {
                         Text("Shared")
                     }
@@ -334,6 +343,14 @@ fun RosterCalendarScreen(
                     Button(
                         modifier = Modifier.weight(1f),
                         onClick = {
+                            analytics.logEvent(
+                                "feature_discovery_opened"
+                            ) {
+                                param(
+                                    "feature",
+                                    "year_view"
+                                )
+                            }
                             calendarViewMode = CalendarViewMode.YEAR
                         }
                     ) {
@@ -343,6 +360,15 @@ fun RosterCalendarScreen(
                     OutlinedButton(
                         modifier = Modifier.weight(1f),
                         onClick = {
+                            analytics.logEvent(
+                                "feature_discovery_opened"
+                            ) {
+                                param(
+                                    "feature",
+                                    "year_view"
+                                )
+                            }
+
                             if (
                                 ProAccess.canUse(
                                     ProFeature.YEARLY_ROSTER
