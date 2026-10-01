@@ -16,6 +16,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import com.fifokit.app.ui.components.FifokitBackButton
+import com.fifokit.app.ui.components.FifokitTopBar
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -118,15 +119,9 @@ fun AnnualEarningsScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = {
-                    Text("Annual Earnings")
-                },
-                navigationIcon = {
-                    FifokitBackButton(
-                        onClick = onBack
-                    )
-                }
+            FifokitTopBar(
+                title = "Annual Earnings",
+                onBack = onBack
             )
         }
     ) { innerPadding ->
