@@ -9,6 +9,7 @@ data class CloudRosterInvite(
     val createdAt: Long = 0L,
     val expiresAt: Long = 0L,
     val status: String = "PENDING",
+    val recipientLimit: Int = 1,
     val acceptedBy: String = "",
     val acceptedAt: Long = 0L
 )

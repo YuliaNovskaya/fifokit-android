@@ -17,11 +17,19 @@ object SharingPolicy {
 
     fun canCreateInvite(
         activeRecipientCount: Int,
-        pendingInviteCount: Int,
         isPro: Boolean
     ): Boolean {
-        return activeRecipientCount + pendingInviteCount <
+        return activeRecipientCount <
                 recipientLimit(isPro)
+    }
+
+    fun canAcceptRecipient(
+        activeRecipientCount: Int,
+        recipientAlreadyActive: Boolean,
+        recipientLimit: Int
+    ): Boolean {
+        return recipientAlreadyActive ||
+                activeRecipientCount < recipientLimit
     }
 }
 

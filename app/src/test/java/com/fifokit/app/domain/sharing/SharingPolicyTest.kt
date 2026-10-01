@@ -8,7 +8,7 @@ import org.junit.Test
 class SharingPolicyTest {
 
     @Test
-    fun `free allows one sharing recipient`() {
+    fun `free allows one active sharing recipient`() {
         assertEquals(
             1,
             SharingPolicy.recipientLimit(
@@ -19,7 +19,6 @@ class SharingPolicyTest {
         assertTrue(
             SharingPolicy.canCreateInvite(
                 activeRecipientCount = 0,
-                pendingInviteCount = 0,
                 isPro = false
             )
         )
@@ -27,14 +26,13 @@ class SharingPolicyTest {
         assertFalse(
             SharingPolicy.canCreateInvite(
                 activeRecipientCount = 1,
-                pendingInviteCount = 0,
                 isPro = false
             )
         )
     }
 
     @Test
-    fun `pro allows up to five sharing recipients`() {
+    fun `pro allows up to five active sharing recipients`() {
         assertEquals(
             5,
             SharingPolicy.recipientLimit(
@@ -45,7 +43,6 @@ class SharingPolicyTest {
         assertTrue(
             SharingPolicy.canCreateInvite(
                 activeRecipientCount = 4,
-                pendingInviteCount = 0,
                 isPro = true
             )
         )
@@ -53,27 +50,26 @@ class SharingPolicyTest {
         assertFalse(
             SharingPolicy.canCreateInvite(
                 activeRecipientCount = 5,
-                pendingInviteCount = 0,
                 isPro = true
             )
         )
     }
 
     @Test
-    fun `pending invites reserve recipient slots`() {
+    fun `acceptance blocks a new recipient when limit is full`() {
         assertFalse(
-            SharingPolicy.canCreateInvite(
-                activeRecipientCount = 0,
-                pendingInviteCount = 1,
-                isPro = false
+            SharingPolicy.canAcceptRecipient(
+                activeRecipientCount = 1,
+                recipientAlreadyActive = false,
+                recipientLimit = 1
             )
         )
 
-        assertFalse(
-            SharingPolicy.canCreateInvite(
-                activeRecipientCount = 3,
-                pendingInviteCount = 2,
-                isPro = true
+        assertTrue(
+            SharingPolicy.canAcceptRecipient(
+                activeRecipientCount = 1,
+                recipientAlreadyActive = true,
+                recipientLimit = 1
             )
         )
     }

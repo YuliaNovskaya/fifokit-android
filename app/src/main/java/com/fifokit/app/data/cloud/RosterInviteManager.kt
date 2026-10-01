@@ -28,17 +28,10 @@ class RosterInviteManager(
                 .distinct()
                 .size
 
-        val pendingInviteCount =
-            inviteRepository
-                .getPendingInvitesForOwner(ownerId)
-                .size
-
         if (
             !SharingPolicy.canCreateInvite(
                 activeRecipientCount =
                     activeRecipientCount,
-                pendingInviteCount =
-                    pendingInviteCount,
                 isPro = isPro
             )
         ) {
@@ -62,7 +55,9 @@ class RosterInviteManager(
             role = "VIEWER",
             createdAt = now,
             expiresAt = now + INVITE_EXPIRY_MS,
-            status = "PENDING"
+            status = "PENDING",
+            recipientLimit =
+                SharingPolicy.recipientLimit(isPro)
         )
 
         inviteRepository.createInvite(invite)
@@ -89,6 +84,31 @@ class RosterInviteManager(
 
         if (invite.ownerId == userId) {
             error("You cannot accept your own invite")
+        }
+
+        val activeRecipientIds =
+            sharingRepository
+                .getSharesForOwner(invite.ownerId)
+                .map { it.userId }
+                .filter { it.isNotBlank() }
+                .distinct()
+
+        if (
+            !SharingPolicy.canAcceptRecipient(
+                activeRecipientCount =
+                    activeRecipientIds.size,
+                recipientAlreadyActive =
+                    userId in activeRecipientIds,
+                recipientLimit =
+                    invite.recipientLimit
+            )
+        ) {
+            throw SharingLimitReachedException(
+                limit = invite.recipientLimit,
+                isPro =
+                    invite.recipientLimit >
+                            SharingPolicy.FREE_RECIPIENT_LIMIT
+            )
         }
 
         sharingRepository.grantViewerAccess(

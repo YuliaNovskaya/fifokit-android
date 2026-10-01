@@ -1,6 +1,7 @@
 package com.fifokit.app.data.cloud
 
 import com.fifokit.app.data.cloud.model.CloudRosterInvite
+import com.fifokit.app.domain.sharing.SharingPolicy
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
@@ -96,6 +97,13 @@ class RosterInviteRepository(
             createdAt = getLong("createdAt") ?: 0L,
             expiresAt = getLong("expiresAt") ?: 0L,
             status = getString("status") ?: "PENDING",
+            recipientLimit =
+                (
+                    getLong("recipientLimit")
+                        ?: SharingPolicy
+                            .FREE_RECIPIENT_LIMIT
+                            .toLong()
+                ).toInt(),
             acceptedBy = getString("acceptedBy").orEmpty(),
             acceptedAt = getLong("acceptedAt") ?: 0L
         )
