@@ -2,6 +2,8 @@ package com.fifokit.app.data.cloud
 
 import com.fifokit.app.data.cloud.model.CloudRosterAccess
 import com.google.firebase.auth.FirebaseAuth
+import com.fifokit.app.domain.pro.ProEntitlementManager
+import com.fifokit.app.domain.sharing.SharingPolicy
 
 class RosterSharingManager(
     private val auth: FirebaseAuth = FirebaseAuth.getInstance(),
@@ -18,6 +20,20 @@ class RosterSharingManager(
             rosterId = rosterId,
             ownerId = ownerId,
             userId = viewerUserId
+        )
+    }
+
+    suspend fun reconcileCurrentEntitlement() {
+        val ownerId =
+            auth.currentUser?.uid
+                ?: return
+
+        repository.reconcileOwnerAccess(
+            ownerId = ownerId,
+            recipientLimit =
+                SharingPolicy.recipientLimit(
+                    ProEntitlementManager.isPro
+                )
         )
     }
 
