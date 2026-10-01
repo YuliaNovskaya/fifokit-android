@@ -30,6 +30,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.TopAppBar
 import com.fifokit.app.ui.components.FifokitBackButton
+import com.fifokit.app.ui.components.FifokitTopBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import com.fifokit.app.domain.pro.ProPurchaseState
 import com.fifokit.app.analytics.AnalyticsEvents
@@ -100,15 +101,9 @@ fun ProScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = {
-                    Text("FIFOKIT Pro")
-                },
-                navigationIcon = {
-                    FifokitBackButton(
-                        onClick = onBack
-                    )
-                }
+            FifokitTopBar(
+                title = "FIFOKIT Pro",
+                onBack = onBack
             )
         }
     ) { innerPadding ->
