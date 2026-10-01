@@ -40,6 +40,9 @@ class RosterCloudSyncManager(
         val activeRosterId =
             rosterPreferences.activeRosterId.first()
 
+        val selectedStates =
+            rosterPreferences.selectedStates.first()
+
         val localByCloudId =
             localRosters.associateBy {
                 requireNotNull(it.cloudId)
@@ -71,6 +74,7 @@ class RosterCloudSyncManager(
                         uid = uid,
                         roster = local.toCloudRoster(
                             deviceId = deviceId,
+                            selectedStates = selectedStates,
                             isActive =
                                 local.id == activeRosterId
                         )
@@ -110,6 +114,7 @@ class RosterCloudSyncManager(
                                 uid = uid,
                                 roster = local.toCloudRoster(
                                     deviceId = deviceId,
+                                    selectedStates = selectedStates,
                                     isActive = false
                                 )
                             )
@@ -124,6 +129,7 @@ class RosterCloudSyncManager(
                                 uid = uid,
                                 roster = local.toCloudRoster(
                                     deviceId = deviceId,
+                                    selectedStates = selectedStates,
                                     isActive =
                                         local.id == activeRosterId
                                 )
@@ -139,6 +145,24 @@ class RosterCloudSyncManager(
                             )
 
                             downloaded++
+                        }
+
+                        cloud.selectedStates.toSet() !=
+                                selectedStates -> {
+
+                            cloudRepository.saveRoster(
+                                uid = uid,
+                                roster = local.toCloudRoster(
+                                    deviceId = deviceId,
+                                    selectedStates =
+                                        selectedStates,
+                                    isActive =
+                                        local.id ==
+                                                activeRosterId
+                                )
+                            )
+
+                            uploaded++
                         }
 
                         else -> {
@@ -158,6 +182,7 @@ class RosterCloudSyncManager(
 
     private fun RosterEntity.toCloudRoster(
         deviceId: String,
+        selectedStates: Set<String>,
         isActive: Boolean
     ): CloudRoster {
 
@@ -169,6 +194,8 @@ class RosterCloudSyncManager(
             customWorkDays = customWorkDays,
             customOffDays = customOffDays,
             startDate = startDate,
+            selectedStates =
+                selectedStates.sorted(),
             isActive = isActive && !isDeleted,
             isDeleted = isDeleted,
             deletedAt = deletedAt ?: 0L,
