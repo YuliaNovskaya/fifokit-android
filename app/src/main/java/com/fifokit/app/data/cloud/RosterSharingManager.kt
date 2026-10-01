@@ -32,6 +32,14 @@ class RosterSharingManager(
         )
     }
 
+    suspend fun getOwnerShares(): List<CloudRosterAccess> {
+        val ownerId = auth.currentUser?.uid ?: return emptyList()
+
+        return repository.getSharesForOwner(
+            ownerId = ownerId
+        )
+    }
+
     suspend fun revokeViewerAccess(
         rosterId: String,
         viewerUserId: String

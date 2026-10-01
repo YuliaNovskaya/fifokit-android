@@ -23,14 +23,12 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.LaunchedEffect
-import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.compose.ui.platform.LocalContext
 import com.google.firebase.analytics.FirebaseAnalytics
 import com.google.firebase.analytics.logEvent
 import com.fifokit.app.growth.GrowthEngagementTracker
 import com.fifokit.app.analytics.AnalyticsEvents
 import com.fifokit.app.analytics.AnalyticsParams
+import com.fifokit.app.domain.pro.ProEntitlementManager
 
 @Composable
 fun RosterInviteScreen(
@@ -56,6 +54,8 @@ fun RosterInviteScreen(
     }
 
     val accessState by accessViewModel.uiState.collectAsState()
+    val entitlement by
+        ProEntitlementManager.entitlement.collectAsState()
 
     LaunchedEffect(rosterId) {
         viewModel.clearState()
@@ -79,6 +79,20 @@ fun RosterInviteScreen(
         Text(
             text = rosterName,
             style = MaterialTheme.typography.titleMedium
+        )
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        Text(
+            text =
+                if (entitlement.isPro) {
+                    "Pro sharing: ${accessState.activeRecipientCount} of 5 people used."
+                } else if (accessState.activeRecipientCount >= 1) {
+                    "Your free sharing slot is in use. Upgrade to Pro to share with up to 5 people."
+                } else {
+                    "Free sharing includes 1 person. Upgrade to Pro to share with up to 5 people."
+                },
+            style = MaterialTheme.typography.bodyMedium
         )
 
         Spacer(modifier = Modifier.height(24.dp))

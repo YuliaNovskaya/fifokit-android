@@ -12,6 +12,7 @@ import kotlinx.coroutines.launch
 data class RosterAccessUiState(
     val isLoading: Boolean = false,
     val shares: List<CloudRosterAccess> = emptyList(),
+    val activeRecipientCount: Int = 0,
     val errorMessage: String? = null
 )
 
@@ -35,11 +36,24 @@ class RosterAccessViewModel(
                 )
 
             runCatching {
-                manager.getRosterShares(rosterId)
-            }.onSuccess { shares ->
+                val rosterShares =
+                    manager.getRosterShares(rosterId)
+
+                val ownerShares =
+                    manager.getOwnerShares()
+
+                rosterShares to
+                        ownerShares
+                            .map { it.userId }
+                            .filter { it.isNotBlank() }
+                            .distinct()
+                            .size
+            }.onSuccess { (shares, activeRecipientCount) ->
                 _uiState.value =
                     RosterAccessUiState(
-                        shares = shares
+                        shares = shares,
+                        activeRecipientCount =
+                            activeRecipientCount
                     )
             }.onFailure { error ->
                 _uiState.value =
