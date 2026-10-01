@@ -52,6 +52,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.TopAppBar
+import com.fifokit.app.ui.components.FifokitBackButton
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.sp
 
@@ -177,11 +178,9 @@ fun TogetherRosterCalendarScreen(
                     Text("Together")
                 },
                 navigationIcon = {
-                    TextButton(
+                    FifokitBackButton(
                         onClick = onBack
-                    ) {
-                        Text("Back")
-                    }
+                    )
                 }
             )
         }
