@@ -594,6 +594,7 @@ private fun CalendarGrid(
                 } else {
                     CalendarDay(
                         date = date,
+                        isRosterActive = !date.isBefore(startDate),
                         isWorkDay = isWorkDay(date),
                         isStartDate = date == startDate,
                         isPublicHoliday = isPublicHoliday(date)
@@ -607,15 +608,16 @@ private fun CalendarGrid(
 @Composable
 private fun CalendarDay(
     date: LocalDate,
+    isRosterActive: Boolean,
     isWorkDay: Boolean,
     isStartDate: Boolean,
     isPublicHoliday: Boolean
 ) {
     val isToday = date == LocalDate.now()
-    val workOffColor = if (isWorkDay) {
-        MaterialTheme.colorScheme.primaryContainer
-    } else {
-        MaterialTheme.colorScheme.surfaceContainerHigh
+    val workOffColor = when {
+        !isRosterActive -> MaterialTheme.colorScheme.surface
+        isWorkDay -> MaterialTheme.colorScheme.primaryContainer
+        else -> MaterialTheme.colorScheme.surfaceContainerHigh
     }
     Surface(
         modifier = Modifier
@@ -687,7 +689,11 @@ private fun CalendarDay(
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = if (isWorkDay) "WORK" else "OFF",
+                        text = when {
+                            !isRosterActive -> ""
+                            isWorkDay -> "WORK"
+                            else -> "OFF"
+                        },
                         style = MaterialTheme.typography.labelSmall
                     )
                 }
@@ -934,6 +940,7 @@ private fun MiniMonthCalendar(
                             MiniCalendarDay(
                                 modifier = Modifier.weight(1f),
                                 date = date,
+                                isRosterActive = !date.isBefore(startDate),
                                 isWorkDay = isWorkDay(date),
                                 isStartDate = date == startDate,
                                 isPublicHoliday = isPublicHoliday(date)
@@ -950,6 +957,7 @@ private fun MiniMonthCalendar(
 private fun MiniCalendarDay(
     modifier: Modifier,
     date: LocalDate,
+    isRosterActive: Boolean,
     isWorkDay: Boolean,
     isStartDate: Boolean,
     isPublicHoliday: Boolean
@@ -957,10 +965,15 @@ private fun MiniCalendarDay(
     val isToday = date == LocalDate.now()
 
     val workOffColor =
-        if (isWorkDay) {
-            MaterialTheme.colorScheme.primaryContainer
-        } else {
-            MaterialTheme.colorScheme.surfaceContainerHigh
+        when {
+            !isRosterActive ->
+                MaterialTheme.colorScheme.surface
+
+            isWorkDay ->
+                MaterialTheme.colorScheme.primaryContainer
+
+            else ->
+                MaterialTheme.colorScheme.surfaceContainerHigh
         }
 
     Surface(
