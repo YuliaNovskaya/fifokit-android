@@ -3,6 +3,7 @@ package com.fifokit.app.data.cloud
 import com.fifokit.app.data.cloud.model.CloudRoster
 import com.fifokit.app.data.cloud.model.CloudRosterAccess
 import com.fifokit.app.domain.sharing.RosterAccessRole
+import com.fifokit.app.domain.sharing.SharingPolicy
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
@@ -73,6 +74,46 @@ class RosterSharingRepository(
             .await()
             .documents
             .mapNotNull { it.toRosterAccessOrNull() }
+    }
+
+    suspend fun reconcileOwnerAccess(
+        ownerId: String,
+        recipientLimit: Int
+    ) {
+        val shares = getSharesForOwner(ownerId)
+
+        val activeRecipientIds =
+            SharingPolicy.recipientIdsToKeepActive(
+                recipientEntries =
+                    shares.map {
+                        it.userId to it.createdAt
+                    },
+                limit = recipientLimit
+            )
+
+        val now = System.currentTimeMillis()
+
+        shares.forEach { access ->
+            val shouldBeActive =
+                access.userId in activeRecipientIds
+
+            if (access.isActive != shouldBeActive) {
+                val shareId =
+                    "${access.ownerId}_${access.rosterId}_${access.userId}"
+
+                firestore
+                    .collection(FirestorePaths.ROSTER_SHARES)
+                    .document(shareId)
+                    .update(
+                        mapOf(
+                            "isActive" to shouldBeActive,
+                            "pausedAt" to
+                                    if (shouldBeActive) 0L else now
+                        )
+                    )
+                    .await()
+            }
+        }
     }
 
     suspend fun getSharedRoster(
@@ -152,6 +193,8 @@ class RosterSharingRepository(
         val rosterId =
             when (rosterIdValue) {
                 is String -> rosterIdValue
+                is Long -> rosterIdValue.toString()
+                is Number -> rosterIdValue.toLong().toString()
                 else -> return null
             }
 
@@ -161,7 +204,9 @@ class RosterSharingRepository(
             userId = getString("userId").orEmpty(),
             role = getString("role").orEmpty(),
             inviteId = getString("inviteId").orEmpty(),
-            createdAt = getLong("createdAt") ?: 0L
+            createdAt = getLong("createdAt") ?: 0L,
+            isActive = getBoolean("isActive") ?: true,
+            pausedAt = getLong("pausedAt") ?: 0L
         )
     }
 }
