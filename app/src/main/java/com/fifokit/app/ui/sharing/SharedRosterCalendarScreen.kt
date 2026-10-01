@@ -148,6 +148,14 @@ fun SharedRosterCalendarScreen(
             .padding(16.dp)
     ) {
 
+        FifokitBackButton(
+            onClick = onBack
+        )
+
+        Spacer(
+            modifier = Modifier.height(12.dp)
+        )
+
         Text(
             text = "Shared roster",
             style = MaterialTheme.typography.headlineMedium
@@ -355,15 +363,5 @@ fun SharedRosterCalendarScreen(
             Text("Together")
         }
 
-        Spacer(
-            modifier = Modifier.height(8.dp)
-        )
-
-        OutlinedButton(
-            modifier = Modifier.fillMaxWidth(),
-            onClick = onBack
-        ) {
-            Text("Back to shared rosters")
-        }
     }
 }
