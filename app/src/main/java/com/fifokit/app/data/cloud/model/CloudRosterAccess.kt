@@ -6,5 +6,7 @@ data class CloudRosterAccess(
     val userId: String = "",
     val role: String = "",
     val inviteId: String = "",
-    val createdAt: Long = 0L
+    val createdAt: Long = 0L,
+    val isActive: Boolean = true,
+    val pausedAt: Long = 0L
 )
