@@ -305,7 +305,15 @@ class RosterSetupViewModel(
         startDate = date
     }
 
+    fun isRosterActive(date: LocalDate): Boolean {
+        return !date.isBefore(startDate)
+    }
+
     fun isWorkDay(date: LocalDate): Boolean {
+        if (!isRosterActive(date)) {
+            return false
+        }
+
         return if (isCustomRoster) {
             RosterCalculator.isWorkDay(
                 date = date,
