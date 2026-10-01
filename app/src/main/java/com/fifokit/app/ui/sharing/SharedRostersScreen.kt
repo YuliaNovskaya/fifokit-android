@@ -26,6 +26,8 @@ import com.google.firebase.analytics.FirebaseAnalytics
 import com.google.firebase.analytics.logEvent
 import com.fifokit.app.analytics.AnalyticsEvents
 import com.fifokit.app.ui.components.FifokitBackButton
+import com.fifokit.app.ui.components.FifokitTopBar
+import androidx.compose.material3.Scaffold
 import com.fifokit.app.domain.model.RosterPattern
 
 @Composable
@@ -44,28 +46,25 @@ fun SharedRostersScreen(
         viewModel.loadSharedRosters()
     }
 
+    Scaffold(
+        topBar = {
+            FifokitTopBar(
+                title = "Shared rosters",
+                onBack = onBack
+            )
+        }
+    ) { innerPadding ->
+
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .padding(innerPadding)
             .padding(24.dp),
         verticalArrangement = Arrangement.Top
     ) {
 
-        FifokitBackButton(
-            onClick = onBack
-        )
-
         Spacer(
-            modifier = Modifier.height(12.dp)
-        )
-
-        Text(
-            text = "Shared rosters",
-            style = MaterialTheme.typography.headlineMedium
-        )
-
-        Spacer(
-            modifier = Modifier.height(24.dp)
+            modifier = Modifier.height(8.dp)
         )
 
         when {
