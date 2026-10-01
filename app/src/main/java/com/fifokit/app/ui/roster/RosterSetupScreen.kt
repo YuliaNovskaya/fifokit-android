@@ -31,6 +31,7 @@ import java.time.format.DateTimeFormatter
 import androidx.compose.material3.ExperimentalMaterial3Api
 import com.fifokit.app.domain.model.RosterPattern
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.AlertDialog
 
 @Composable
 fun RosterSetupScreen(
@@ -57,6 +58,7 @@ fun RosterSetupScreen(
     onGenerateRoster: () -> Unit = {}
 ) {
     var showDatePicker by remember { mutableStateOf(false) }
+    var showDeleteRosterConfirmation by remember { mutableStateOf(false) }
 
     Column(
         modifier = modifier
@@ -261,11 +263,48 @@ fun RosterSetupScreen(
 
             TextButton(
                 modifier = Modifier.fillMaxWidth(),
-                onClick = onResetRoster
+                onClick = {
+                    showDeleteRosterConfirmation = true
+                }
             ) {
                 Text("Delete roster")
             }
         }
+    }
+
+    if (showDeleteRosterConfirmation) {
+        AlertDialog(
+            onDismissRequest = {
+                showDeleteRosterConfirmation = false
+            },
+            title = {
+                Text("Delete $rosterName?")
+            },
+            text = {
+                Text(
+                    "This roster will be deleted. If it is shared, shared access will also stop."
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showDeleteRosterConfirmation = false
+                        onResetRoster()
+                    }
+                ) {
+                    Text("Delete")
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = {
+                        showDeleteRosterConfirmation = false
+                    }
+                ) {
+                    Text("Cancel")
+                }
+            }
+        )
     }
 
     if (showDatePicker) {
