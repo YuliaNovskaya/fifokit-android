@@ -56,6 +56,39 @@ class SharingPolicyTest {
     }
 
     @Test
+    fun `free downgrade keeps oldest recipient active`() {
+        val activeIds =
+            SharingPolicy.recipientIdsToKeepActive(
+                recipientEntries = listOf(
+                    "user-b" to 200L,
+                    "user-a" to 100L,
+                    "user-b" to 250L
+                ),
+                limit = 1
+            )
+
+        assertEquals(
+            setOf("user-a"),
+            activeIds
+        )
+    }
+
+    @Test
+    fun `pro keeps up to five recipients active`() {
+        val activeIds =
+            SharingPolicy.recipientIdsToKeepActive(
+                recipientEntries =
+                    (1..6).map { index ->
+                        "user-$index" to index.toLong()
+                    },
+                limit = 5
+            )
+
+        assertEquals(5, activeIds.size)
+        assertFalse("user-6" in activeIds)
+    }
+
+    @Test
     fun `acceptance blocks a new recipient when limit is full`() {
         assertFalse(
             SharingPolicy.canAcceptRecipient(
