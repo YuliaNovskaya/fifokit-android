@@ -45,6 +45,8 @@ import androidx.compose.ui.platform.LocalContext
 import com.google.firebase.analytics.FirebaseAnalytics
 import com.google.firebase.analytics.logEvent
 import com.fifokit.app.ui.components.FifokitBackButton
+import com.fifokit.app.ui.components.FifokitTopBar
+import androidx.compose.material3.Scaffold
 
 @Composable
 fun SharedRosterCalendarScreen(
@@ -143,24 +145,21 @@ fun SharedRosterCalendarScreen(
             }
         }
 
+    Scaffold(
+        topBar = {
+            FifokitTopBar(
+                title = "Shared roster",
+                onBack = onBack
+            )
+        }
+    ) { innerPadding ->
+
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .padding(innerPadding)
             .padding(16.dp)
     ) {
-
-        FifokitBackButton(
-            onClick = onBack
-        )
-
-        Spacer(
-            modifier = Modifier.height(12.dp)
-        )
-
-        Text(
-            text = "Shared roster",
-            style = MaterialTheme.typography.headlineMedium
-        )
 
         Spacer(
             modifier = Modifier.height(8.dp)
