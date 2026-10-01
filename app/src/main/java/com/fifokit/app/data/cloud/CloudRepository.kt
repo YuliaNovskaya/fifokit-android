@@ -50,6 +50,7 @@ class CloudRepository(
             "customWorkDays" to roster.customWorkDays,
             "customOffDays" to roster.customOffDays,
             "startDate" to roster.startDate,
+            "selectedStates" to roster.selectedStates,
             "isActive" to roster.isActive,
             "isDeleted" to roster.isDeleted,
             "deletedAt" to roster.deletedAt,
@@ -108,6 +109,19 @@ class CloudRepository(
 
                 startDate =
                     document.getString("startDate").orEmpty(),
+
+                selectedStates =
+                    (
+                        document.get("selectedStates")
+                            as? List<*>
+                    )
+                        ?.mapNotNull {
+                            it as? String
+                        }
+                        ?.ifEmpty {
+                            listOf("WA")
+                        }
+                        ?: listOf("WA"),
 
                 isActive =
                     document.getBoolean("isActive")
