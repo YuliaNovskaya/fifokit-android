@@ -30,6 +30,11 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.fifokit.app.domain.model.RosterPattern
 import com.fifokit.app.domain.roster.RosterCalculator
+import com.fifokit.app.domain.roster.PublicHolidayProvider
+import com.fifokit.app.domain.roster.AustralianState
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxHeight
 import com.fifokit.app.domain.sharing.SharedRoster
 import java.time.LocalDate
 import java.time.YearMonth
@@ -71,6 +76,18 @@ fun SharedRosterCalendarScreen(
         }
     }
 
+
+    val ownerStates =
+        roster.selectedStates
+            .mapNotNull { stateName ->
+                runCatching {
+                    AustralianState.valueOf(stateName)
+                }.getOrNull()
+            }
+            .toSet()
+            .ifEmpty {
+                setOf(AustralianState.WA)
+            }
 
     val startDate =
         runCatching {
@@ -247,6 +264,12 @@ fun SharedRosterCalendarScreen(
                     val workDay =
                         isWorkDay(date)
 
+                    val isPublicHoliday =
+                        PublicHolidayProvider.isPublicHoliday(
+                            date,
+                            ownerStates
+                        )
+
                     Surface(
                         modifier = Modifier
                             .aspectRatio(1f)
@@ -268,27 +291,53 @@ fun SharedRosterCalendarScreen(
                                 null
                             }
                     ) {
-
-                        Column(
-                            modifier = Modifier.padding(4.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.Center
+                        Box(
+                            modifier = Modifier.fillMaxSize()
                         ) {
+                            if (isPublicHoliday) {
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .fillMaxHeight(0.5f)
+                                        .align(Alignment.TopCenter)
+                                        .background(
+                                            MaterialTheme.colorScheme.tertiaryContainer
+                                        )
+                                )
 
-                            Text(
-                                text = date.dayOfMonth.toString(),
-                                style = MaterialTheme.typography.bodyMedium
-                            )
+                                Text(
+                                    text = "PH",
+                                    modifier = Modifier
+                                        .align(Alignment.TopEnd)
+                                        .padding(2.dp),
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
 
-                            Text(
-                                text =
-                                    if (workDay) {
-                                        "WORK"
-                                    } else {
-                                        "OFF"
-                                    },
-                                style = MaterialTheme.typography.labelSmall
-                            )
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .padding(4.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.Center
+                            ) {
+
+                                Text(
+                                    text = date.dayOfMonth.toString(),
+                                    style = MaterialTheme.typography.bodyMedium
+                                )
+
+                                Text(
+                                    text =
+                                        if (workDay) {
+                                            "WORK"
+                                        } else {
+                                            "OFF"
+                                        },
+                                    style = MaterialTheme.typography.labelSmall
+                                )
+                            }
                         }
                     }
                 }
