@@ -24,10 +24,17 @@ import java.util.Locale
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.ExperimentalMaterial3Api
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AccountScreen(
-    authViewModel: AuthViewModel = viewModel()
+    authViewModel: AuthViewModel = viewModel(),
+    onBack: (() -> Unit)? = null,
+    onCreateRoster: (() -> Unit)? = null,
+    onSignedIn: () -> Unit = {}
 ){
     val currentUser by authViewModel.currentUser.collectAsState()
     val isLoading by authViewModel.isLoading.collectAsState()
@@ -43,13 +50,50 @@ fun AccountScreen(
         mutableStateOf(false)
     }
 
+    var signInRequested by remember {
+        mutableStateOf(false)
+    }
+
+    LaunchedEffect(
+        currentUser,
+        signInRequested
+    ) {
+        if (
+            signInRequested &&
+            currentUser != null
+        ) {
+            signInRequested = false
+            onSignedIn()
+        }
+    }
+
     val context = LocalContext.current
     val activity = context.findActivity()
     val scope = rememberCoroutineScope()
 
+    Scaffold(
+        topBar = {
+            if (onBack != null) {
+                TopAppBar(
+                    title = {
+                        Text("Account & cloud sync")
+                    },
+                    navigationIcon = {
+                        OutlinedButton(
+                            onClick = onBack
+                        ) {
+                            Text("Back")
+                        }
+                    }
+                )
+            }
+        }
+    ) { innerPadding ->
+
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .padding(innerPadding)
             .padding(24.dp),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
@@ -64,6 +108,7 @@ fun AccountScreen(
                 enabled = !isLoading && activity != null,
                 onClick = {
                     activity ?: return@Button
+                    signInRequested = true
 
                     scope.launch {
                         try {
@@ -74,6 +119,7 @@ fun AccountScreen(
                             authViewModel.signInWithGoogle(idToken)
 
                         } catch (e: Exception) {
+                            signInRequested = false
                             android.util.Log.e(
                                 "FIFOKIT_AUTH",
                                 "Google credential sign-in failed",
@@ -84,6 +130,15 @@ fun AccountScreen(
                 }
             ) {
                 Text("Continue with Google")
+            }
+
+            if (onCreateRoster != null) {
+                OutlinedButton(
+                    modifier = Modifier.padding(top = 12.dp),
+                    onClick = onCreateRoster
+                ) {
+                    Text("Create roster")
+                }
             }
 
         } else {
@@ -170,6 +225,15 @@ fun AccountScreen(
                 )
             }
 
+            if (onCreateRoster != null) {
+                OutlinedButton(
+                    modifier = Modifier.padding(top = 16.dp),
+                    onClick = onCreateRoster
+                ) {
+                    Text("Create roster")
+                }
+            }
+
         }
 
         if (isLoading) {
@@ -184,6 +248,7 @@ fun AccountScreen(
                 modifier = Modifier.padding(top = 16.dp)
             )
         }
+    }
     }
     if (showDeleteConfirmation) {
 
