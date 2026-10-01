@@ -32,6 +32,8 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import com.fifokit.app.domain.model.RosterPattern
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Scaffold
+import com.fifokit.app.ui.components.FifokitTopBar
 
 @Composable
 fun RosterSetupScreen(
@@ -54,29 +56,32 @@ fun RosterSetupScreen(
     onCancelExistingRoster: () -> Unit = {},
     showResetRoster: Boolean = false,
     onResetRoster: () -> Unit = {},
-    onSettings: () -> Unit = {},
+    onBack: () -> Unit = {},
     onGenerateRoster: () -> Unit = {}
 ) {
     var showDatePicker by remember { mutableStateOf(false) }
     var showDeleteRosterConfirmation by remember { mutableStateOf(false) }
 
+    Scaffold(
+        topBar = {
+            FifokitTopBar(
+                title =
+                    if (showCancelNewRoster) {
+                        "Create roster"
+                    } else {
+                        "Edit roster"
+                    },
+                onBack = onBack
+            )
+        }
+    ) { innerPadding ->
+
     Column(
         modifier = modifier
             .fillMaxSize()
+            .padding(innerPadding)
             .padding(24.dp)
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.End
-        ) {
-            TextButton(
-                onClick = onSettings
-            ) {
-                Text("Settings")
-            }
-        }
-
-        Spacer(modifier = Modifier.height(8.dp))
         Text("Roster name")
 
         Spacer(modifier = Modifier.height(8.dp))
@@ -270,6 +275,8 @@ fun RosterSetupScreen(
                 Text("Delete roster")
             }
         }
+    }
+
     }
 
     if (showDeleteRosterConfirmation) {
