@@ -37,7 +37,7 @@ import com.fifokit.app.growth.GrowthEngagementTracker
 fun RosterSetupRoute(
     viewModel: RosterSetupViewModel,
     onGenerateRoster: () -> Unit = {},
-    onSettings: () -> Unit = {},
+    onBack: () -> Unit = {},
     onProRequested: (String) -> Unit = { _ -> }
 ) {
     RosterSetupScreen(
@@ -49,7 +49,7 @@ fun RosterSetupRoute(
         customOffDays = viewModel.customOffDays,
         startDate = viewModel.startDate,
         onRosterSelected = viewModel::selectPattern,
-        onSettings = onSettings,
+        onBack = onBack,
         onCustomRosterSelected = {
             if (
                 ProAccess.canUse(
