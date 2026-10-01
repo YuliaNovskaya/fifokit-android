@@ -13,6 +13,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import com.fifokit.app.ui.components.FifokitBackButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -109,11 +110,9 @@ fun FinancialGoalScreen(
                     Text("Financial Goal")
                 },
                 navigationIcon = {
-                    TextButton(
+                    FifokitBackButton(
                         onClick = onBack
-                    ) {
-                        Text("Back")
-                    }
+                    )
                 }
             )
         }
