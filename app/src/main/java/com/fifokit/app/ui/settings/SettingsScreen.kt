@@ -15,6 +15,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import com.fifokit.app.ui.components.FifokitBackButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -76,11 +77,9 @@ fun SettingsScreen(
                     Text("Settings")
                 },
                 navigationIcon = {
-                    androidx.compose.material3.TextButton(
+                    FifokitBackButton(
                         onClick = onBack
-                    ) {
-                        Text("Back")
-                    }
+                    )
                 }
             )
         }
