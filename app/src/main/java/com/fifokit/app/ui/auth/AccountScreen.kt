@@ -27,6 +27,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.TopAppBar
 import com.fifokit.app.ui.components.FifokitBackButton
+import com.fifokit.app.ui.components.FifokitTopBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -75,15 +76,9 @@ fun AccountScreen(
     Scaffold(
         topBar = {
             if (onBack != null) {
-                TopAppBar(
-                    title = {
-                        Text("Account & cloud sync")
-                    },
-                    navigationIcon = {
-                        FifokitBackButton(
-                            onClick = onBack
-                        )
-                    }
+                FifokitTopBar(
+                    title = "Account & cloud sync",
+                    onBack = onBack
                 )
             }
         }
