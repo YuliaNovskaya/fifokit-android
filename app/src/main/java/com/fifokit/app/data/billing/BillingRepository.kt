@@ -23,11 +23,30 @@ import android.app.Activity
 import com.android.billingclient.api.BillingFlowParams
 import com.fifokit.app.domain.pro.ProPlan
 import com.fifokit.app.domain.pro.ProPurchaseState
+import com.fifokit.app.data.cloud.RosterSharingRepository
+import com.fifokit.app.domain.sharing.SharingPolicy
+import com.google.firebase.auth.FirebaseAuth
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 
 
 class BillingRepository(
     context: Context
 ) : PurchasesUpdatedListener {
+
+    private val sharingScope =
+        CoroutineScope(
+            SupervisorJob() +
+                    Dispatchers.IO
+        )
+
+    private val sharingRepository =
+        RosterSharingRepository()
+
+    private val auth =
+        FirebaseAuth.getInstance()
 
     private val applicationContext =
         context.applicationContext
@@ -316,6 +335,20 @@ class BillingRepository(
     ) {
         entitlementStore.save(entitlement)
         ProEntitlementManager.updateEntitlement(entitlement)
+
+        auth.currentUser?.uid?.let { ownerId ->
+            sharingScope.launch {
+                runCatching {
+                    sharingRepository.reconcileOwnerAccess(
+                        ownerId = ownerId,
+                        recipientLimit =
+                            SharingPolicy.recipientLimit(
+                                entitlement.isPro
+                            )
+                    )
+                }
+            }
+        }
 
         Log.d(
             "FIFOKITWidget",
