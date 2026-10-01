@@ -49,7 +49,11 @@ class BillingRepository(
             .build()
 
     fun startConnection() {
-        if (billingClient.isReady) return
+        if (billingClient.isReady) {
+            queryProProduct()
+            queryExistingPurchases()
+            return
+        }
 
         billingClient.startConnection(
             object : BillingClientStateListener {
