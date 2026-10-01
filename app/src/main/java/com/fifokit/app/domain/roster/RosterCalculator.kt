@@ -25,6 +25,10 @@ object RosterCalculator {
         workDays: Int,
         offDays: Int
     ): Boolean {
+        if (date.isBefore(startDate)) {
+            return false
+        }
+
         val daysFromStart = ChronoUnit.DAYS.between(startDate, date)
         val cycleLength = workDays + offDays
 
