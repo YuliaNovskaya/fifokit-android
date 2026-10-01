@@ -1,6 +1,7 @@
 package com.fifokit.app.data.cloud
 
 import com.fifokit.app.data.cloud.model.CloudRosterInvite
+import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
 
@@ -29,9 +30,7 @@ class RosterInviteRepository(
             .await()
             .documents
             .mapNotNull {
-                it.toObject(
-                    CloudRosterInvite::class.java
-                )
+                it.toRosterInviteOrNull()
             }
             .filter {
                 it.status == "PENDING" &&
@@ -47,7 +46,7 @@ class RosterInviteRepository(
             .document(inviteId)
             .get()
             .await()
-            .toObject(CloudRosterInvite::class.java)
+            .toRosterInviteOrNull()
     }
 
     suspend fun updateInvite(
@@ -68,5 +67,37 @@ class RosterInviteRepository(
             .document(inviteId)
             .delete()
             .await()
+    }
+
+    private fun DocumentSnapshot.toRosterInviteOrNull():
+            CloudRosterInvite? {
+
+        if (!exists()) {
+            return null
+        }
+
+        val rosterId =
+            when (val value = get("rosterId")) {
+                is String -> value
+                is Long -> value.toString()
+                is Number -> value.toLong().toString()
+                else -> return null
+            }
+
+        return CloudRosterInvite(
+            inviteId =
+                getString("inviteId")
+                    ?.takeIf { it.isNotBlank() }
+                    ?: id,
+            rosterId = rosterId,
+            ownerId = getString("ownerId").orEmpty(),
+            rosterName = getString("rosterName").orEmpty(),
+            role = getString("role") ?: "VIEWER",
+            createdAt = getLong("createdAt") ?: 0L,
+            expiresAt = getLong("expiresAt") ?: 0L,
+            status = getString("status") ?: "PENDING",
+            acceptedBy = getString("acceptedBy").orEmpty(),
+            acceptedAt = getLong("acceptedAt") ?: 0L
+        )
     }
 }
