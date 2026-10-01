@@ -23,6 +23,23 @@ object SharingPolicy {
                 recipientLimit(isPro)
     }
 
+    fun recipientIdsToKeepActive(
+        recipientEntries: List<Pair<String, Long>>,
+        limit: Int
+    ): Set<String> {
+        return recipientEntries
+            .filter { it.first.isNotBlank() }
+            .groupBy { it.first }
+            .mapValues { (_, entries) ->
+                entries.minOf { it.second }
+            }
+            .entries
+            .sortedBy { it.value }
+            .take(limit)
+            .map { it.key }
+            .toSet()
+    }
+
     fun canAcceptRecipient(
         activeRecipientCount: Int,
         recipientAlreadyActive: Boolean,
