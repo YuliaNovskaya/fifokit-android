@@ -56,8 +56,16 @@ class RosterCalculatorTest {
     }
 
     @Test
-    fun `roster calculates dates before start date correctly`() {
-        val pattern = RosterPattern.SEVEN_SEVEN
+    fun `roster does not project work days before start date`() {
+        val pattern = RosterPattern.TWO_ONE
+
+        assertFalse(
+            RosterCalculator.isWorkDay(
+                LocalDate.of(2026, 8, 24),
+                startDate,
+                pattern
+            )
+        )
 
         assertFalse(
             RosterCalculator.isWorkDay(
