@@ -26,6 +26,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.TopAppBar
+import com.fifokit.app.ui.components.FifokitBackButton
 import androidx.compose.material3.ExperimentalMaterial3Api
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -79,11 +80,9 @@ fun AccountScreen(
                         Text("Account & cloud sync")
                     },
                     navigationIcon = {
-                        OutlinedButton(
+                        FifokitBackButton(
                             onClick = onBack
-                        ) {
-                            Text("Back")
-                        }
+                        )
                     }
                 )
             }
