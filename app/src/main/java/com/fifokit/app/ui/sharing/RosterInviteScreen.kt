@@ -232,7 +232,12 @@ fun RosterInviteScreen(
                 ) {
 
                     Text(
-                        text = "Viewer"
+                        text =
+                            if (access.isActive) {
+                                "Viewer"
+                            } else {
+                                "Viewer · Paused"
+                            }
                     )
 
                     OutlinedButton(
