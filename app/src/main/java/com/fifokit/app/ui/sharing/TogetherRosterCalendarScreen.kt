@@ -43,6 +43,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.platform.LocalContext
 import com.fifokit.app.domain.roster.PublicHolidayProvider
+import com.fifokit.app.domain.roster.AustralianState
 import com.google.firebase.analytics.FirebaseAnalytics
 import com.google.firebase.analytics.logEvent
 import com.fifokit.app.analytics.AnalyticsEvents
@@ -70,6 +71,18 @@ fun TogetherRosterCalendarScreen(
     }
 
     val partnerRoster = sharedRoster.roster
+
+    val partnerStates =
+        partnerRoster.selectedStates
+            .mapNotNull { stateName ->
+                runCatching {
+                    AustralianState.valueOf(stateName)
+                }.getOrNull()
+            }
+            .toSet()
+            .ifEmpty {
+                setOf(AustralianState.WA)
+            }
 
     LaunchedEffect(partnerRoster.id) {
         analytics.logEvent(
@@ -447,11 +460,37 @@ fun TogetherRosterCalendarScreen(
                         val sharedOff =
                             !myWork && !partnerWork
 
-                        val isPublicHoliday =
+                        val myPublicHoliday =
                             PublicHolidayProvider.isPublicHoliday(
                                 date,
                                 viewModel.selectedStates
                             )
+
+                        val partnerPublicHoliday =
+                            PublicHolidayProvider.isPublicHoliday(
+                                date,
+                                partnerStates
+                            )
+
+                        val isPublicHoliday =
+                            myPublicHoliday ||
+                                    partnerPublicHoliday
+
+                        val publicHolidayLabel =
+                            when {
+                                myPublicHoliday &&
+                                        partnerPublicHoliday ->
+                                    "PH BOTH"
+
+                                myPublicHoliday ->
+                                    "PH ME"
+
+                                partnerPublicHoliday ->
+                                    "PH THEM"
+
+                                else ->
+                                    ""
+                            }
 
                         Surface(
                             modifier = Modifier
@@ -510,7 +549,7 @@ fun TogetherRosterCalendarScreen(
                                         )
 
                                         Text(
-                                            text = "PH",
+                                            text = publicHolidayLabel,
                                             modifier = Modifier
                                                 .align(Alignment.TopEnd)
                                                 .padding(2.dp),
@@ -614,7 +653,7 @@ fun TogetherRosterCalendarScreen(
                     )
 
                     TogetherLegendChip(
-                        text = "PH",
+                        text = "PH ME/THEM",
                         background =
                             MaterialTheme.colorScheme
                                 .secondaryContainer
