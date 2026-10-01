@@ -335,6 +335,18 @@ fun FIFOKITApp(
                     rosterName = rosterSetupViewModel.rosterName,
                     onBack = {
                         showShareRoster = false
+                    },
+                    onProRequested = {
+                        analytics.logEvent(
+                            AnalyticsEvents.PRO_FEATURE_LOCKED
+                        ) {
+                            param(
+                                AnalyticsParams.FEATURE,
+                                "roster_sharing_limit"
+                            )
+                        }
+                        showShareRoster = false
+                        showPro = true
                     }
                 )
             } else if (showPro) {

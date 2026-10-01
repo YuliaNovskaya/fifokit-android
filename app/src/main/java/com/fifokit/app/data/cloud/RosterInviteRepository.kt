@@ -18,6 +18,27 @@ class RosterInviteRepository(
             .await()
     }
 
+    suspend fun getPendingInvitesForOwner(
+        ownerId: String,
+        now: Long = System.currentTimeMillis()
+    ): List<CloudRosterInvite> {
+        return firestore
+            .collection(FirestorePaths.ROSTER_INVITES)
+            .whereEqualTo("ownerId", ownerId)
+            .get()
+            .await()
+            .documents
+            .mapNotNull {
+                it.toObject(
+                    CloudRosterInvite::class.java
+                )
+            }
+            .filter {
+                it.status == "PENDING" &&
+                        it.expiresAt >= now
+            }
+    }
+
     suspend fun getInvite(
         inviteId: String
     ): CloudRosterInvite? {

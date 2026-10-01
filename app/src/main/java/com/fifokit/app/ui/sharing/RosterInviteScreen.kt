@@ -37,6 +37,7 @@ fun RosterInviteScreen(
     rosterId: String,
     rosterName: String,
     onBack: () -> Unit,
+    onProRequested: () -> Unit = {},
     viewModel: RosterInviteViewModel = viewModel(),
     accessViewModel: RosterAccessViewModel = viewModel()
 ) {
@@ -95,15 +96,26 @@ fun RosterInviteScreen(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                Button(
-                    onClick = {
-                        viewModel.createInvite(
-                            rosterId = rosterId,
-                            rosterName = rosterName
-                        )
-                    }
+                if (
+                    state.sharingLimitReached &&
+                    !state.isPro
                 ) {
-                    Text("Try again")
+                    Button(
+                        onClick = onProRequested
+                    ) {
+                        Text("Upgrade to Pro")
+                    }
+                } else if (!state.sharingLimitReached) {
+                    Button(
+                        onClick = {
+                            viewModel.createInvite(
+                                rosterId = rosterId,
+                                rosterName = rosterName
+                            )
+                        }
+                    ) {
+                        Text("Try again")
+                    }
                 }
             }
 

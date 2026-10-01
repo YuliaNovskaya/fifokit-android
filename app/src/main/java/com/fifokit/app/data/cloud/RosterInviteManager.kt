@@ -2,6 +2,8 @@ package com.fifokit.app.data.cloud
 
 import com.fifokit.app.data.cloud.model.CloudRosterInvite
 import com.google.firebase.auth.FirebaseAuth
+import com.fifokit.app.domain.sharing.SharingLimitReachedException
+import com.fifokit.app.domain.sharing.SharingPolicy
 import java.util.UUID
 
 class RosterInviteManager(
@@ -12,10 +14,42 @@ class RosterInviteManager(
 
     suspend fun createInvite(
         rosterId: String,
-        rosterName: String
+        rosterName: String,
+        isPro: Boolean
     ): String {
         val ownerId = auth.currentUser?.uid
             ?: error("User must be signed in")
+
+        val activeRecipientCount =
+            sharingRepository
+                .getSharesForOwner(ownerId)
+                .map { it.userId }
+                .filter { it.isNotBlank() }
+                .distinct()
+                .size
+
+        val pendingInviteCount =
+            inviteRepository
+                .getPendingInvitesForOwner(ownerId)
+                .size
+
+        if (
+            !SharingPolicy.canCreateInvite(
+                activeRecipientCount =
+                    activeRecipientCount,
+                pendingInviteCount =
+                    pendingInviteCount,
+                isPro = isPro
+            )
+        ) {
+            throw SharingLimitReachedException(
+                limit =
+                    SharingPolicy.recipientLimit(
+                        isPro
+                    ),
+                isPro = isPro
+            )
+        }
 
         val inviteId = UUID.randomUUID().toString()
         val now = System.currentTimeMillis()

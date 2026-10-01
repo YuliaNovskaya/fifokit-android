@@ -37,6 +37,18 @@ class RosterSharingRepository(
             .await()
     }
 
+    suspend fun getSharesForOwner(
+        ownerId: String
+    ): List<CloudRosterAccess> {
+        return firestore
+            .collection(FirestorePaths.ROSTER_SHARES)
+            .whereEqualTo("ownerId", ownerId)
+            .get()
+            .await()
+            .documents
+            .mapNotNull { it.toRosterAccessOrNull() }
+    }
+
     suspend fun getSharesForRoster(
         rosterId: String,
         ownerId: String

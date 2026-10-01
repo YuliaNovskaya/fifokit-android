@@ -9,6 +9,8 @@ import com.fifokit.app.data.cloud.RosterCloudSyncManager
 import com.fifokit.app.data.cloud.RosterInviteManager
 import com.fifokit.app.data.local.RosterDatabase
 import com.google.firebase.auth.FirebaseAuth
+import com.fifokit.app.domain.pro.ProEntitlementManager
+import com.fifokit.app.domain.sharing.SharingLimitReachedException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -18,7 +20,9 @@ data class RosterInviteUiState(
     val isLoading: Boolean = false,
     val inviteId: String? = null,
     val accepted: Boolean = false,
-    val errorMessage: String? = null
+    val errorMessage: String? = null,
+    val sharingLimitReached: Boolean = false,
+    val isPro: Boolean = false
 )
 
 class RosterInviteViewModel(
@@ -83,7 +87,9 @@ class RosterInviteViewModel(
 
                 inviteManager.createInvite(
                     rosterId = rosterId,
-                    rosterName = rosterName
+                    rosterName = rosterName,
+                    isPro =
+                        ProEntitlementManager.isPro
                 )
 
             }.onSuccess { inviteId ->
@@ -99,7 +105,13 @@ class RosterInviteViewModel(
                     RosterInviteUiState(
                         errorMessage =
                             error.message
-                                ?: "Unable to create invite"
+                                ?: "Unable to create invite",
+                        sharingLimitReached =
+                            error is SharingLimitReachedException,
+                        isPro =
+                            (error as? SharingLimitReachedException)
+                                ?.isPro
+                                ?: ProEntitlementManager.isPro
                     )
             }
         }
