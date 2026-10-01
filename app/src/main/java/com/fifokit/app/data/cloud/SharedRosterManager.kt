@@ -20,7 +20,10 @@ class SharedRosterManager(
 
         return accesses.mapNotNull { access ->
 
-            if (access.userId != userId) {
+            if (
+                access.userId != userId ||
+                !access.isActive
+            ) {
                 return@mapNotNull null
             }
 
