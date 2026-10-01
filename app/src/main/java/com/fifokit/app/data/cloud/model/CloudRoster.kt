@@ -8,6 +8,7 @@ data class CloudRoster(
     val customWorkDays: Int = 0,
     val customOffDays: Int = 0,
     val startDate: String = "",
+    val selectedStates: List<String> = listOf("WA"),
     val isActive: Boolean = false,
 
     val createdAt: Long = 0L,
