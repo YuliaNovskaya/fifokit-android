@@ -34,6 +34,8 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.platform.LocalFocusManager
 import com.fifokit.app.data.FinancePreferences
 import kotlinx.coroutines.launch
 import android.os.Bundle
@@ -53,6 +55,10 @@ fun PayCalculatorScreen(
     onBack: () -> Unit
 ) {
     val context = LocalContext.current
+    val keyboardController =
+        LocalSoftwareKeyboardController.current
+    val focusManager =
+        LocalFocusManager.current
 
     val analytics = remember(context) {
         FirebaseAnalytics.getInstance(context)
@@ -247,6 +253,8 @@ fun PayCalculatorScreen(
 
             Button(
                 onClick = {
+                    keyboardController?.hide()
+                    focusManager.clearFocus()
                     val rateValue = rate.toDoubleOrNull()
                     val hoursValue = hoursPerDay.toDoubleOrNull()
                     val allowanceValue =
