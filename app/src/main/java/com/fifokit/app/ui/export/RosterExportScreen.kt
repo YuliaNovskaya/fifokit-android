@@ -21,6 +21,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import com.fifokit.app.ui.components.FifokitBackButton
+import com.fifokit.app.ui.components.FifokitTopBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -429,15 +430,9 @@ fun RosterExportScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = {
-                    Text("Export roster")
-                },
-                navigationIcon = {
-                    FifokitBackButton(
-                        onClick = onBack
-                    )
-                }
+            FifokitTopBar(
+                title = "Export roster",
+                onBack = onBack
             )
         }
     ) { innerPadding ->
