@@ -25,6 +25,7 @@ import androidx.compose.ui.platform.LocalContext
 import com.google.firebase.analytics.FirebaseAnalytics
 import com.google.firebase.analytics.logEvent
 import com.fifokit.app.analytics.AnalyticsEvents
+import com.fifokit.app.ui.components.FifokitBackButton
 import com.fifokit.app.domain.model.RosterPattern
 
 @Composable
@@ -49,6 +50,14 @@ fun SharedRostersScreen(
             .padding(24.dp),
         verticalArrangement = Arrangement.Top
     ) {
+
+        FifokitBackButton(
+            onClick = onBack
+        )
+
+        Spacer(
+            modifier = Modifier.height(12.dp)
+        )
 
         Text(
             text = "Shared rosters",
@@ -142,14 +151,5 @@ fun SharedRostersScreen(
             }
         }
 
-        Spacer(
-            modifier = Modifier.height(24.dp)
-        )
-
-        OutlinedButton(
-            onClick = onBack
-        ) {
-            Text("Back")
-        }
     }
 }
