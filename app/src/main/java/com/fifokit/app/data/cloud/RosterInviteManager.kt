@@ -20,9 +20,16 @@ class RosterInviteManager(
         val ownerId = auth.currentUser?.uid
             ?: error("User must be signed in")
 
+        sharingRepository.reconcileOwnerAccess(
+            ownerId = ownerId,
+            recipientLimit =
+                SharingPolicy.recipientLimit(isPro)
+        )
+
         val activeRecipientCount =
             sharingRepository
                 .getSharesForOwner(ownerId)
+                .filter { it.isActive }
                 .map { it.userId }
                 .filter { it.isNotBlank() }
                 .distinct()
@@ -89,6 +96,7 @@ class RosterInviteManager(
         val activeRecipientIds =
             sharingRepository
                 .getSharesForOwner(invite.ownerId)
+                .filter { it.isActive }
                 .map { it.userId }
                 .filter { it.isNotBlank() }
                 .distinct()
