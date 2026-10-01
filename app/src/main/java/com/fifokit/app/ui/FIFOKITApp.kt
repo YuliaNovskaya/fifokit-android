@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -13,6 +14,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.fifokit.app.deeplink.AppLinkDestination
@@ -402,7 +404,15 @@ fun FIFOKITApp(
                 )
             } else if (showAccount) {
                 AccountScreen(
-                    authViewModel = authViewModel
+                    authViewModel = authViewModel,
+                    onBack = {
+                        showAccount = false
+                        rosterSetupViewModel.refreshFromLocalStorage()
+                        screenOverride = null
+                    },
+                    onSignedIn = {
+                        showAccount = false
+                    }
                 )
             } else if (showSettings) {
                 SettingsScreen(
@@ -464,7 +474,7 @@ fun FIFOKITApp(
                         showPro = true
                     }
                 )
-            } else {
+            } else if (screenOverride == false) {
                 RosterSetupRoute(
                     viewModel = rosterSetupViewModel,
                     onGenerateRoster = {
@@ -478,6 +488,24 @@ fun FIFOKITApp(
                             param(AnalyticsParams.FEATURE, feature)
                         }
                         showPro = true
+                    }
+                )
+            } else if (rosterSetupViewModel.hasSavedRoster == null) {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator()
+                }
+            } else {
+                AccountScreen(
+                    authViewModel = authViewModel,
+                    onCreateRoster = {
+                        rosterSetupViewModel.createNewRoster()
+                        screenOverride = false
+                    },
+                    onSignedIn = {
+                        rosterSetupViewModel.refreshFromLocalStorage()
                     }
                 )
             }
