@@ -492,8 +492,13 @@ fun FIFOKITApp(
                     onGenerateRoster = {
                         screenOverride = true
                     },
-                    onSettings = {
-                        showSettings = true
+                    onBack = {
+                        if (rosterSetupViewModel.isCreatingNewRoster) {
+                            rosterSetupViewModel.cancelNewRoster()
+                        } else {
+                            rosterSetupViewModel.cancelEditRoster()
+                        }
+                        screenOverride = true
                     },
                     onProRequested = { feature ->
                         analytics.logEvent(AnalyticsEvents.PRO_FEATURE_LOCKED) {
