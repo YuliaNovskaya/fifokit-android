@@ -29,6 +29,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.ui.Alignment
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.TopAppBar
+import com.fifokit.app.ui.components.FifokitBackButton
 import androidx.compose.material3.ExperimentalMaterial3Api
 import com.fifokit.app.domain.pro.ProPurchaseState
 import com.fifokit.app.analytics.AnalyticsEvents
@@ -104,11 +105,9 @@ fun ProScreen(
                     Text("FIFOKIT Pro")
                 },
                 navigationIcon = {
-                    TextButton(
+                    FifokitBackButton(
                         onClick = onBack
-                    ) {
-                        Text("Back")
-                    }
+                    )
                 }
             )
         }
