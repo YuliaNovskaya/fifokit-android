@@ -28,6 +28,8 @@ import com.google.firebase.analytics.logEvent
 import com.fifokit.app.growth.GrowthEngagementTracker
 import com.fifokit.app.analytics.AnalyticsEvents
 import com.fifokit.app.ui.components.FifokitBackButton
+import com.fifokit.app.ui.components.FifokitTopBar
+import androidx.compose.material3.Scaffold
 import com.fifokit.app.analytics.AnalyticsParams
 import com.fifokit.app.domain.pro.ProEntitlementManager
 
@@ -63,23 +65,22 @@ fun RosterInviteScreen(
         accessViewModel.loadShares(rosterId)
     }
 
+    Scaffold(
+        topBar = {
+            FifokitTopBar(
+                title = "Share roster",
+                onBack = onBack
+            )
+        }
+    ) { innerPadding ->
+
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .padding(innerPadding)
             .padding(24.dp),
         verticalArrangement = Arrangement.Top
     ) {
-
-        FifokitBackButton(
-            onClick = onBack
-        )
-
-        Spacer(modifier = Modifier.height(12.dp))
-
-        Text(
-            text = "Share roster",
-            style = MaterialTheme.typography.headlineMedium
-        )
 
         Spacer(modifier = Modifier.height(8.dp))
 
