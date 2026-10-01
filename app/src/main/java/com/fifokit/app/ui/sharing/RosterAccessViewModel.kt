@@ -36,6 +36,8 @@ class RosterAccessViewModel(
                 )
 
             runCatching {
+                manager.reconcileCurrentEntitlement()
+
                 val rosterShares =
                     manager.getRosterShares(rosterId)
 
@@ -44,6 +46,7 @@ class RosterAccessViewModel(
 
                 rosterShares to
                         ownerShares
+                            .filter { it.isActive }
                             .map { it.userId }
                             .filter { it.isNotBlank() }
                             .distinct()
