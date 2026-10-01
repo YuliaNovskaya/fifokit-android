@@ -53,6 +53,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.TopAppBar
 import com.fifokit.app.ui.components.FifokitBackButton
+import com.fifokit.app.ui.components.FifokitTopBar
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.sp
 
@@ -173,15 +174,9 @@ fun TogetherRosterCalendarScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = {
-                    Text("Together")
-                },
-                navigationIcon = {
-                    FifokitBackButton(
-                        onClick = onBack
-                    )
-                }
+            FifokitTopBar(
+                title = "Together",
+                onBack = onBack
             )
         }
     ) { innerPadding ->
