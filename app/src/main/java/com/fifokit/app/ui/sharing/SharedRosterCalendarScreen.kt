@@ -44,6 +44,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.platform.LocalContext
 import com.google.firebase.analytics.FirebaseAnalytics
 import com.google.firebase.analytics.logEvent
+import com.fifokit.app.ui.components.FifokitBackButton
 
 @Composable
 fun SharedRosterCalendarScreen(
