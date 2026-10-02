@@ -20,7 +20,8 @@ data class RosterExportData(
 data class RosterExportDay(
     val date: LocalDate,
     val isWorkDay: Boolean,
-    val isPublicHoliday: Boolean
+    val isPublicHoliday: Boolean,
+    val isShutdown: Boolean
 )
 
 object RosterExportCalendar {
@@ -56,7 +57,11 @@ object RosterExportCalendar {
                     PublicHolidayProvider.isPublicHoliday(
                         date = date,
                         states = data.selectedStates
-                    )
+                    ),
+                isShutdown =
+                    data.shutdowns.shutdownOn(
+                        date
+                    ) != null
             )
         }
 
