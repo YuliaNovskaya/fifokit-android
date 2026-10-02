@@ -114,6 +114,22 @@ fun FIFOKITApp(
         mutableStateOf(false)
     }
 
+    fun clearOpenScreens() {
+        showTogetherRoster = false
+        selectedSharedRoster = null
+        showSharedRosters = false
+        showShareRoster = false
+        showRosterExport = false
+        showPro = false
+        showAccount = false
+        showFinancialGoal = false
+        showAnnualEarnings = false
+        showPayCalculator = false
+        showSettings = false
+        showRosterActionsSheet = false
+        showToolsActionsSheet = false
+    }
+
     LaunchedEffect(
         appLinkDestination,
         inviteId
@@ -242,11 +258,12 @@ fun FIFOKITApp(
                 showRosterActionsSheet = false
             },
             onShareRoster = {
-                showRosterActionsSheet = false
+                clearOpenScreens()
                 showShareRoster = true
+                screenOverride = true
             },
             onSharedRosters = {
-                showRosterActionsSheet = false
+                clearOpenScreens()
                 analytics.logEvent(
                     AnalyticsEvents.FEATURE_OPENED
                 ) {
@@ -256,10 +273,12 @@ fun FIFOKITApp(
                     )
                 }
                 showSharedRosters = true
+                screenOverride = true
             },
             onExportRoster = {
-                showRosterActionsSheet = false
+                clearOpenScreens()
                 showRosterExport = true
+                screenOverride = true
             }
         )
     }
@@ -270,11 +289,12 @@ fun FIFOKITApp(
                 showToolsActionsSheet = false
             },
             onPayCalculator = {
-                showToolsActionsSheet = false
+                clearOpenScreens()
                 showPayCalculator = true
+                screenOverride = true
             },
             onAnnualEarnings = {
-                showToolsActionsSheet = false
+                clearOpenScreens()
 
                 if (
                     ProAccess.canUse(
@@ -282,6 +302,7 @@ fun FIFOKITApp(
                     )
                 ) {
                     showAnnualEarnings = true
+                    screenOverride = true
                 } else {
                     analytics.logEvent(
                         AnalyticsEvents.PRO_FEATURE_LOCKED
@@ -292,11 +313,13 @@ fun FIFOKITApp(
                         )
                     }
                     showPro = true
+                    screenOverride = true
                 }
             },
             onFinancialGoal = {
-                showToolsActionsSheet = false
+                clearOpenScreens()
                 showFinancialGoal = true
+                screenOverride = true
             }
         )
     }
@@ -310,19 +333,7 @@ fun FIFOKITApp(
             if (showPersistentNavigation) {
                 FifokitBottomNavigation(
                     onEdit = {
-                        showTogetherRoster = false
-                        selectedSharedRoster = null
-                        showSharedRosters = false
-                        showShareRoster = false
-                        showRosterExport = false
-                        showPro = false
-                        showAccount = false
-                        showFinancialGoal = false
-                        showAnnualEarnings = false
-                        showPayCalculator = false
-                        showSettings = false
-                        showRosterActionsSheet = false
-                        showToolsActionsSheet = false
+                        clearOpenScreens()
                         screenOverride = false
                     },
                     onRoster = {
@@ -340,18 +351,7 @@ fun FIFOKITApp(
                         showToolsActionsSheet = true
                     },
                     onSettings = {
-                        showTogetherRoster = false
-                        selectedSharedRoster = null
-                        showSharedRosters = false
-                        showShareRoster = false
-                        showRosterExport = false
-                        showPro = false
-                        showAccount = false
-                        showFinancialGoal = false
-                        showAnnualEarnings = false
-                        showPayCalculator = false
-                        showRosterActionsSheet = false
-                        showToolsActionsSheet = false
+                        clearOpenScreens()
                         showSettings = true
                         screenOverride = true
                     }
