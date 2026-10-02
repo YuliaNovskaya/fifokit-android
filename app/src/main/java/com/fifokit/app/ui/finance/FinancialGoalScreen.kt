@@ -2,6 +2,7 @@ package com.fifokit.app.ui.finance
 
 import android.os.Bundle
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -15,8 +16,6 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -55,6 +54,12 @@ import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.util.UUID
 
+private enum class FinancialGoalMode {
+    LIST,
+    DETAIL,
+    EDIT
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FinancialGoalScreen(
@@ -66,274 +71,154 @@ fun FinancialGoalScreen(
         LocalSoftwareKeyboardController.current
     val focusManager =
         LocalFocusManager.current
-
     val analytics =
         remember(context) {
-            FirebaseAnalytics.getInstance(
-                context
-            )
+            FirebaseAnalytics.getInstance(context)
         }
-
     val financePreferences =
         remember(context) {
             FinancePreferences(context)
         }
-
     val goals by
-        financePreferences
-            .financialGoals
-            .collectAsState(
-                initial =
-                    listOf(
-                        FinancialGoal()
-                    )
-            )
+        financePreferences.financialGoals.collectAsState(
+            initial = listOf(FinancialGoal())
+        )
+    val scope = rememberCoroutineScope()
 
-    val scope =
-        rememberCoroutineScope()
-
-    var selectedGoalId by remember {
-        mutableStateOf("primary")
+    var mode by remember {
+        mutableStateOf(FinancialGoalMode.LIST)
     }
-
+    var selectedGoalId by remember {
+        mutableStateOf<String?>(null)
+    }
     var draftGoal by remember {
         mutableStateOf<FinancialGoal?>(null)
     }
-
-    var isEditing by remember {
+    var showCreateDialog by remember {
         mutableStateOf(false)
     }
-
-    var goalMenuExpanded by remember {
+    var showDeleteDialog by remember {
         mutableStateOf(false)
     }
-
-    var showCreateGoalDialog by remember {
-        mutableStateOf(false)
-    }
-
-    var showDeleteGoalDialog by remember {
-        mutableStateOf(false)
-    }
-
     var newGoalName by remember {
         mutableStateOf("")
     }
 
-    var goalName by remember {
-        mutableStateOf("")
-    }
-
-    var targetAmount by remember {
-        mutableStateOf("")
-    }
-
-    var currentAmount by remember {
-        mutableStateOf("")
-    }
-
-    var contributionPerPay by remember {
-        mutableStateOf("")
-    }
-
-    var payFrequencyDays by remember {
-        mutableStateOf("14")
-    }
-
+    var goalName by remember { mutableStateOf("") }
+    var targetAmount by remember { mutableStateOf("") }
+    var currentAmount by remember { mutableStateOf("") }
+    var contributionPerPay by remember { mutableStateOf("") }
+    var payFrequencyDays by remember { mutableStateOf("14") }
     var validationError by remember {
         mutableStateOf<String?>(null)
     }
 
-    var goalResult by remember {
-        mutableStateOf<FinancialGoalResult?>(null)
-    }
-
     val storedSelectedGoal =
-        goals.firstOrNull {
-            it.id == selectedGoalId
-        } ?: goals.firstOrNull {
-            it.id == "primary"
-        } ?: FinancialGoal()
+        selectedGoalId?.let { id ->
+            goals.firstOrNull { it.id == id }
+        }
 
     val selectedGoal =
-        draftGoal
-            ?: storedSelectedGoal
+        draftGoal ?: storedSelectedGoal
 
-    fun loadGoalFields(
-        goal: FinancialGoal
-    ) {
-        goalName =
-            goal.name
-
-        targetAmount =
-            if (goal.targetAmount == 0.0) {
-                ""
-            } else {
-                goal.targetAmount.toString()
-            }
-
-        currentAmount =
-            if (goal.currentAmount == 0.0) {
-                ""
-            } else {
-                goal.currentAmount.toString()
-            }
-
-        contributionPerPay =
-            if (
-                goal.contributionPerPay ==
-                0.0
-            ) {
-                ""
-            } else {
-                goal.contributionPerPay
-                    .toString()
-            }
-
-        payFrequencyDays =
-            goal.payFrequencyDays
-                .toString()
-
-        validationError = null
-    }
-
-    fun calculateSavedGoal(
-        goal: FinancialGoal
+    fun calculationFor(
+        goal: FinancialGoal?
     ): FinancialGoalResult? {
+        if (goal == null) return null
+
         return if (
             goal.targetAmount > 0.0 &&
             goal.currentAmount >= 0.0 &&
             goal.contributionPerPay >= 0.0 &&
             goal.payFrequencyDays > 0 &&
             (
-                goal.currentAmount >=
-                    goal.targetAmount ||
+                goal.currentAmount >= goal.targetAmount ||
                 goal.contributionPerPay > 0.0
             )
         ) {
-            FinanceCalculator
-                .calculateFinancialGoal(
-                    goal
-                )
+            FinanceCalculator.calculateFinancialGoal(goal)
         } else {
             null
         }
     }
 
-    fun cancelEditing() {
-        keyboardController?.hide()
-        focusManager.clearFocus()
-
-        val wasDraft =
-            draftGoal != null
-
-        if (wasDraft) {
-            val fallbackGoal =
-                goals.firstOrNull {
-                    it.id == "primary"
-                } ?: goals.firstOrNull()
-                ?: FinancialGoal()
-
-            draftGoal = null
-            selectedGoalId =
-                fallbackGoal.id
-
-            loadGoalFields(
-                fallbackGoal
-            )
-
-            goalResult =
-                calculateSavedGoal(
-                    fallbackGoal
-                )
-        } else {
-            loadGoalFields(
-                storedSelectedGoal
-            )
-
-            goalResult =
-                calculateSavedGoal(
-                    storedSelectedGoal
-                )
-        }
-
-        isEditing = false
+    fun loadEditFields(
+        goal: FinancialGoal
+    ) {
+        goalName = goal.name
+        targetAmount =
+            if (goal.targetAmount == 0.0) "" else goal.targetAmount.toString()
+        currentAmount =
+            if (goal.currentAmount == 0.0) "" else goal.currentAmount.toString()
+        contributionPerPay =
+            if (goal.contributionPerPay == 0.0) {
+                ""
+            } else {
+                goal.contributionPerPay.toString()
+            }
+        payFrequencyDays =
+            goal.payFrequencyDays.toString()
         validationError = null
     }
 
-    BackHandler(
-        enabled = isEditing
-    ) {
-        cancelEditing()
+    fun returnToList() {
+        keyboardController?.hide()
+        focusManager.clearFocus()
+        mode = FinancialGoalMode.LIST
+        selectedGoalId = null
+        draftGoal = null
+        validationError = null
+    }
+
+    fun returnToDetail() {
+        keyboardController?.hide()
+        focusManager.clearFocus()
+
+        if (draftGoal != null && storedSelectedGoal == null) {
+            returnToList()
+        } else {
+            mode = FinancialGoalMode.DETAIL
+            draftGoal = null
+            validationError = null
+        }
+    }
+
+    LaunchedEffect(Unit) {
+        financePreferences.cleanupLegacyEmptySecondaryGoals()
     }
 
     LaunchedEffect(
         goals,
-        selectedGoalId,
         draftGoal?.id
     ) {
-        val draft =
-            draftGoal
-
+        val draft = draftGoal
         if (
             draft != null &&
-            goals.any {
-                it.id == draft.id
-            }
+            goals.any { it.id == draft.id }
         ) {
-            selectedGoalId =
-                draft.id
+            selectedGoalId = draft.id
             draftGoal = null
-        } else if (
-            draft == null &&
-            goals.none {
-                it.id == selectedGoalId
-            }
-        ) {
-            selectedGoalId =
-                goals
-                    .firstOrNull()
-                    ?.id
-                    ?: "primary"
         }
     }
 
-    LaunchedEffect(
-        selectedGoal.id,
-        selectedGoal.updatedAt,
-        draftGoal?.id
+    BackHandler(
+        enabled = mode != FinancialGoalMode.LIST
     ) {
-        loadGoalFields(
-            selectedGoal
-        )
-
-        if (draftGoal != null) {
-            goalResult =
-                calculateSavedGoal(
-                    selectedGoal
-                )
-        } else {
-            goalResult =
-                calculateSavedGoal(
-                    selectedGoal
-                )
-
-            isEditing =
-                selectedGoal.targetAmount <=
-                        0.0
+        when (mode) {
+            FinancialGoalMode.EDIT -> returnToDetail()
+            FinancialGoalMode.DETAIL -> returnToList()
+            FinancialGoalMode.LIST -> Unit
         }
     }
 
-    if (showCreateGoalDialog) {
+    if (showCreateDialog) {
         AlertDialog(
             onDismissRequest = {
-                showCreateGoalDialog = false
+                showCreateDialog = false
                 newGoalName = ""
             },
             title = {
-                Text(
-                    "New financial goal"
-                )
+                Text("New financial goal")
             },
             text = {
                 OutlinedTextField(
@@ -342,48 +227,29 @@ fun FinancialGoalScreen(
                         newGoalName = it
                     },
                     label = {
-                        Text(
-                            text = "Goal name",
-                            style =
-                                MaterialTheme
-                                    .typography
-                                    .bodyLarge
-                        )
+                        Text("Goal name")
                     },
                     singleLine = true,
-                    modifier =
-                        Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth()
                 )
             },
             confirmButton = {
                 TextButton(
                     enabled =
-                        newGoalName
-                            .trim()
-                            .isNotEmpty(),
+                        newGoalName.trim().isNotEmpty(),
                     onClick = {
-                        val name =
-                            newGoalName.trim()
-
-                        showCreateGoalDialog =
-                            false
-                        newGoalName = ""
-
                         val draft =
                             FinancialGoal(
-                                id =
-                                    UUID
-                                        .randomUUID()
-                                        .toString(),
-                                name = name
+                                id = UUID.randomUUID().toString(),
+                                name = newGoalName.trim()
                             )
 
-                        draftGoal =
-                            draft
-                        selectedGoalId =
-                            draft.id
-                        isEditing = true
-                        goalResult = null
+                        newGoalName = ""
+                        showCreateDialog = false
+                        selectedGoalId = draft.id
+                        draftGoal = draft
+                        loadEditFields(draft)
+                        mode = FinancialGoalMode.EDIT
                     }
                 ) {
                     Text("Continue")
@@ -392,8 +258,7 @@ fun FinancialGoalScreen(
             dismissButton = {
                 TextButton(
                     onClick = {
-                        showCreateGoalDialog =
-                            false
+                        showCreateDialog = false
                         newGoalName = ""
                     }
                 ) {
@@ -404,53 +269,40 @@ fun FinancialGoalScreen(
     }
 
     if (
-        showDeleteGoalDialog &&
+        showDeleteDialog &&
+        selectedGoal != null &&
         selectedGoal.id != "primary"
     ) {
         AlertDialog(
             onDismissRequest = {
-                showDeleteGoalDialog =
-                    false
+                showDeleteDialog = false
             },
             title = {
-                Text(
-                    "Delete financial goal?"
-                )
+                Text("Delete financial goal?")
             },
             text = {
                 Text(
                     "Delete \"" +
                             selectedGoal.name +
-                            "\"? This action requires confirmation."
+                            "\"? This cannot be undone."
                 )
             },
             confirmButton = {
                 TextButton(
                     onClick = {
-                        val goalId =
-                            selectedGoal.id
-
+                        val id = selectedGoal.id
                         val isStored =
-                            goals.any {
-                                it.id == goalId
-                            }
+                            goals.any { it.id == id }
 
-                        showDeleteGoalDialog =
-                            false
-                        draftGoal = null
-                        selectedGoalId =
-                            "primary"
-                        isEditing = false
-                        validationError = null
+                        showDeleteDialog = false
 
                         if (isStored) {
                             scope.launch {
-                                financePreferences
-                                    .deleteFinancialGoal(
-                                        goalId
-                                    )
+                                financePreferences.deleteFinancialGoal(id)
                             }
                         }
+
+                        returnToList()
                     }
                 ) {
                     Text("Delete")
@@ -459,8 +311,7 @@ fun FinancialGoalScreen(
             dismissButton = {
                 TextButton(
                     onClick = {
-                        showDeleteGoalDialog =
-                            false
+                        showDeleteDialog = false
                     }
                 ) {
                     Text("Cancel")
@@ -472,12 +323,30 @@ fun FinancialGoalScreen(
     Scaffold(
         topBar = {
             FifokitTopBar(
-                title = "Financial Goal",
+                title = when (mode) {
+                    FinancialGoalMode.LIST ->
+                        "Financial Goals"
+
+                    FinancialGoalMode.DETAIL ->
+                        "Financial Goal"
+
+                    FinancialGoalMode.EDIT ->
+                        if (draftGoal != null) {
+                            "New Financial Goal"
+                        } else {
+                            "Edit Financial Goal"
+                        }
+                },
                 onBack = {
-                    if (isEditing) {
-                        cancelEditing()
-                    } else {
-                        onBack()
+                    when (mode) {
+                        FinancialGoalMode.LIST ->
+                            onBack()
+
+                        FinancialGoalMode.DETAIL ->
+                            returnToList()
+
+                        FinancialGoalMode.EDIT ->
+                            returnToDetail()
                     }
                 }
             )
@@ -488,675 +357,533 @@ fun FinancialGoalScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .verticalScroll(
-                    rememberScrollState()
-                )
+                .verticalScroll(rememberScrollState())
                 .padding(16.dp)
         ) {
-            Text(
-                text = "Saved goals",
-                style =
-                    MaterialTheme
-                        .typography
-                        .titleMedium,
-                fontWeight =
-                    FontWeight.SemiBold
-            )
+            when (mode) {
+                FinancialGoalMode.LIST -> {
+                    Text(
+                        text = "Financial Goals",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold
+                    )
 
-            Spacer(
-                modifier =
-                    Modifier.height(8.dp)
-            )
+                    Spacer(
+                        modifier = Modifier.height(8.dp)
+                    )
 
-            OutlinedButton(
-                modifier =
-                    Modifier.fillMaxWidth(),
-                onClick = {
-                    goalMenuExpanded =
-                        true
-                }
-            ) {
-                Text(
-                    if (
-                        selectedGoal.id ==
-                        "primary"
-                    ) {
-                        selectedGoal.name
-                    } else {
-                        selectedGoal.name +
-                                " · PRO"
-                    }
-                )
-            }
+                    Text(
+                        text =
+                            "Your first goal is free. Additional saved goals require FIFOKIT Pro.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
 
-            DropdownMenu(
-                expanded =
-                    goalMenuExpanded,
-                onDismissRequest = {
-                    goalMenuExpanded =
-                        false
-                }
-            ) {
-                goals.forEach { goal ->
-                    DropdownMenuItem(
-                        text = {
-                            Text(
+                    Spacer(
+                        modifier = Modifier.height(16.dp)
+                    )
+
+                    goals.forEach { goal ->
+                        FinancialGoalListItem(
+                            goal = goal,
+                            isProGoal = goal.id != "primary",
+                            onClick = {
                                 if (
-                                    goal.id ==
-                                    "primary"
+                                    goal.id == "primary" ||
+                                    ProAccess.canUse(
+                                        ProFeature.ADVANCED_FINANCIAL_GOALS
+                                    )
                                 ) {
-                                    goal.name
+                                    selectedGoalId = goal.id
+                                    draftGoal = null
+                                    mode = FinancialGoalMode.DETAIL
                                 } else {
-                                    goal.name +
-                                            " · PRO"
+                                    onProRequested(
+                                        "advanced_financial_goals"
+                                    )
                                 }
-                            )
-                        },
-                        onClick = {
-                            goalMenuExpanded =
-                                false
+                            }
+                        )
 
+                        Spacer(
+                            modifier = Modifier.height(10.dp)
+                        )
+                    }
+
+                    OutlinedButton(
+                        modifier = Modifier.fillMaxWidth(),
+                        onClick = {
                             if (
-                                goal.id ==
-                                "primary" ||
                                 ProAccess.canUse(
-                                    ProFeature
-                                        .ADVANCED_FINANCIAL_GOALS
+                                    ProFeature.ADVANCED_FINANCIAL_GOALS
                                 )
                             ) {
-                                draftGoal = null
-                                selectedGoalId =
-                                    goal.id
-                                isEditing =
-                                    false
+                                showCreateDialog = true
                             } else {
                                 onProRequested(
                                     "advanced_financial_goals"
                                 )
                             }
                         }
-                    )
+                    ) {
+                        Text("+ New goal · PRO")
+                    }
                 }
 
-                DropdownMenuItem(
-                    text = {
-                        Text(
-                            "+ New goal · PRO"
-                        )
-                    },
-                    onClick = {
-                        goalMenuExpanded =
-                            false
+                FinancialGoalMode.DETAIL -> {
+                    val goal = selectedGoal
 
-                        if (
-                            ProAccess.canUse(
-                                ProFeature
-                                    .ADVANCED_FINANCIAL_GOALS
-                            )
+                    if (goal == null) {
+                        Text("Goal not found")
+                    } else {
+                        Text(
+                            text = goal.name,
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.Bold
+                        )
+
+                        Spacer(
+                            modifier = Modifier.height(12.dp)
+                        )
+
+                        FinancialGoalSummary(goal)
+
+                        Spacer(
+                            modifier = Modifier.height(12.dp)
+                        )
+
+                        OutlinedButton(
+                            modifier = Modifier.fillMaxWidth(),
+                            onClick = {
+                                loadEditFields(goal)
+                                mode = FinancialGoalMode.EDIT
+                            }
                         ) {
-                            showCreateGoalDialog =
-                                true
-                        } else {
-                            onProRequested(
-                                "advanced_financial_goals"
+                            Text("Edit goal")
+                        }
+
+                        if (goal.id != "primary") {
+                            Spacer(
+                                modifier = Modifier.height(8.dp)
+                            )
+
+                            OutlinedButton(
+                                modifier = Modifier.fillMaxWidth(),
+                                onClick = {
+                                    showDeleteDialog = true
+                                }
+                            ) {
+                                Text("Delete goal")
+                            }
+                        }
+
+                        calculationFor(goal)?.let { result ->
+                            Spacer(
+                                modifier = Modifier.height(20.dp)
+                            )
+
+                            FinancialGoalCalculation(
+                                result = result
                             )
                         }
                     }
-                )
-            }
+                }
 
-            Spacer(
-                modifier =
-                    Modifier.height(20.dp)
-            )
+                FinancialGoalMode.EDIT -> {
+                    val goal = selectedGoal
 
-            if (isEditing) {
-                Text(
-                    text =
-                        if (
-                            draftGoal != null
+                    if (goal == null) {
+                        Text("Goal not found")
+                    } else {
+                        FinancialGoalEditFields(
+                            goalName = goalName,
+                            onGoalNameChange = {
+                                goalName = it
+                                validationError = null
+                            },
+                            targetAmount = targetAmount,
+                            onTargetAmountChange = {
+                                targetAmount = it
+                                validationError = null
+                            },
+                            currentAmount = currentAmount,
+                            onCurrentAmountChange = {
+                                currentAmount = it
+                                validationError = null
+                            },
+                            contributionPerPay = contributionPerPay,
+                            onContributionPerPayChange = {
+                                contributionPerPay = it
+                                validationError = null
+                            },
+                            payFrequencyDays = payFrequencyDays,
+                            onPayFrequencyDaysChange = {
+                                payFrequencyDays = it
+                                validationError = null
+                            }
+                        )
+
+                        Spacer(
+                            modifier = Modifier.height(24.dp)
+                        )
+
+                        Button(
+                            modifier = Modifier.fillMaxWidth(),
+                            onClick = {
+                                keyboardController?.hide()
+                                focusManager.clearFocus()
+
+                                val targetValue =
+                                    targetAmount.toDoubleOrNull()
+                                val currentValue =
+                                    currentAmount.toDoubleOrNull()
+                                val contributionValue =
+                                    contributionPerPay.toDoubleOrNull()
+                                val frequencyValue =
+                                    payFrequencyDays.toIntOrNull()
+
+                                validationError =
+                                    when {
+                                        goalName.trim().isEmpty() ->
+                                            "Enter a goal name"
+
+                                        targetValue == null ||
+                                                targetValue <= 0.0 ->
+                                            "Enter a valid target amount"
+
+                                        currentValue == null ||
+                                                currentValue < 0.0 ->
+                                            "Enter valid current savings"
+
+                                        contributionValue == null ||
+                                                contributionValue < 0.0 ->
+                                            "Enter a valid contribution"
+
+                                        currentValue < targetValue &&
+                                                contributionValue == 0.0 ->
+                                            "Enter a contribution greater than zero"
+
+                                        frequencyValue == null ||
+                                                frequencyValue <= 0 ->
+                                            "Enter a valid pay frequency"
+
+                                        else ->
+                                            null
+                                    }
+
+                                if (validationError == null) {
+                                    val savedGoal =
+                                        goal.copy(
+                                            name = goalName.trim(),
+                                            targetAmount = targetValue!!,
+                                            currentAmount = currentValue!!,
+                                            contributionPerPay =
+                                                contributionValue!!,
+                                            payFrequencyDays =
+                                                frequencyValue!!
+                                        )
+
+                                    draftGoal = savedGoal
+                                    selectedGoalId = savedGoal.id
+                                    mode = FinancialGoalMode.DETAIL
+
+                                    scope.launch {
+                                        financePreferences
+                                            .saveFinancialGoal(
+                                                savedGoal
+                                            )
+                                    }
+
+                                    analytics.logEvent(
+                                        AnalyticsEvents
+                                            .FINANCIAL_GOAL_CALCULATED,
+                                        Bundle().apply {
+                                            putString(
+                                                AnalyticsParams.TOOL,
+                                                "financial_goal"
+                                            )
+                                            putLong(
+                                                AnalyticsParams
+                                                    .PAY_FREQUENCY_DAYS,
+                                                frequencyValue.toLong()
+                                            )
+                                        }
+                                    )
+                                }
+                            }
                         ) {
-                            "New goal"
-                        } else {
-                            "Edit goal"
-                        },
-                    style =
-                        MaterialTheme
-                            .typography
-                            .titleMedium,
-                    fontWeight =
-                        FontWeight.SemiBold
-                )
+                            Text("Save & calculate")
+                        }
 
-                Spacer(
-                    modifier =
-                        Modifier.height(12.dp)
-                )
-
-                OutlinedTextField(
-                    value = goalName,
-                    onValueChange = {
-                        goalName = it
-                        goalResult = null
-                    },
-                    label = {
-                        Text(
-                            text = "Goal name",
-                            style =
-                                MaterialTheme
-                                    .typography
-                                    .bodyLarge,
-                            fontWeight =
-                                FontWeight.Medium
+                        Spacer(
+                            modifier = Modifier.height(8.dp)
                         )
-                    },
-                    textStyle =
-                        MaterialTheme
-                            .typography
-                            .titleMedium,
-                    singleLine = true,
-                    modifier =
-                        Modifier.fillMaxWidth()
-                )
 
-                Spacer(
-                    modifier =
-                        Modifier.height(12.dp)
-                )
-
-                OutlinedTextField(
-                    value = targetAmount,
-                    onValueChange = {
-                        targetAmount = it
-                        goalResult = null
-                        validationError = null
-                    },
-                    label = {
-                        Text(
-                            text =
-                                "Target amount",
-                            style =
-                                MaterialTheme
-                                    .typography
-                                    .bodyLarge,
-                            fontWeight =
-                                FontWeight.Medium
-                        )
-                    },
-                    keyboardOptions =
-                        KeyboardOptions(
-                            keyboardType =
-                                KeyboardType
-                                    .Decimal
-                        ),
-                    textStyle =
-                        MaterialTheme
-                            .typography
-                            .titleMedium,
-                    modifier =
-                        Modifier.fillMaxWidth()
-                )
-
-                Spacer(
-                    modifier =
-                        Modifier.height(12.dp)
-                )
-
-                OutlinedTextField(
-                    value = currentAmount,
-                    onValueChange = {
-                        currentAmount = it
-                        goalResult = null
-                        validationError = null
-                    },
-                    label = {
-                        Text(
-                            text =
-                                "Current savings",
-                            style =
-                                MaterialTheme
-                                    .typography
-                                    .bodyLarge,
-                            fontWeight =
-                                FontWeight.Medium
-                        )
-                    },
-                    keyboardOptions =
-                        KeyboardOptions(
-                            keyboardType =
-                                KeyboardType
-                                    .Decimal
-                        ),
-                    textStyle =
-                        MaterialTheme
-                            .typography
-                            .titleMedium,
-                    modifier =
-                        Modifier.fillMaxWidth()
-                )
-
-                Spacer(
-                    modifier =
-                        Modifier.height(12.dp)
-                )
-
-                OutlinedTextField(
-                    value =
-                        contributionPerPay,
-                    onValueChange = {
-                        contributionPerPay = it
-                        goalResult = null
-                        validationError = null
-                    },
-                    label = {
-                        Text(
-                            text =
-                                "Contribution per pay",
-                            style =
-                                MaterialTheme
-                                    .typography
-                                    .bodyLarge,
-                            fontWeight =
-                                FontWeight.Medium
-                        )
-                    },
-                    keyboardOptions =
-                        KeyboardOptions(
-                            keyboardType =
-                                KeyboardType
-                                    .Decimal
-                        ),
-                    textStyle =
-                        MaterialTheme
-                            .typography
-                            .titleMedium,
-                    modifier =
-                        Modifier.fillMaxWidth()
-                )
-
-                Spacer(
-                    modifier =
-                        Modifier.height(12.dp)
-                )
-
-                OutlinedTextField(
-                    value =
-                        payFrequencyDays,
-                    onValueChange = {
-                        payFrequencyDays = it
-                        goalResult = null
-                        validationError = null
-                    },
-                    label = {
-                        Text(
-                            text =
-                                "Pay frequency in days",
-                            style =
-                                MaterialTheme
-                                    .typography
-                                    .bodyLarge,
-                            fontWeight =
-                                FontWeight.Medium
-                        )
-                    },
-                    keyboardOptions =
-                        KeyboardOptions(
-                            keyboardType =
-                                KeyboardType
-                                    .Number
-                        ),
-                    textStyle =
-                        MaterialTheme
-                            .typography
-                            .titleMedium,
-                    modifier =
-                        Modifier.fillMaxWidth()
-                )
-
-                Spacer(
-                    modifier =
-                        Modifier.height(24.dp)
-                )
-
-                Button(
-                    onClick = {
-                        keyboardController
-                            ?.hide()
-
-                        focusManager.clearFocus()
-
-                        val targetValue =
-                            targetAmount
-                                .toDoubleOrNull()
-
-                        val currentValue =
-                            currentAmount
-                                .toDoubleOrNull()
-
-                        val contributionValue =
-                            contributionPerPay
-                                .toDoubleOrNull()
-
-                        val frequencyValue =
-                            payFrequencyDays
-                                .toIntOrNull()
-
-                        validationError =
-                            when {
-                                goalName
-                                    .trim()
-                                    .isEmpty() ->
-                                    "Enter a goal name"
-
-                                targetValue == null ||
-                                        targetValue <=
-                                        0.0 ->
-                                    "Enter a valid target amount"
-
-                                currentValue == null ||
-                                        currentValue <
-                                        0.0 ->
-                                    "Enter valid current savings"
-
-                                contributionValue ==
-                                        null ||
-                                        contributionValue <
-                                        0.0 ->
-                                    "Enter a valid contribution"
-
-                                currentValue <
-                                        targetValue &&
-                                        contributionValue ==
-                                        0.0 ->
-                                    "Enter a contribution greater than zero"
-
-                                frequencyValue ==
-                                        null ||
-                                        frequencyValue <=
-                                        0 ->
-                                    "Enter a valid pay frequency"
-
-                                else ->
-                                    null
+                        OutlinedButton(
+                            modifier = Modifier.fillMaxWidth(),
+                            onClick = {
+                                returnToDetail()
                             }
-
-                        if (
-                            validationError ==
-                            null
                         ) {
-                            val goal =
-                                selectedGoal.copy(
-                                    name =
-                                        goalName
-                                            .trim(),
-                                    targetAmount =
-                                        targetValue!!,
-                                    currentAmount =
-                                        currentValue!!,
-                                    contributionPerPay =
-                                        contributionValue!!,
-                                    payFrequencyDays =
-                                        frequencyValue!!
-                                )
-
-                            val result =
-                                FinanceCalculator
-                                    .calculateFinancialGoal(
-                                        goal
-                                    )
-
-                            if (
-                                draftGoal !=
-                                null
-                            ) {
-                                draftGoal =
-                                    goal
-                            }
-
-                            goalResult =
-                                result
-                            isEditing =
-                                false
-
-                            scope.launch {
-                                financePreferences
-                                    .saveFinancialGoal(
-                                        goal
-                                    )
-                            }
-
-                            analytics.logEvent(
-                                AnalyticsEvents
-                                    .FINANCIAL_GOAL_CALCULATED,
-                                Bundle().apply {
-                                    putString(
-                                        AnalyticsParams
-                                            .TOOL,
-                                        "financial_goal"
-                                    )
-                                    putLong(
-                                        AnalyticsParams
-                                            .PAY_FREQUENCY_DAYS,
-                                        frequencyValue
-                                            .toLong()
-                                    )
+                            Text(
+                                if (draftGoal != null &&
+                                    storedSelectedGoal == null
+                                ) {
+                                    "Cancel new goal"
+                                } else {
+                                    "Cancel edit"
                                 }
                             )
                         }
-                    },
-                    modifier =
-                        Modifier.fillMaxWidth()
-                ) {
-                    Text(
-                        "Save & calculate"
-                    )
-                }
 
-                Spacer(
-                    modifier =
-                        Modifier.height(8.dp)
-                )
-
-                OutlinedButton(
-                    modifier =
-                        Modifier.fillMaxWidth(),
-                    onClick = {
-                        cancelEditing()
-                    }
-                ) {
-                    Text(
-                        if (
-                            draftGoal != null
-                        ) {
-                            "Cancel new goal"
-                        } else {
-                            "Cancel edit"
-                        }
-                    )
-                }
-
-                if (
-                    selectedGoal.id != "primary"
-                ) {
-                    Spacer(
-                        modifier =
-                            Modifier.height(8.dp)
-                    )
-
-                    OutlinedButton(
-                        modifier =
-                            Modifier.fillMaxWidth(),
-                        onClick = {
-                            showDeleteGoalDialog =
-                                true
-                        }
-                    ) {
-                        Text("Delete goal")
-                    }
-                }
-            } else {
-                Text(
-                    text =
-                        selectedGoal.name,
-                    style =
-                        MaterialTheme
-                            .typography
-                            .titleLarge,
-                    fontWeight =
-                        FontWeight.Bold
-                )
-
-                Spacer(
-                    modifier =
-                        Modifier.height(12.dp)
-                )
-
-                Surface(
-                    modifier =
-                        Modifier.fillMaxWidth(),
-                    shape =
-                        MaterialTheme
-                            .shapes
-                            .medium,
-                    color =
-                        MaterialTheme
-                            .colorScheme
-                            .surfaceVariant
-                ) {
-                    Column(
-                        modifier =
-                            Modifier.padding(
-                                16.dp
+                        if (goal.id != "primary") {
+                            Spacer(
+                                modifier = Modifier.height(8.dp)
                             )
-                    ) {
-                        Text(
-                            text =
-                                "Target: " +
-                                        FinanceFormatter.money(
-                                            selectedGoal
-                                                .targetAmount
-                                        ),
-                            style =
-                                MaterialTheme
-                                    .typography
-                                    .bodyLarge
-                        )
 
-                        Text(
-                            text =
-                                "Current savings: " +
-                                        FinanceFormatter.money(
-                                            selectedGoal
-                                                .currentAmount
-                                        ),
-                            style =
-                                MaterialTheme
-                                    .typography
-                                    .bodyLarge
-                        )
-
-                        Text(
-                            text =
-                                "Contribution per pay: " +
-                                        FinanceFormatter.money(
-                                            selectedGoal
-                                                .contributionPerPay
-                                        ),
-                            style =
-                                MaterialTheme
-                                    .typography
-                                    .bodyLarge
-                        )
-
-                        Text(
-                            text =
-                                "Pay every " +
-                                        selectedGoal
-                                            .payFrequencyDays +
-                                        " days",
-                            style =
-                                MaterialTheme
-                                    .typography
-                                    .bodyLarge
-                        )
-                    }
-                }
-
-                Spacer(
-                    modifier =
-                        Modifier.height(12.dp)
-                )
-
-                Row(
-                    modifier =
-                        Modifier.fillMaxWidth(),
-                    horizontalArrangement =
-                        Arrangement.spacedBy(
-                            8.dp
-                        )
-                ) {
-                    OutlinedButton(
-                        modifier =
-                            Modifier.weight(1f),
-                        onClick = {
-                            loadGoalFields(
-                                selectedGoal
-                            )
-                            isEditing =
-                                true
-                        }
-                    ) {
-                        Text("Edit goal")
-                    }
-
-                    if (
-                        selectedGoal.id !=
-                        "primary"
-                    ) {
-                        OutlinedButton(
-                            modifier =
-                                Modifier.weight(
-                                    1f
-                                ),
-                            onClick = {
-                                showDeleteGoalDialog =
-                                    true
+                            OutlinedButton(
+                                modifier = Modifier.fillMaxWidth(),
+                                onClick = {
+                                    showDeleteDialog = true
+                                }
+                            ) {
+                                Text("Delete goal")
                             }
-                        ) {
-                            Text("Delete goal")
+                        }
+
+                        validationError?.let { error ->
+                            Spacer(
+                                modifier = Modifier.height(12.dp)
+                            )
+
+                            Text(error)
                         }
                     }
                 }
-
-                goalResult?.let { result ->
-                    Spacer(
-                        modifier =
-                            Modifier.height(
-                                20.dp
-                            )
-                    )
-
-                    FinancialGoalCalculation(
-                        result = result
-                    )
-                }
-            }
-
-            validationError?.let { error ->
-                Spacer(
-                    modifier =
-                        Modifier.height(12.dp)
-                )
-
-                Text(error)
             }
 
             Spacer(
-                modifier =
-                    Modifier.height(20.dp)
+                modifier = Modifier.height(20.dp)
             )
         }
     }
+}
+
+@Composable
+private fun FinancialGoalListItem(
+    goal: FinancialGoal,
+    isProGoal: Boolean,
+    onClick: () -> Unit
+) {
+    Surface(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick),
+        shape = MaterialTheme.shapes.medium,
+        color = MaterialTheme.colorScheme.surfaceVariant
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp)
+        ) {
+            Text(
+                text =
+                    if (isProGoal) {
+                        goal.name + " · PRO"
+                    } else {
+                        goal.name
+                    },
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold
+            )
+
+            if (goal.targetAmount > 0.0) {
+                Spacer(
+                    modifier = Modifier.height(4.dp)
+                )
+
+                Text(
+                    text =
+                        FinanceFormatter.money(goal.currentAmount) +
+                                " of " +
+                                FinanceFormatter.money(goal.targetAmount),
+                    style = MaterialTheme.typography.bodyLarge
+                )
+            } else {
+                Spacer(
+                    modifier = Modifier.height(4.dp)
+                )
+
+                Text(
+                    text = "Not configured yet",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun FinancialGoalSummary(
+    goal: FinancialGoal
+) {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.medium,
+        color = MaterialTheme.colorScheme.surfaceVariant
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp)
+        ) {
+            Text(
+                text =
+                    "Target: " +
+                            FinanceFormatter.money(
+                                goal.targetAmount
+                            ),
+                style = MaterialTheme.typography.bodyLarge
+            )
+
+            Text(
+                text =
+                    "Current savings: " +
+                            FinanceFormatter.money(
+                                goal.currentAmount
+                            ),
+                style = MaterialTheme.typography.bodyLarge
+            )
+
+            Text(
+                text =
+                    "Contribution per pay: " +
+                            FinanceFormatter.money(
+                                goal.contributionPerPay
+                            ),
+                style = MaterialTheme.typography.bodyLarge
+            )
+
+            Text(
+                text =
+                    "Pay every " +
+                            goal.payFrequencyDays +
+                            " days",
+                style = MaterialTheme.typography.bodyLarge
+            )
+        }
+    }
+}
+
+@Composable
+private fun FinancialGoalEditFields(
+    goalName: String,
+    onGoalNameChange: (String) -> Unit,
+    targetAmount: String,
+    onTargetAmountChange: (String) -> Unit,
+    currentAmount: String,
+    onCurrentAmountChange: (String) -> Unit,
+    contributionPerPay: String,
+    onContributionPerPayChange: (String) -> Unit,
+    payFrequencyDays: String,
+    onPayFrequencyDaysChange: (String) -> Unit
+) {
+    OutlinedTextField(
+        value = goalName,
+        onValueChange = onGoalNameChange,
+        label = {
+            Text(
+                text = "Goal name",
+                style = MaterialTheme.typography.bodyLarge,
+                fontWeight = FontWeight.Medium
+            )
+        },
+        textStyle = MaterialTheme.typography.titleMedium,
+        singleLine = true,
+        modifier = Modifier.fillMaxWidth()
+    )
+
+    Spacer(
+        modifier = Modifier.height(12.dp)
+    )
+
+    OutlinedTextField(
+        value = targetAmount,
+        onValueChange = onTargetAmountChange,
+        label = {
+            Text(
+                text = "Target amount",
+                style = MaterialTheme.typography.bodyLarge,
+                fontWeight = FontWeight.Medium
+            )
+        },
+        keyboardOptions = KeyboardOptions(
+            keyboardType = KeyboardType.Decimal
+        ),
+        textStyle = MaterialTheme.typography.titleMedium,
+        modifier = Modifier.fillMaxWidth()
+    )
+
+    Spacer(
+        modifier = Modifier.height(12.dp)
+    )
+
+    OutlinedTextField(
+        value = currentAmount,
+        onValueChange = onCurrentAmountChange,
+        label = {
+            Text(
+                text = "Current savings",
+                style = MaterialTheme.typography.bodyLarge,
+                fontWeight = FontWeight.Medium
+            )
+        },
+        keyboardOptions = KeyboardOptions(
+            keyboardType = KeyboardType.Decimal
+        ),
+        textStyle = MaterialTheme.typography.titleMedium,
+        modifier = Modifier.fillMaxWidth()
+    )
+
+    Spacer(
+        modifier = Modifier.height(12.dp)
+    )
+
+    OutlinedTextField(
+        value = contributionPerPay,
+        onValueChange = onContributionPerPayChange,
+        label = {
+            Text(
+                text = "Contribution per pay",
+                style = MaterialTheme.typography.bodyLarge,
+                fontWeight = FontWeight.Medium
+            )
+        },
+        keyboardOptions = KeyboardOptions(
+            keyboardType = KeyboardType.Decimal
+        ),
+        textStyle = MaterialTheme.typography.titleMedium,
+        modifier = Modifier.fillMaxWidth()
+    )
+
+    Spacer(
+        modifier = Modifier.height(12.dp)
+    )
+
+    OutlinedTextField(
+        value = payFrequencyDays,
+        onValueChange = onPayFrequencyDaysChange,
+        label = {
+            Text(
+                text = "Pay frequency in days",
+                style = MaterialTheme.typography.bodyLarge,
+                fontWeight = FontWeight.Medium
+            )
+        },
+        keyboardOptions = KeyboardOptions(
+            keyboardType = KeyboardType.Number
+        ),
+        textStyle = MaterialTheme.typography.titleMedium,
+        modifier = Modifier.fillMaxWidth()
+    )
 }
 
 @Composable
@@ -1165,49 +892,30 @@ private fun FinancialGoalCalculation(
 ) {
     val weeksRequired =
         result.daysRequired / 7.0
-
     val monthsRequired =
         result.daysRequired / 30.44
-
     val estimatedDate =
         LocalDate.now()
             .plusDays(
-                result.daysRequired
-                    .toLong()
+                result.daysRequired.toLong()
             )
 
     Surface(
-        modifier =
-            Modifier.fillMaxWidth(),
-        shape =
-            MaterialTheme
-                .shapes
-                .medium,
-        color =
-            MaterialTheme
-                .colorScheme
-                .surfaceVariant
+        modifier = Modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.medium,
+        color = MaterialTheme.colorScheme.surfaceVariant
     ) {
         Column(
-            modifier =
-                Modifier.padding(
-                    16.dp
-                )
+            modifier = Modifier.padding(16.dp)
         ) {
             Text(
-                text =
-                    "Calculation",
-                style =
-                    MaterialTheme
-                        .typography
-                        .titleMedium,
-                fontWeight =
-                    FontWeight.Bold
+                text = "Calculation",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold
             )
 
             Spacer(
-                modifier =
-                    Modifier.height(8.dp)
+                modifier = Modifier.height(8.dp)
             )
 
             Text(
@@ -1216,60 +924,38 @@ private fun FinancialGoalCalculation(
                             FinanceFormatter.money(
                                 result.amountRemaining
                             ),
-                style =
-                    MaterialTheme
-                        .typography
-                        .titleMedium,
-                fontWeight =
-                    FontWeight.Bold
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold
             )
 
             Text(
                 text =
                     "Contributions required: " +
-                            result
-                                .contributionsRequired,
-                style =
-                    MaterialTheme
-                        .typography
-                        .bodyLarge
+                            result.contributionsRequired,
+                style = MaterialTheme.typography.bodyLarge
             )
 
             Text(
                 text =
                     "Time required: " +
-                            "%.1f".format(
-                                weeksRequired
-                            ) +
+                            "%.1f".format(weeksRequired) +
                             " weeks",
-                style =
-                    MaterialTheme
-                        .typography
-                        .bodyLarge
+                style = MaterialTheme.typography.bodyLarge
             )
 
             Text(
                 text =
                     "Approx. months: " +
-                            "%.1f".format(
-                                monthsRequired
-                            ),
-                style =
-                    MaterialTheme
-                        .typography
-                        .bodyLarge
+                            "%.1f".format(monthsRequired),
+                style = MaterialTheme.typography.bodyLarge
             )
 
             Text(
                 text =
                     "Estimated goal date: " +
                             estimatedDate,
-                style =
-                    MaterialTheme
-                        .typography
-                        .titleMedium,
-                fontWeight =
-                    FontWeight.Bold
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold
             )
         }
     }
