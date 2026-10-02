@@ -266,7 +266,7 @@ private fun CompactRosterCalendarContent(
 
                 Text(
                     text =
-                        "Orange WORK · [ ] Today · P Public holiday",
+                        "Orange WORK · [ ] Today · P Public holiday · S Shutdown",
                     style = TextStyle(
                         color =
                             compactSecondary,
@@ -360,13 +360,15 @@ private fun CompactCalendarRows(
                                         }
                                     ) +
                                             (
-                                                if (
-                                                    day
-                                                        .isPublicHoliday
-                                                ) {
-                                                    "P"
-                                                } else {
-                                                    ""
+                                                when {
+                                                    day.isShutdown ->
+                                                        "S"
+
+                                                    day.isPublicHoliday ->
+                                                        "P"
+
+                                                    else ->
+                                                        ""
                                                 }
                                             ),
                                 modifier =
@@ -379,8 +381,8 @@ private fun CompactCalendarRows(
                                         )
                                         .background(
                                             if (
-                                                day
-                                                    .isWorkDay
+                                                day.isWorkDay &&
+                                                !day.isShutdown
                                             ) {
                                                 compactOrange
                                             } else {
