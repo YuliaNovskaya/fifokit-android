@@ -139,7 +139,7 @@ private fun SwingStatusContent(
                 text = "FIFOKIT",
                 style = TextStyle(
                     color = widgetOrange,
-                    fontSize = 12.sp,
+                    fontSize = 16.sp,
                     fontWeight = FontWeight.Bold
                 )
             )
@@ -233,7 +233,7 @@ private fun SwingStatusContent(
                             status.periodLength,
                 style = TextStyle(
                     color = widgetSecondary,
-                    fontSize = 15.sp
+                    fontSize = 16.sp
                 )
             )
 
@@ -260,7 +260,7 @@ private fun SwingStatusContent(
                                 ),
                 style = TextStyle(
                     color = widgetOrange,
-                    fontSize = 15.sp,
+                    fontSize = 17.sp,
                     fontWeight = FontWeight.Bold
                 )
             )
