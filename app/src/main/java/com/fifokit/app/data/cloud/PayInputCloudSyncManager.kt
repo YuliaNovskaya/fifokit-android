@@ -5,6 +5,7 @@ import com.fifokit.app.data.FinancePreferences
 import com.fifokit.app.data.cloud.model.CloudPayInput
 import com.fifokit.app.domain.finance.PayInput
 import com.fifokit.app.domain.finance.PayRateType
+import com.fifokit.app.domain.finance.PipType
 import kotlinx.coroutines.flow.first
 
 data class PayInputSyncResult(
@@ -55,9 +56,13 @@ class PayInputCloudSyncManager(
                         localInput.hoursPerWorkDay,
                     allowancePerWorkDay =
                         localInput.allowancePerWorkDay,
+                    pipType =
+                        localInput.pipType.name,
+                    pipValue =
+                        localInput.pipValue,
                     updatedAt = localUpdatedAt,
                     deviceId = deviceId,
-                    schemaVersion = 1
+                    schemaVersion = 2
                 )
             )
 
@@ -78,6 +83,15 @@ class PayInputCloudSyncManager(
                     PayRateType.HOURLY
                 )
 
+            val pipType =
+                runCatching {
+                    PipType.valueOf(
+                        cloudInput.pipType
+                    )
+                }.getOrDefault(
+                    PipType.NONE
+                )
+
             financePreferences.applyCloudPayInput(
                 input = PayInput(
                     rateType = rateType,
@@ -85,7 +99,10 @@ class PayInputCloudSyncManager(
                     hoursPerWorkDay =
                         cloudInput.hoursPerWorkDay,
                     allowancePerWorkDay =
-                        cloudInput.allowancePerWorkDay
+                        cloudInput.allowancePerWorkDay,
+                    pipType = pipType,
+                    pipValue =
+                        cloudInput.pipValue
                 ),
                 updatedAt =
                     cloudInput.updatedAt
@@ -108,11 +125,15 @@ class PayInputCloudSyncManager(
                         localInput.hoursPerWorkDay,
                     allowancePerWorkDay =
                         localInput.allowancePerWorkDay,
+                    pipType =
+                        localInput.pipType.name,
+                    pipValue =
+                        localInput.pipValue,
                     updatedAt =
                         localUpdatedAt,
                     deviceId =
                         deviceId,
-                    schemaVersion = 1
+                    schemaVersion = 2
                 )
             )
 
