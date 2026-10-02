@@ -30,6 +30,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import java.time.format.DateTimeFormatter
 import android.Manifest
@@ -48,6 +49,8 @@ import com.fifokit.app.notifications.RosterNotificationManager
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import com.google.firebase.analytics.FirebaseAnalytics
 import com.google.firebase.analytics.logEvent
@@ -66,6 +69,7 @@ import com.fifokit.app.analytics.AnalyticsEvents
 import com.fifokit.app.analytics.AnalyticsParams
 import com.fifokit.app.growth.GrowthEngagementTracker
 import com.fifokit.app.growth.InAppReviewLauncher
+import com.fifokit.app.ui.components.FifokitTopBar
 
 private enum class CalendarViewMode {
     MONTH,
@@ -77,11 +81,15 @@ fun RosterCalendarScreen(
     viewModel: RosterSetupViewModel,
     onBack: () -> Unit,
     onSettings: () -> Unit,
-    onFinance: () -> Unit,
     onShareRoster: () -> Unit,
     onExportRoster: (YearMonth) -> Unit,
     onProRequested: (String) -> Unit,
     onSharedRosters: () -> Unit,
+    onPayCalculator: () -> Unit,
+    onAnnualEarnings: () -> Unit,
+    onFinancialGoal: () -> Unit,
+    openToolsSheet: Boolean = false,
+    onToolsSheetOpened: () -> Unit = {},
 ) {
     val context = LocalContext.current
     val analytics = remember(context) {
@@ -138,6 +146,21 @@ fun RosterCalendarScreen(
 
     var rosterMenuExpanded by remember {
         mutableStateOf(false)
+    }
+
+    var showRosterActionsSheet by remember {
+        mutableStateOf(false)
+    }
+
+    var showToolsSheet by remember {
+        mutableStateOf(false)
+    }
+
+    LaunchedEffect(openToolsSheet) {
+        if (openToolsSheet) {
+            showToolsSheet = true
+            onToolsSheetOpened()
+        }
     }
 
     if (showReviewPrompt) {
@@ -198,25 +221,37 @@ fun RosterCalendarScreen(
         )
     }
 
-    Scaffold(
-        topBar = {
-            CalendarTopBar(
-                onTools = {
-                    analytics.logEvent(
-                        AnalyticsEvents.FEATURE_OPENED
-                    ) {
-                        param(
-                            AnalyticsParams.FEATURE,
-                            "finance_tools"
-                        )
-                    }
-                    onFinance()
-                },
-                onExport = {
-                    onExportRoster(month)
-                },
-                onShare = onShareRoster,
-                onShared = {
+    if (showRosterActionsSheet) {
+        ModalBottomSheet(
+            onDismissRequest = {
+                showRosterActionsSheet = false
+            }
+        ) {
+            ActionSheetHeader(
+                title = "Roster",
+                onClose = {
+                    showRosterActionsSheet = false
+                }
+            )
+
+            ActionSheetItem(
+                title = "Share roster",
+                description =
+                    "Invite a partner or family member to view the selected roster.",
+                onClick = {
+                    showRosterActionsSheet = false
+                    onShareRoster()
+                }
+            )
+
+            HorizontalDivider()
+
+            ActionSheetItem(
+                title = "Shared rosters",
+                description =
+                    "View rosters other people have shared with you.",
+                onClick = {
+                    showRosterActionsSheet = false
                     analytics.logEvent(
                         AnalyticsEvents.FEATURE_OPENED
                     ) {
@@ -226,9 +261,129 @@ fun RosterCalendarScreen(
                         )
                     }
                     onSharedRosters()
+                }
+            )
+
+            HorizontalDivider()
+
+            ActionSheetItem(
+                title = "Export roster",
+                description =
+                    "Save or share the selected roster as an image or PDF.",
+                onClick = {
+                    showRosterActionsSheet = false
+                    onExportRoster(month)
+                }
+            )
+
+            Spacer(
+                modifier = Modifier.height(24.dp)
+            )
+        }
+    }
+
+    if (showToolsSheet) {
+        ModalBottomSheet(
+            onDismissRequest = {
+                showToolsSheet = false
+            }
+        ) {
+            ActionSheetHeader(
+                title = "Tools",
+                onClose = {
+                    showToolsSheet = false
+                }
+            )
+
+            ActionSheetItem(
+                title = "FIFO Pay Calculator",
+                description =
+                    "Calculate pay using your hourly, daily or salary rate.",
+                onClick = {
+                    showToolsSheet = false
+                    analytics.logEvent(
+                        AnalyticsEvents.FINANCE_TOOL_SELECTED
+                    ) {
+                        param(
+                            AnalyticsParams.TOOL,
+                            "pay_calculator"
+                        )
+                    }
+                    onPayCalculator()
+                }
+            )
+
+            HorizontalDivider()
+
+            ActionSheetItem(
+                title = "Annual Earnings · PRO",
+                description =
+                    "Estimate yearly work days, hours and gross earnings.",
+                onClick = {
+                    showToolsSheet = false
+                    analytics.logEvent(
+                        AnalyticsEvents.FINANCE_TOOL_SELECTED
+                    ) {
+                        param(
+                            AnalyticsParams.TOOL,
+                            "annual_earnings"
+                        )
+                    }
+                    onAnnualEarnings()
+                }
+            )
+
+            HorizontalDivider()
+
+            ActionSheetItem(
+                title = "Financial Goal",
+                description =
+                    "Estimate how long it will take to reach a savings target.",
+                onClick = {
+                    showToolsSheet = false
+                    analytics.logEvent(
+                        AnalyticsEvents.FINANCE_TOOL_SELECTED
+                    ) {
+                        param(
+                            AnalyticsParams.TOOL,
+                            "financial_goal"
+                        )
+                    }
+                    onFinancialGoal()
+                }
+            )
+
+            Spacer(
+                modifier = Modifier.height(24.dp)
+            )
+        }
+    }
+
+    Scaffold(
+        topBar = {
+            FifokitTopBar(
+                title = "Roster Calendar"
+            )
+        },
+        bottomBar = {
+            CalendarBottomNavigation(
+                onCalendar = {},
+                onEdit = onBack,
+                onRoster = {
+                    showRosterActionsSheet = true
                 },
-                onSettings = onSettings,
-                onEdit = onBack
+                onTools = {
+                    analytics.logEvent(
+                        AnalyticsEvents.FEATURE_OPENED
+                    ) {
+                        param(
+                            AnalyticsParams.FEATURE,
+                            "finance_tools"
+                        )
+                    }
+                    showToolsSheet = true
+                },
+                onSettings = onSettings
             )
         }
     ) { innerPadding ->
@@ -539,103 +694,139 @@ fun RosterCalendarScreen(
 }
 
 @Composable
-private fun CalendarTopBar(
+private fun CalendarBottomNavigation(
+    onCalendar: () -> Unit,
+    onEdit: () -> Unit,
+    onRoster: () -> Unit,
     onTools: () -> Unit,
-    onExport: () -> Unit,
-    onShare: () -> Unit,
-    onShared: () -> Unit,
-    onSettings: () -> Unit,
-    onEdit: () -> Unit
+    onSettings: () -> Unit
 ) {
-    var menuExpanded by remember {
-        mutableStateOf(false)
-    }
-
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(64.dp)
-            .padding(horizontal = 8.dp)
+    Surface(
+        tonalElevation = 3.dp
     ) {
-        Box(
-            modifier = Modifier.align(
-                Alignment.CenterStart
-            )
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(
+                    horizontal = 4.dp,
+                    vertical = 6.dp
+                ),
+            verticalAlignment = Alignment.CenterVertically
         ) {
             TextButton(
-                onClick = {
-                    menuExpanded = true
-                }
+                modifier = Modifier.weight(1f),
+                onClick = onCalendar
             ) {
                 Text(
-                    text = "☰",
-                    style = MaterialTheme.typography.titleLarge
+                    text = "Calendar",
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary
                 )
             }
 
-            DropdownMenu(
-                expanded = menuExpanded,
-                onDismissRequest = {
-                    menuExpanded = false
-                }
+            TextButton(
+                modifier = Modifier.weight(1f),
+                onClick = onEdit
             ) {
-                DropdownMenuItem(
-                    text = { Text("Tools") },
-                    onClick = {
-                        menuExpanded = false
-                        onTools()
-                    }
+                Text(
+                    text = "Edit",
+                    style = MaterialTheme.typography.labelLarge
                 )
+            }
 
-                DropdownMenuItem(
-                    text = { Text("Export") },
-                    onClick = {
-                        menuExpanded = false
-                        onExport()
-                    }
+            Button(
+                modifier = Modifier.weight(1f),
+                onClick = onRoster
+            ) {
+                Text(
+                    text = "Roster",
+                    style = MaterialTheme.typography.labelLarge
                 )
+            }
 
-                DropdownMenuItem(
-                    text = { Text("Share roster") },
-                    onClick = {
-                        menuExpanded = false
-                        onShare()
-                    }
+            TextButton(
+                modifier = Modifier.weight(1f),
+                onClick = onTools
+            ) {
+                Text(
+                    text = "Tools",
+                    style = MaterialTheme.typography.labelLarge
                 )
+            }
 
-                DropdownMenuItem(
-                    text = { Text("Shared rosters") },
-                    onClick = {
-                        menuExpanded = false
-                        onShared()
-                    }
-                )
-
-                DropdownMenuItem(
-                    text = { Text("Settings") },
-                    onClick = {
-                        menuExpanded = false
-                        onSettings()
-                    }
-                )
-
-                DropdownMenuItem(
-                    text = { Text("Edit roster") },
-                    onClick = {
-                        menuExpanded = false
-                        onEdit()
-                    }
+            TextButton(
+                modifier = Modifier.weight(1f),
+                onClick = onSettings
+            ) {
+                Text(
+                    text = "Settings",
+                    style = MaterialTheme.typography.labelLarge
                 )
             }
         }
+    }
+}
+
+@Composable
+private fun ActionSheetHeader(
+    title: String,
+    onClose: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(
+                start = 24.dp,
+                end = 12.dp,
+                bottom = 8.dp
+            ),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Text(
+            text = title,
+            style = MaterialTheme.typography.headlineSmall,
+            fontWeight = FontWeight.SemiBold
+        )
+
+        TextButton(
+            onClick = onClose
+        ) {
+            Text("Close")
+        }
+    }
+}
+
+@Composable
+private fun ActionSheetItem(
+    title: String,
+    description: String,
+    onClick: () -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(
+                horizontal = 24.dp,
+                vertical = 16.dp
+            )
+    ) {
+        Text(
+            text = title,
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.SemiBold
+        )
+
+        Spacer(
+            modifier = Modifier.height(4.dp)
+        )
 
         Text(
-            text = "Roster Calendar",
-            modifier = Modifier.align(
-                Alignment.Center
-            ),
-            style = MaterialTheme.typography.titleLarge,
-            textAlign = TextAlign.Center
+            text = description,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
         )
     }
 }
