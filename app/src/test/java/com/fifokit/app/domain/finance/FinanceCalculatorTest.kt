@@ -219,6 +219,40 @@ class FinanceCalculatorTest {
     }
 
     @Test
+    fun localWeekdayAndSaturdayRatesCalculateCorrectly() {
+        val result =
+            FinanceCalculator.calculateLocalPay(
+                weekdayHourlyRate = 50.0,
+                saturdayHourlyRate = 60.0,
+                hoursPerDay = 8.0
+            )
+
+        assertEquals(
+            2000.0,
+            result.weekdayGrossPerWeek,
+            0.001
+        )
+
+        assertEquals(
+            480.0,
+            result.saturdayGrossPerWeek,
+            0.001
+        )
+
+        assertEquals(
+            2480.0,
+            result.weeklyGross,
+            0.001
+        )
+
+        assertEquals(
+            128960.0,
+            result.annualisedGross,
+            0.001
+        )
+    }
+
+    @Test
     fun financialGoalCalculatesRequiredContributions() {
         val goal = FinancialGoal(
             targetAmount = 10000.0,
