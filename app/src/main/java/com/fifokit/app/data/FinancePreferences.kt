@@ -11,6 +11,7 @@ import androidx.datastore.preferences.preferencesDataStore
 import com.fifokit.app.domain.finance.FinancialGoal
 import com.fifokit.app.domain.finance.PayInput
 import com.fifokit.app.domain.finance.PayRateType
+import com.fifokit.app.domain.finance.PipType
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import org.json.JSONArray
@@ -37,6 +38,12 @@ class FinancePreferences(
 
         val ALLOWANCE_PER_WORK_DAY =
             doublePreferencesKey("allowance_per_work_day")
+
+        val PIP_TYPE =
+            stringPreferencesKey("pip_type")
+
+        val PIP_VALUE =
+            doublePreferencesKey("pip_value")
 
         // Legacy primary-goal fields retained for migration/backward compatibility.
         val TARGET_AMOUNT =
@@ -78,13 +85,25 @@ class FinancePreferences(
                     }
                     ?: PayRateType.HOURLY
 
+            val pipType =
+                preferences[Keys.PIP_TYPE]
+                    ?.let { saved ->
+                        runCatching {
+                            PipType.valueOf(saved)
+                        }.getOrNull()
+                    }
+                    ?: PipType.NONE
+
             PayInput(
                 rateType = rateType,
                 rate = preferences[Keys.PAY_RATE] ?: 0.0,
                 hoursPerWorkDay =
                     preferences[Keys.HOURS_PER_WORK_DAY] ?: 12.0,
                 allowancePerWorkDay =
-                    preferences[Keys.ALLOWANCE_PER_WORK_DAY] ?: 0.0
+                    preferences[Keys.ALLOWANCE_PER_WORK_DAY] ?: 0.0,
+                pipType = pipType,
+                pipValue =
+                    preferences[Keys.PIP_VALUE] ?: 0.0
             )
         }
 
@@ -141,6 +160,12 @@ class FinancePreferences(
 
             preferences[Keys.ALLOWANCE_PER_WORK_DAY] =
                 input.allowancePerWorkDay
+
+            preferences[Keys.PIP_TYPE] =
+                input.pipType.name
+
+            preferences[Keys.PIP_VALUE] =
+                input.pipValue
 
             preferences[Keys.PAY_INPUT_UPDATED_AT] =
                 System.currentTimeMillis()
@@ -392,6 +417,12 @@ class FinancePreferences(
 
             preferences[Keys.ALLOWANCE_PER_WORK_DAY] =
                 input.allowancePerWorkDay
+
+            preferences[Keys.PIP_TYPE] =
+                input.pipType.name
+
+            preferences[Keys.PIP_VALUE] =
+                input.pipValue
 
             preferences[Keys.PAY_INPUT_UPDATED_AT] =
                 updatedAt
