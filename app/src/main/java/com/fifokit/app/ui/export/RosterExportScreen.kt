@@ -1,5 +1,18 @@
 package com.fifokit.app.ui.export
 
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import com.fifokit.app.export.RosterExportCalendar
+import java.time.format.TextStyle
+import java.util.Locale
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
@@ -109,6 +122,10 @@ fun RosterExportScreen(
 
     var selectedExport by remember {
         mutableStateOf<ExportKind?>(null)
+    }
+
+    var selectedMonth by remember(startMonth) {
+        mutableStateOf(startMonth)
     }
 
     var pendingSave by remember {
@@ -226,13 +243,13 @@ fun RosterExportScreen(
                         .exportMonthImage(
                             context = context,
                             data = data,
-                            month = startMonth
+                            month = selectedMonth
                         )
 
                 ExportKind.THREE_MONTH_PDF -> {
                     val months =
                         List(3) { index ->
-                            startMonth
+                            selectedMonth
                                 .plusMonths(
                                     index.toLong()
                                 )
@@ -251,7 +268,7 @@ fun RosterExportScreen(
                 ExportKind.SIX_MONTH_PDF -> {
                     val months =
                         List(6) { index ->
-                            startMonth
+                            selectedMonth
                                 .plusMonths(
                                     index.toLong()
                                 )
@@ -270,7 +287,7 @@ fun RosterExportScreen(
                 ExportKind.ANNUAL_PDF -> {
                     val firstMonth =
                         YearMonth.of(
-                            startMonth.year,
+                            selectedMonth.year,
                             1
                         )
 
@@ -288,7 +305,7 @@ fun RosterExportScreen(
                             data = data,
                             months = months,
                             fileName =
-                                "fifokit_roster_${startMonth.year}.pdf"
+                                "fifokit_roster_${selectedMonth.year}.pdf"
                         )
                 }
             }
@@ -391,9 +408,24 @@ fun RosterExportScreen(
                 Text(exportKind.label)
             },
             text = {
-                Text(
-                    "Would you like to save this file or share it?"
-                )
+                Column {
+                    Text(
+                        text = exportPeriodLabel(
+                            kind = exportKind,
+                            selectedMonth = selectedMonth
+                        ),
+                        style = MaterialTheme.typography.bodyLarge,
+                        fontWeight = FontWeight.Medium
+                    )
+
+                    Spacer(
+                        modifier = Modifier.height(8.dp)
+                    )
+
+                    Text(
+                        "Would you like to save this file or share it?"
+                    )
+                }
             },
             confirmButton = {
                 TextButton(
@@ -441,6 +473,7 @@ fun RosterExportScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
+                .verticalScroll(rememberScrollState())
                 .padding(20.dp),
             verticalArrangement =
                 Arrangement.spacedBy(12.dp)
@@ -450,7 +483,55 @@ fun RosterExportScreen(
             )
 
             Text(
-                "Starting month: $startMonth"
+                text = "Choose month",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold
+            )
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                TextButton(
+                    onClick = {
+                        selectedMonth =
+                            selectedMonth.minusMonths(1)
+                    }
+                ) {
+                    Text("<")
+                }
+
+                Text(
+                    text =
+                        selectedMonth.month.getDisplayName(
+                            TextStyle.FULL,
+                            Locale.getDefault()
+                        ) +
+                                " " +
+                                selectedMonth.year,
+                    modifier = Modifier.weight(1f),
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.SemiBold,
+                    textAlign = TextAlign.Center
+                )
+
+                TextButton(
+                    onClick = {
+                        selectedMonth =
+                            selectedMonth.plusMonths(1)
+                    }
+                ) {
+                    Text(">")
+                }
+            }
+
+            ExportMonthPreview(
+                data = data,
+                month = selectedMonth
+            )
+
+            Spacer(
+                modifier = Modifier.height(4.dp)
             )
 
             Button(
@@ -540,6 +621,182 @@ fun RosterExportScreen(
             errorMessage?.let {
                 Text(it)
             }
+        }
+    }
+}
+
+private fun exportPeriodLabel(
+    kind: ExportKind,
+    selectedMonth: YearMonth
+): String {
+    return when (kind) {
+        ExportKind.MONTH_IMAGE ->
+            "Exports " +
+                    monthLabel(selectedMonth) +
+                    "."
+
+        ExportKind.THREE_MONTH_PDF ->
+            "Exports " +
+                    monthLabel(selectedMonth) +
+                    " to " +
+                    monthLabel(
+                        selectedMonth.plusMonths(2)
+                    ) +
+                    "."
+
+        ExportKind.SIX_MONTH_PDF ->
+            "Exports " +
+                    monthLabel(selectedMonth) +
+                    " to " +
+                    monthLabel(
+                        selectedMonth.plusMonths(5)
+                    ) +
+                    "."
+
+        ExportKind.ANNUAL_PDF ->
+            "Exports January to December " +
+                    selectedMonth.year +
+                    "."
+    }
+}
+
+private fun monthLabel(
+    month: YearMonth
+): String {
+    return month.month.getDisplayName(
+        TextStyle.FULL,
+        Locale.getDefault()
+    ) + " " + month.year
+}
+
+@Composable
+private fun ExportMonthPreview(
+    data: RosterExportData,
+    month: YearMonth
+) {
+    val cells =
+        RosterExportCalendar.monthDays(
+            month = month,
+            data = data
+        )
+
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.medium,
+        color = MaterialTheme.colorScheme.surfaceVariant
+    ) {
+        Column(
+            modifier = Modifier.padding(12.dp)
+        ) {
+            Text(
+                text = "Preview",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold
+            )
+
+            Spacer(
+                modifier = Modifier.height(8.dp)
+            )
+
+            Row(
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                listOf(
+                    "M", "T", "W", "T", "F", "S", "S"
+                ).forEach { day ->
+                    Text(
+                        text = day,
+                        modifier = Modifier.weight(1f),
+                        textAlign = TextAlign.Center,
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
+            }
+
+            Spacer(
+                modifier = Modifier.height(4.dp)
+            )
+
+            cells.chunked(7).forEach { week ->
+                Row(
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    week.forEach { day ->
+                        if (day == null) {
+                            Spacer(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .aspectRatio(1f)
+                            )
+                        } else {
+                            Surface(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .aspectRatio(1f)
+                                    .padding(1.dp),
+                                shape =
+                                    MaterialTheme.shapes.small,
+                                color =
+                                    if (day.isWorkDay) {
+                                        MaterialTheme.colorScheme
+                                            .primaryContainer
+                                    } else {
+                                        MaterialTheme.colorScheme
+                                            .surfaceContainerHigh
+                                    }
+                            ) {
+                                Box(
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Column(
+                                        horizontalAlignment =
+                                            Alignment.CenterHorizontally
+                                    ) {
+                                        Text(
+                                            text =
+                                                day.date.dayOfMonth
+                                                    .toString(),
+                                            style =
+                                                MaterialTheme.typography
+                                                    .labelLarge,
+                                            fontWeight =
+                                                FontWeight.SemiBold
+                                        )
+
+                                        Text(
+                                            text =
+                                                if (
+                                                    day.isPublicHoliday
+                                                ) {
+                                                    "PH"
+                                                } else if (
+                                                    day.isWorkDay
+                                                ) {
+                                                    "W"
+                                                } else {
+                                                    "O"
+                                                },
+                                            style =
+                                                MaterialTheme.typography
+                                                    .labelSmall
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            Spacer(
+                modifier = Modifier.height(6.dp)
+            )
+
+            Text(
+                text = "W = WORK · O = OFF · PH = Public holiday",
+                style = MaterialTheme.typography.labelMedium
+            )
         }
     }
 }
