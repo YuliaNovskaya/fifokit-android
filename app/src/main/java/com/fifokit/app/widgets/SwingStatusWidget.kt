@@ -26,6 +26,7 @@ import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
 import androidx.glance.unit.ColorProvider
 import com.fifokit.app.MainActivity
+import com.fifokit.app.domain.roster.shutdownOn
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.time.LocalDate
@@ -171,6 +172,10 @@ private fun SwingStatusContent(
                 )
             )
         } else {
+            val shutdown =
+                roster.shutdowns
+                    .shutdownOn(today)
+
             val status =
                 SwingStatusCalculator
                     .calculate(
@@ -184,21 +189,27 @@ private fun SwingStatusContent(
                     )
 
             val statusLabel =
-                if (
-                    status.isWorkDay
-                ) {
-                    "ON SWING"
-                } else {
-                    "OFF SWING"
+                when {
+                    shutdown != null ->
+                        "SHUTDOWN"
+
+                    status.isWorkDay ->
+                        "ON SWING"
+
+                    else ->
+                        "OFF SWING"
                 }
 
             val nextLabel =
-                if (
-                    status.isWorkDay
-                ) {
-                    "R&R starts"
-                } else {
-                    "Work starts"
+                when {
+                    shutdown != null ->
+                        "Ends"
+
+                    status.isWorkDay ->
+                        "R&R starts"
+
+                    else ->
+                        "Work starts"
                 }
 
             Text(
@@ -253,8 +264,12 @@ private fun SwingStatusContent(
                 text =
                     nextLabel +
                             " " +
-                            status
-                                .nextTransitionDate
+                            (
+                                shutdown
+                                    ?.endDate
+                                    ?: status
+                                        .nextTransitionDate
+                            )
                                 .format(
                                     widgetDateFormatter
                                 ),
