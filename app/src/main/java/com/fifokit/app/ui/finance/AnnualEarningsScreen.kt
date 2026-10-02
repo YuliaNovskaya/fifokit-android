@@ -26,11 +26,13 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.fifokit.app.domain.finance.PayRateType
+import com.fifokit.app.domain.finance.PipType
 import com.fifokit.app.domain.model.RosterPattern
 import com.fifokit.app.domain.roster.AustralianState
 import java.time.LocalDate
@@ -48,6 +50,7 @@ import com.google.firebase.analytics.FirebaseAnalytics
 import com.fifokit.app.domain.finance.FinanceFormatter
 import com.fifokit.app.analytics.AnalyticsEvents
 import com.fifokit.app.analytics.AnalyticsParams
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -94,6 +97,14 @@ fun AnnualEarningsScreen(
         mutableStateOf("")
     }
 
+    var pipType by remember {
+        mutableStateOf(PipType.NONE)
+    }
+
+    var pipValue by remember {
+        mutableStateOf("")
+    }
+
     var annualResult by remember {
         mutableStateOf<EarningsResult?>(null)
     }
@@ -101,6 +112,8 @@ fun AnnualEarningsScreen(
     var validationError by remember {
         mutableStateOf<String?>(null)
     }
+
+    val scope = rememberCoroutineScope()
 
     LaunchedEffect(savedPayInput) {
         rateType = savedPayInput.rateType
@@ -120,6 +133,16 @@ fun AnnualEarningsScreen(
                 ""
             } else {
                 savedPayInput.allowancePerWorkDay.toString()
+            }
+
+        pipType =
+            savedPayInput.pipType
+
+        pipValue =
+            if (savedPayInput.pipValue == 0.0) {
+                ""
+            } else {
+                savedPayInput.pipValue.toString()
             }
     }
 
@@ -273,6 +296,26 @@ fun AnnualEarningsScreen(
             )
 
             Spacer(
+                modifier = Modifier.height(20.dp)
+            )
+
+            PipInputSection(
+                pipType = pipType,
+                pipValue = pipValue,
+                onPipTypeChange = {
+                    pipType = it
+                    pipValue = ""
+                    annualResult = null
+                    validationError = null
+                },
+                onPipValueChange = {
+                    pipValue = it
+                    annualResult = null
+                    validationError = null
+                }
+            )
+
+            Spacer(
                 modifier = Modifier.height(24.dp)
             )
 
@@ -285,6 +328,13 @@ fun AnnualEarningsScreen(
                     val allowanceValue =
                         allowancePerDay.toDoubleOrNull() ?: 0.0
 
+                    val pipNumericValue =
+                        if (pipType == PipType.NONE) {
+                            0.0
+                        } else {
+                            pipValue.toDoubleOrNull()
+                        }
+
                     validationError = when {
                         rateValue == null || rateValue <= 0.0 ->
                             "Enter a valid pay rate"
@@ -294,6 +344,10 @@ fun AnnualEarningsScreen(
 
                         allowanceValue < 0.0 ->
                             "Allowance cannot be negative"
+
+                        pipNumericValue == null ||
+                                pipNumericValue < 0.0 ->
+                            "Enter a valid PIP value"
 
                         else ->
                             null
@@ -305,8 +359,14 @@ fun AnnualEarningsScreen(
                             rateType = rateType,
                             rate = rateValue!!,
                             hoursPerWorkDay = hoursValue!!,
-                            allowancePerWorkDay = allowanceValue
+                            allowancePerWorkDay = allowanceValue,
+                            pipType = pipType,
+                            pipValue = pipNumericValue!!
                         )
+
+                        scope.launch {
+                            financePreferences.savePayInput(input)
+                        }
 
                         val year = LocalDate.now().year
 
@@ -416,6 +476,12 @@ fun AnnualEarningsScreen(
                         fontWeight = FontWeight.Bold
                     )
                 }
+
+                Text(
+                    text = "PIP: ${FinanceFormatter.money(result.pipEarnings)}",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold
+                )
 
                 Text(
                     "Allowances: ${FinanceFormatter.money(result.allowances)}"
