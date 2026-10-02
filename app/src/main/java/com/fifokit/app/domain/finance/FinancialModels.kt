@@ -20,7 +20,11 @@ data class PayInput(
     val hoursPerWorkDay: Double = 12.0,
     val allowancePerWorkDay: Double = 0.0,
     val pipType: PipType = PipType.NONE,
-    val pipValue: Double = 0.0
+    val pipValue: Double = 0.0,
+    val localRatesEnabled: Boolean = false,
+    val localWeekdayHourlyRate: Double = 0.0,
+    val localSaturdayHourlyRate: Double = 0.0,
+    val localHoursPerDay: Double = 8.0
 )
 
 data class EarningsResult(
@@ -33,6 +37,15 @@ data class EarningsResult(
     val totalGrossEarnings: Double,
     val equivalentHourlyRate: Double? = null,
     val publicHolidaysWorked: Int = 0
+)
+
+data class LocalPayResult(
+    val weekdayGrossPerWeek: Double,
+    val saturdayGrossPerWeek: Double,
+    val weeklyGross: Double,
+    val annualisedGross: Double,
+    val annualHours: Double,
+    val effectiveHourlyRate: Double
 )
 
 data class FinancialGoal(
