@@ -103,6 +103,7 @@ fun RosterCalendarScreen(
     LaunchedEffect(Unit) {
         RosterNotificationManager.createChannel(context)
         analytics.logEvent(AnalyticsEvents.CALENDAR_VIEWED, null)
+        viewModel.refreshSharingStatus()
     }
     var month by remember {
         mutableStateOf(YearMonth.now())
@@ -279,7 +280,29 @@ fun RosterCalendarScreen(
                         rosterMenuExpanded = true
                     }
                 ) {
-                    Text("Roster: ${viewModel.rosterName}")
+                    val activeRoster =
+                        viewModel.rosters
+                            .firstOrNull {
+                                it.id ==
+                                        viewModel.activeRosterId
+                            }
+
+                    val shareCount =
+                        activeRoster
+                            ?.cloudId
+                            ?.let {
+                                viewModel
+                                    .shareCountByCloudId[it]
+                            }
+                            ?: 0
+
+                    Text(
+                        if (shareCount > 0) {
+                            "Roster: ${viewModel.rosterName} · Shared with $shareCount"
+                        } else {
+                            "Roster: ${viewModel.rosterName}"
+                        }
+                    )
                 }
 
                 DropdownMenu(
@@ -291,7 +314,21 @@ fun RosterCalendarScreen(
                     viewModel.rosters.forEach { roster ->
                         DropdownMenuItem(
                             text = {
-                                Text(roster.name)
+                                val shareCount =
+                                    roster.cloudId
+                                        ?.let {
+                                            viewModel
+                                                .shareCountByCloudId[it]
+                                        }
+                                        ?: 0
+
+                                Text(
+                                    if (shareCount > 0) {
+                                        "${roster.name} · Shared with $shareCount"
+                                    } else {
+                                        roster.name
+                                    }
+                                )
                             },
                             onClick = {
                                 rosterMenuExpanded = false
