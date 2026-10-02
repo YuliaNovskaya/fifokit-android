@@ -159,13 +159,6 @@ fun FinancialGoalScreen(
         draftGoal
             ?: storedSelectedGoal
 
-    val isSavedSecondaryGoal =
-        draftGoal == null &&
-                storedSelectedGoal.id != "primary" &&
-                goals.any {
-                    it.id == storedSelectedGoal.id
-                }
-
     fun loadGoalFields(
         goal: FinancialGoal
     ) {
@@ -412,7 +405,7 @@ fun FinancialGoalScreen(
 
     if (
         showDeleteGoalDialog &&
-        isSavedSecondaryGoal
+        selectedGoal.id != "primary"
     ) {
         AlertDialog(
             onDismissRequest = {
@@ -427,27 +420,36 @@ fun FinancialGoalScreen(
             text = {
                 Text(
                     "Delete \"" +
-                            storedSelectedGoal.name +
-                            "\"? This will also be removed from cloud sync."
+                            selectedGoal.name +
+                            "\"? This action requires confirmation."
                 )
             },
             confirmButton = {
                 TextButton(
                     onClick = {
                         val goalId =
-                            storedSelectedGoal.id
+                            selectedGoal.id
+
+                        val isStored =
+                            goals.any {
+                                it.id == goalId
+                            }
 
                         showDeleteGoalDialog =
                             false
+                        draftGoal = null
                         selectedGoalId =
                             "primary"
                         isEditing = false
+                        validationError = null
 
-                        scope.launch {
-                            financePreferences
-                                .deleteFinancialGoal(
-                                    goalId
-                                )
+                        if (isStored) {
+                            scope.launch {
+                                financePreferences
+                                    .deleteFinancialGoal(
+                                        goalId
+                                    )
+                            }
                         }
                     }
                 ) {
@@ -974,7 +976,7 @@ fun FinancialGoalScreen(
                 }
 
                 if (
-                    isSavedSecondaryGoal
+                    selectedGoal.id != "primary"
                 ) {
                     Spacer(
                         modifier =
@@ -1108,7 +1110,8 @@ fun FinancialGoalScreen(
                     }
 
                     if (
-                        isSavedSecondaryGoal
+                        selectedGoal.id !=
+                        "primary"
                     ) {
                         OutlinedButton(
                             modifier =
