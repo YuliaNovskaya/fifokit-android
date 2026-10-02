@@ -1,6 +1,7 @@
 package com.fifokit.app.ui.finance
 
 import android.os.Bundle
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -219,6 +220,53 @@ fun FinancialGoalScreen(
         }
     }
 
+    fun cancelEditing() {
+        keyboardController?.hide()
+        focusManager.clearFocus()
+
+        val wasDraft =
+            draftGoal != null
+
+        if (wasDraft) {
+            val fallbackGoal =
+                goals.firstOrNull {
+                    it.id == "primary"
+                } ?: goals.firstOrNull()
+                ?: FinancialGoal()
+
+            draftGoal = null
+            selectedGoalId =
+                fallbackGoal.id
+
+            loadGoalFields(
+                fallbackGoal
+            )
+
+            goalResult =
+                calculateSavedGoal(
+                    fallbackGoal
+                )
+        } else {
+            loadGoalFields(
+                storedSelectedGoal
+            )
+
+            goalResult =
+                calculateSavedGoal(
+                    storedSelectedGoal
+                )
+        }
+
+        isEditing = false
+        validationError = null
+    }
+
+    BackHandler(
+        enabled = isEditing
+    ) {
+        cancelEditing()
+    }
+
     LaunchedEffect(
         goals,
         selectedGoalId,
@@ -417,7 +465,13 @@ fun FinancialGoalScreen(
         topBar = {
             FifokitTopBar(
                 title = "Financial Goal",
-                onBack = onBack
+                onBack = {
+                    if (isEditing) {
+                        cancelEditing()
+                    } else {
+                        onBack()
+                    }
+                }
             )
         }
     ) { innerPadding ->
@@ -899,39 +953,7 @@ fun FinancialGoalScreen(
                     modifier =
                         Modifier.fillMaxWidth(),
                     onClick = {
-                        keyboardController
-                            ?.hide()
-                        focusManager
-                            .clearFocus()
-
-                        if (
-                            draftGoal != null
-                        ) {
-                            draftGoal = null
-                            selectedGoalId =
-                                "primary"
-                        } else {
-                            loadGoalFields(
-                                selectedGoal
-                            )
-                        }
-
-                        goalResult =
-                            calculateSavedGoal(
-                                if (
-                                    draftGoal !=
-                                    null
-                                ) {
-                                    storedSelectedGoal
-                                } else {
-                                    selectedGoal
-                                }
-                            )
-
-                        isEditing =
-                            false
-                        validationError =
-                            null
+                        cancelEditing()
                     }
                 ) {
                     Text(
@@ -943,6 +965,27 @@ fun FinancialGoalScreen(
                             "Cancel edit"
                         }
                     )
+                }
+
+                if (
+                    draftGoal == null &&
+                    selectedGoal.id != "primary"
+                ) {
+                    Spacer(
+                        modifier =
+                            Modifier.height(8.dp)
+                    )
+
+                    OutlinedButton(
+                        modifier =
+                            Modifier.fillMaxWidth(),
+                        onClick = {
+                            showDeleteGoalDialog =
+                                true
+                        }
+                    ) {
+                        Text("Delete goal")
+                    }
                 }
             } else {
                 Text(
