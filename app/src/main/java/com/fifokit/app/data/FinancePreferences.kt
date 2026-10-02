@@ -282,10 +282,6 @@ class FinancePreferences(
     suspend fun deleteFinancialGoal(
         goalId: String
     ) {
-        if (goalId == "primary") {
-            return
-        }
-
         val now =
             System.currentTimeMillis()
 
@@ -300,6 +296,35 @@ class FinancePreferences(
                 }
 
             if (index < 0) {
+                return@edit
+            }
+
+            if (goalId == "primary") {
+                val resetGoal =
+                    FinancialGoal(
+                        id = "primary",
+                        name = "My goal",
+                        createdAt =
+                            goals[index]
+                                .createdAt
+                                .takeIf {
+                                    it > 0L
+                                }
+                                ?: now,
+                        updatedAt = now
+                    )
+
+                goals[index] =
+                    resetGoal
+
+                preferences[Keys.FINANCIAL_GOALS_JSON] =
+                    encodeGoals(goals)
+
+                writeLegacyPrimary(
+                    preferences = preferences,
+                    goal = resetGoal
+                )
+
                 return@edit
             }
 
