@@ -48,7 +48,6 @@ import com.fifokit.app.notifications.RosterNotificationManager
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import com.google.firebase.analytics.FirebaseAnalytics
 import com.google.firebase.analytics.logEvent
@@ -67,7 +66,6 @@ import com.fifokit.app.analytics.AnalyticsEvents
 import com.fifokit.app.analytics.AnalyticsParams
 import com.fifokit.app.growth.GrowthEngagementTracker
 import com.fifokit.app.growth.InAppReviewLauncher
-import com.fifokit.app.ui.components.FifokitTopBar
 
 private enum class CalendarViewMode {
     MONTH,
@@ -202,8 +200,35 @@ fun RosterCalendarScreen(
 
     Scaffold(
         topBar = {
-            FifokitTopBar(
-                title = "Roster Calendar"
+            CalendarTopBar(
+                onTools = {
+                    analytics.logEvent(
+                        AnalyticsEvents.FEATURE_OPENED
+                    ) {
+                        param(
+                            AnalyticsParams.FEATURE,
+                            "finance_tools"
+                        )
+                    }
+                    onFinance()
+                },
+                onExport = {
+                    onExportRoster(month)
+                },
+                onShare = onShareRoster,
+                onShared = {
+                    analytics.logEvent(
+                        AnalyticsEvents.FEATURE_OPENED
+                    ) {
+                        param(
+                            AnalyticsParams.FEATURE,
+                            "partner_sharing"
+                        )
+                    }
+                    onSharedRosters()
+                },
+                onSettings = onSettings,
+                onEdit = onBack
             )
         }
     ) { innerPadding ->
@@ -509,45 +534,12 @@ fun RosterCalendarScreen(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            CalendarActions(
-                onTools = {
-                    analytics.logEvent(
-                        AnalyticsEvents.FEATURE_OPENED
-                    ) {
-                        param(
-                            AnalyticsParams.FEATURE,
-                            "finance_tools"
-                        )
-                    }
-                    onFinance()
-                },
-                onExport = {
-                    onExportRoster(month)
-                },
-                onShare = onShareRoster,
-                onShared = {
-                    analytics.logEvent(
-                        AnalyticsEvents.FEATURE_OPENED
-                    ) {
-                        param(
-                            AnalyticsParams.FEATURE,
-                            "partner_sharing"
-                        )
-                    }
-                    onSharedRosters()
-                },
-                onSettings = onSettings,
-                onEdit = onBack
-            )
-
-            Spacer(modifier = Modifier.height(8.dp))
-
         }
     }
 }
 
 @Composable
-private fun CalendarActions(
+private fun CalendarTopBar(
     onTools: () -> Unit,
     onExport: () -> Unit,
     onShare: () -> Unit,
@@ -555,61 +547,96 @@ private fun CalendarActions(
     onSettings: () -> Unit,
     onEdit: () -> Unit
 ) {
-    Column(
-        modifier = Modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
+    var menuExpanded by remember {
+        mutableStateOf(false)
+    }
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(64.dp)
+            .padding(horizontal = 8.dp)
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        Box(
+            modifier = Modifier.align(
+                Alignment.CenterStart
+            )
         ) {
-            OutlinedButton(
-                modifier = Modifier.weight(1f),
-                onClick = onTools
+            TextButton(
+                onClick = {
+                    menuExpanded = true
+                }
             ) {
-                Text("Tools")
+                Text(
+                    text = "☰",
+                    style = MaterialTheme.typography.titleLarge
+                )
             }
 
-            OutlinedButton(
-                modifier = Modifier.weight(1f),
-                onClick = onShare
+            DropdownMenu(
+                expanded = menuExpanded,
+                onDismissRequest = {
+                    menuExpanded = false
+                }
             ) {
-                Text("Share")
-            }
+                DropdownMenuItem(
+                    text = { Text("Tools") },
+                    onClick = {
+                        menuExpanded = false
+                        onTools()
+                    }
+                )
 
-            OutlinedButton(
-                modifier = Modifier.weight(1f),
-                onClick = onEdit
-            ) {
-                Text("Edit")
+                DropdownMenuItem(
+                    text = { Text("Export") },
+                    onClick = {
+                        menuExpanded = false
+                        onExport()
+                    }
+                )
+
+                DropdownMenuItem(
+                    text = { Text("Share roster") },
+                    onClick = {
+                        menuExpanded = false
+                        onShare()
+                    }
+                )
+
+                DropdownMenuItem(
+                    text = { Text("Shared rosters") },
+                    onClick = {
+                        menuExpanded = false
+                        onShared()
+                    }
+                )
+
+                DropdownMenuItem(
+                    text = { Text("Settings") },
+                    onClick = {
+                        menuExpanded = false
+                        onSettings()
+                    }
+                )
+
+                DropdownMenuItem(
+                    text = { Text("Edit roster") },
+                    onClick = {
+                        menuExpanded = false
+                        onEdit()
+                    }
+                )
             }
         }
 
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            OutlinedButton(
-                modifier = Modifier.weight(1f),
-                onClick = onExport
-            ) {
-                Text("Export")
-            }
-
-            OutlinedButton(
-                modifier = Modifier.weight(1f),
-                onClick = onShared
-            ) {
-                Text("Shared")
-            }
-
-            OutlinedButton(
-                modifier = Modifier.weight(1f),
-                onClick = onSettings
-            ) {
-                Text("Settings")
-            }
-        }
+        Text(
+            text = "Roster Calendar",
+            modifier = Modifier.align(
+                Alignment.Center
+            ),
+            style = MaterialTheme.typography.titleLarge,
+            textAlign = TextAlign.Center
+        )
     }
 }
 
