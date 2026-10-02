@@ -19,7 +19,9 @@ data class EarningsResult(
     val workHoursPerYear: Double,
     val baseEarnings: Double,
     val allowances: Double,
-    val totalGrossEarnings: Double
+    val totalGrossEarnings: Double,
+    val equivalentHourlyRate: Double? = null,
+    val publicHolidaysWorked: Int = 0
 )
 
 data class FinancialGoal(
