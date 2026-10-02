@@ -133,7 +133,11 @@ fun FinancialGoalScreen(
                     validationError = null
                 },
                 label = {
-                    Text("Target amount")
+                    Text(
+                        text = "Target amount",
+                        style = MaterialTheme.typography.bodyLarge,
+                        fontWeight = FontWeight.Medium
+                    )
                 },
                 keyboardOptions = KeyboardOptions(
                     keyboardType = KeyboardType.Decimal
@@ -154,7 +158,11 @@ fun FinancialGoalScreen(
                     validationError = null
                 },
                 label = {
-                    Text("Current savings")
+                    Text(
+                        text = "Current savings",
+                        style = MaterialTheme.typography.bodyLarge,
+                        fontWeight = FontWeight.Medium
+                    )
                 },
                 keyboardOptions = KeyboardOptions(
                     keyboardType = KeyboardType.Decimal
@@ -175,7 +183,11 @@ fun FinancialGoalScreen(
                     validationError = null
                 },
                 label = {
-                    Text("Contribution per pay")
+                    Text(
+                        text = "Contribution per pay",
+                        style = MaterialTheme.typography.bodyLarge,
+                        fontWeight = FontWeight.Medium
+                    )
                 },
                 keyboardOptions = KeyboardOptions(
                     keyboardType = KeyboardType.Decimal
@@ -196,7 +208,11 @@ fun FinancialGoalScreen(
                     validationError = null
                 },
                 label = {
-                    Text("Pay frequency in days")
+                    Text(
+                        text = "Pay frequency in days",
+                        style = MaterialTheme.typography.bodyLarge,
+                        fontWeight = FontWeight.Medium
+                    )
                 },
                 keyboardOptions = KeyboardOptions(
                     keyboardType = KeyboardType.Number
