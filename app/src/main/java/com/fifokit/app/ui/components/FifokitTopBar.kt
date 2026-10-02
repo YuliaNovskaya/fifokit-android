@@ -15,7 +15,7 @@ import androidx.compose.ui.unit.dp
 @Composable
 fun FifokitTopBar(
     title: String,
-    onBack: () -> Unit
+    onBack: (() -> Unit)? = null
 ) {
     Box(
         modifier = Modifier
@@ -32,11 +32,13 @@ fun FifokitTopBar(
             textAlign = TextAlign.Center
         )
 
-        FifokitBackButton(
-            onClick = onBack,
-            modifier = Modifier.align(
-                Alignment.CenterEnd
+        if (onBack != null) {
+            FifokitBackButton(
+                onClick = onBack,
+                modifier = Modifier.align(
+                    Alignment.CenterEnd
+                )
             )
-        )
+        }
     }
 }
