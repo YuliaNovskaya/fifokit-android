@@ -278,7 +278,7 @@ private fun CompactRosterCalendarContent(
 
                 Text(
                     text =
-                        "Orange WORK · • Today · P Public holiday",
+                        "Orange WORK · [ ] Today · P Public holiday",
                     style = TextStyle(
                         color =
                             compactSecondary,
@@ -365,17 +365,12 @@ private fun CompactCalendarRows(
                             Text(
                                 text =
                                     (
-                                        if (
-                                            day.isToday
-                                        ) {
-                                            "•"
+                                        if (day.isToday) {
+                                            "[${day.date.dayOfMonth}]"
                                         } else {
-                                            ""
+                                            day.date.dayOfMonth.toString()
                                         }
                                     ) +
-                                            day
-                                                .date
-                                                .dayOfMonth +
                                             (
                                                 if (
                                                     day
@@ -411,16 +406,26 @@ private fun CompactCalendarRows(
                                 style =
                                     TextStyle(
                                         color =
-                                            if (
-                                                day
-                                                    .isWorkDay
-                                            ) {
-                                                compactDark
-                                            } else {
-                                                compactWhite
+                                            when {
+                                                day.isToday &&
+                                                        day.isWorkDay ->
+                                                    compactWhite
+
+                                                day.isToday ->
+                                                    compactOrange
+
+                                                day.isWorkDay ->
+                                                    compactDark
+
+                                                else ->
+                                                    compactWhite
                                             },
                                         fontSize =
-                                            10.sp,
+                                            if (day.isToday) {
+                                                11.sp
+                                            } else {
+                                                10.sp
+                                            },
                                         fontWeight =
                                             if (
                                                 day
