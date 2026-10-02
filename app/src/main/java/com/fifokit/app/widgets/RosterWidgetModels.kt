@@ -10,6 +10,9 @@ import com.fifokit.app.domain.model.RosterPattern
 import com.fifokit.app.domain.roster.AustralianState
 import com.fifokit.app.domain.roster.PublicHolidayProvider
 import com.fifokit.app.domain.roster.RosterCalculator
+import com.fifokit.app.domain.roster.ShutdownPeriod
+import com.fifokit.app.domain.roster.ShutdownPeriodCodec
+import com.fifokit.app.domain.roster.shutdownOn
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -23,6 +26,7 @@ data class WidgetRoster(
     val startDate: LocalDate,
     val workDays: Int,
     val offDays: Int,
+    val shutdowns: List<ShutdownPeriod> = emptyList(),
     val selectedStates: Set<AustralianState> =
         setOf(AustralianState.WA)
 )
@@ -154,6 +158,10 @@ class RosterWidgetDataSource(
             startDate = parsedStartDate,
             workDays = resolvedWorkDays,
             offDays = resolvedOffDays,
+            shutdowns =
+                ShutdownPeriodCodec.decode(
+                    shutdownsJson
+                ),
             selectedStates = states
         )
     }
@@ -257,16 +265,17 @@ object CompactRosterCalendarCalculator {
                 WidgetCalendarDay(
                     date = date,
                     isWorkDay =
-                        RosterCalculator
-                            .isWorkDay(
-                                date = date,
-                                startDate =
-                                    roster.startDate,
-                                workDays =
-                                    roster.workDays,
-                                offDays =
-                                    roster.offDays
-                            ),
+                        roster.shutdowns.shutdownOn(date) == null &&
+                                RosterCalculator
+                                    .isWorkDay(
+                                        date = date,
+                                        startDate =
+                                            roster.startDate,
+                                        workDays =
+                                            roster.workDays,
+                                        offDays =
+                                            roster.offDays
+                                    ),
                     isToday =
                         date == today,
                     isPublicHoliday =
