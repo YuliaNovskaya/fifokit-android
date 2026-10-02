@@ -52,6 +52,7 @@ fun RosterSetupRoute(
         customWorkDays = viewModel.customWorkDays,
         customOffDays = viewModel.customOffDays,
         startDate = viewModel.startDate,
+        shutdowns = viewModel.shutdowns,
         onRosterSelected = viewModel::selectPattern,
         onBack = onBack,
         onCustomRosterSelected = {
@@ -68,6 +69,8 @@ fun RosterSetupRoute(
         onCustomWorkDaysChanged = viewModel::updateCustomWorkDays,
         onCustomOffDaysChanged = viewModel::updateCustomOffDays,
         onStartDateSelected = viewModel::selectStartDate,
+        onAddShutdown = viewModel::addShutdown,
+        onRemoveShutdown = viewModel::removeShutdown,
         showCancelNewRoster = viewModel.isCreatingNewRoster,
         onCancelNewRoster = {
             viewModel.cancelNewRoster()
