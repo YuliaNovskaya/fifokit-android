@@ -11,7 +11,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
     entities = [
         RosterEntity::class
     ],
-    version = 3,
+    version = 4,
     exportSchema = false
 )
 abstract class RosterDatabase : RoomDatabase() {
@@ -60,6 +60,21 @@ abstract class RosterDatabase : RoomDatabase() {
                     )
                 }
             }
+        private val MIGRATION_3_4 =
+            object : Migration(3, 4) {
+
+                override fun migrate(
+                    db: SupportSQLiteDatabase
+                ) {
+                    db.execSQL(
+                        """
+                ALTER TABLE rosters
+                ADD COLUMN shutdownsJson TEXT NOT NULL DEFAULT '[]'
+                """.trimIndent()
+                    )
+                }
+            }
+
         @Volatile
         private var INSTANCE: RosterDatabase? = null
 
@@ -72,7 +87,8 @@ abstract class RosterDatabase : RoomDatabase() {
                 )
                     .addMigrations(
                         MIGRATION_1_2,
-                        MIGRATION_2_3
+                        MIGRATION_2_3,
+                        MIGRATION_3_4
                     )
                     .build()
                     .also { INSTANCE = it }
