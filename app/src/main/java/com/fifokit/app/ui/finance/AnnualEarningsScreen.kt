@@ -35,6 +35,7 @@ import com.fifokit.app.domain.finance.PayRateType
 import com.fifokit.app.domain.finance.PipType
 import com.fifokit.app.domain.model.RosterPattern
 import com.fifokit.app.domain.roster.AustralianState
+import com.fifokit.app.domain.roster.ShutdownPeriod
 import java.time.LocalDate
 import com.fifokit.app.domain.finance.EarningsResult
 import com.fifokit.app.domain.finance.FinanceCalculator
@@ -61,6 +62,7 @@ fun AnnualEarningsScreen(
     customOffDays: Int,
     rosterStartDate: LocalDate,
     selectedStates: Set<AustralianState>,
+    shutdowns: List<ShutdownPeriod>,
     onBack: () -> Unit
 ) {
     val context = LocalContext.current
@@ -378,7 +380,8 @@ fun AnnualEarningsScreen(
                                     workDays = customWorkDays,
                                     offDays = customOffDays,
                                     year = year,
-                                    selectedStates = selectedStates
+                                    selectedStates = selectedStates,
+                                    shutdowns = shutdowns
                                 )
                             } else {
                                 FinanceCalculator.calculateAnnualEarnings(
@@ -386,7 +389,8 @@ fun AnnualEarningsScreen(
                                     pattern = selectedPattern,
                                     rosterStartDate = rosterStartDate,
                                     year = year,
-                                    selectedStates = selectedStates
+                                    selectedStates = selectedStates,
+                                    shutdowns = shutdowns
                                 )
                             }
                         analytics.logEvent(
