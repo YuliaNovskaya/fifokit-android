@@ -202,14 +202,12 @@ private fun SwingStatusContent(
                 }
 
             Text(
-                text =
-                    "FIFOKIT · " + roster.name,
+                text = "FIFOKIT",
                 style = TextStyle(
                     color = widgetOrange,
                     fontSize = 12.sp,
                     fontWeight = FontWeight.Bold
-                ),
-                maxLines = 1
+                )
             )
 
             Spacer(
@@ -232,21 +230,23 @@ private fun SwingStatusContent(
                     "Day " +
                             status.dayInPeriod +
                             " of " +
-                            status.periodLength +
-                            " · " +
-                            status.daysUntilTransition +
+                            status.periodLength,
+                style = TextStyle(
+                    color = widgetSecondary,
+                    fontSize = 15.sp
+                )
+            )
+
+            Text(
+                text =
+                    status
+                        .daysUntilTransition
+                        .toString() +
                             " days until change",
                 style = TextStyle(
                     color = widgetSecondary,
-                    fontSize = 14.sp
-                ),
-                maxLines = 1
-            )
-
-            Spacer(
-                modifier =
-                    GlanceModifier
-                        .height(3.dp)
+                    fontSize = 15.sp
+                )
             )
 
             Text(
@@ -260,9 +260,19 @@ private fun SwingStatusContent(
                                 ),
                 style = TextStyle(
                     color = widgetOrange,
-                    fontSize = 14.sp,
+                    fontSize = 15.sp,
                     fontWeight = FontWeight.Bold
                 )
+            )
+
+            Text(
+                text = roster.name,
+                style = TextStyle(
+                    color = widgetSecondary,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Bold
+                ),
+                maxLines = 1
             )
         }
     }
