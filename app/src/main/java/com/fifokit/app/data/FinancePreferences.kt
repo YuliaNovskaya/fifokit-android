@@ -299,35 +299,6 @@ class FinancePreferences(
                 return@edit
             }
 
-            if (goalId == "primary") {
-                val resetGoal =
-                    FinancialGoal(
-                        id = "primary",
-                        name = "My goal",
-                        createdAt =
-                            goals[index]
-                                .createdAt
-                                .takeIf {
-                                    it > 0L
-                                }
-                                ?: now,
-                        updatedAt = now
-                    )
-
-                goals[index] =
-                    resetGoal
-
-                preferences[Keys.FINANCIAL_GOALS_JSON] =
-                    encodeGoals(goals)
-
-                writeLegacyPrimary(
-                    preferences = preferences,
-                    goal = resetGoal
-                )
-
-                return@edit
-            }
-
             goals[index] =
                 goals[index].copy(
                     isDeleted = true,
@@ -337,6 +308,23 @@ class FinancePreferences(
 
             preferences[Keys.FINANCIAL_GOALS_JSON] =
                 encodeGoals(goals)
+
+            if (goalId == "primary") {
+                preferences[Keys.TARGET_AMOUNT] =
+                    0.0
+
+                preferences[Keys.CURRENT_AMOUNT] =
+                    0.0
+
+                preferences[Keys.CONTRIBUTION_PER_PAY] =
+                    0.0
+
+                preferences[Keys.PAY_FREQUENCY_DAYS] =
+                    14
+
+                preferences[Keys.FINANCIAL_GOAL_UPDATED_AT] =
+                    now
+            }
         }
     }
 
