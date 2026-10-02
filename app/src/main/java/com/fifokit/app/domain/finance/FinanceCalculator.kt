@@ -28,6 +28,27 @@ object FinanceCalculator {
                 input.rate
         }
 
+        val pipEarnings =
+            when (input.pipType) {
+                PipType.NONE ->
+                    0.0
+
+                PipType.PER_HOUR ->
+                    input.pipValue *
+                            workHoursPerYear
+
+                PipType.PER_DAY ->
+                    input.pipValue *
+                            workDaysPerYear
+
+                PipType.PERCENT_BASE ->
+                    baseEarnings *
+                            (input.pipValue / 100.0)
+
+                PipType.FIXED_AMOUNT ->
+                    input.pipValue
+            }
+
         val allowances =
             input.allowancePerWorkDay * workDaysPerYear
 
@@ -56,8 +77,12 @@ object FinanceCalculator {
             restDaysPerYear = 365 - workDaysPerYear,
             workHoursPerYear = workHoursPerYear,
             baseEarnings = baseEarnings,
+            pipEarnings = pipEarnings,
             allowances = allowances,
-            totalGrossEarnings = baseEarnings + allowances,
+            totalGrossEarnings =
+                baseEarnings +
+                        pipEarnings +
+                        allowances,
             equivalentHourlyRate = equivalentHourlyRate
         )
     }
