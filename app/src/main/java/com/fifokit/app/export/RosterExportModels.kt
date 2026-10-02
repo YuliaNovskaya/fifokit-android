@@ -21,7 +21,7 @@ data class RosterExportDay(
     val date: LocalDate,
     val isWorkDay: Boolean,
     val isPublicHoliday: Boolean,
-    val isShutdown: Boolean
+    val isShutdown: Boolean = false
 )
 
 object RosterExportCalendar {
