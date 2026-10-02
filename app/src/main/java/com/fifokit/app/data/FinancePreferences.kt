@@ -2,6 +2,7 @@ package com.fifokit.app.data
 
 import android.content.Context
 import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.doublePreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
@@ -44,6 +45,18 @@ class FinancePreferences(
 
         val PIP_VALUE =
             doublePreferencesKey("pip_value")
+
+        val LOCAL_RATES_ENABLED =
+            booleanPreferencesKey("local_rates_enabled")
+
+        val LOCAL_WEEKDAY_HOURLY_RATE =
+            doublePreferencesKey("local_weekday_hourly_rate")
+
+        val LOCAL_SATURDAY_HOURLY_RATE =
+            doublePreferencesKey("local_saturday_hourly_rate")
+
+        val LOCAL_HOURS_PER_DAY =
+            doublePreferencesKey("local_hours_per_day")
 
         // Legacy primary-goal fields retained for migration/backward compatibility.
         val TARGET_AMOUNT =
@@ -103,7 +116,15 @@ class FinancePreferences(
                     preferences[Keys.ALLOWANCE_PER_WORK_DAY] ?: 0.0,
                 pipType = pipType,
                 pipValue =
-                    preferences[Keys.PIP_VALUE] ?: 0.0
+                    preferences[Keys.PIP_VALUE] ?: 0.0,
+                localRatesEnabled =
+                    preferences[Keys.LOCAL_RATES_ENABLED] ?: false,
+                localWeekdayHourlyRate =
+                    preferences[Keys.LOCAL_WEEKDAY_HOURLY_RATE] ?: 0.0,
+                localSaturdayHourlyRate =
+                    preferences[Keys.LOCAL_SATURDAY_HOURLY_RATE] ?: 0.0,
+                localHoursPerDay =
+                    preferences[Keys.LOCAL_HOURS_PER_DAY] ?: 8.0
             )
         }
 
@@ -166,6 +187,18 @@ class FinancePreferences(
 
             preferences[Keys.PIP_VALUE] =
                 input.pipValue
+
+            preferences[Keys.LOCAL_RATES_ENABLED] =
+                input.localRatesEnabled
+
+            preferences[Keys.LOCAL_WEEKDAY_HOURLY_RATE] =
+                input.localWeekdayHourlyRate
+
+            preferences[Keys.LOCAL_SATURDAY_HOURLY_RATE] =
+                input.localSaturdayHourlyRate
+
+            preferences[Keys.LOCAL_HOURS_PER_DAY] =
+                input.localHoursPerDay
 
             preferences[Keys.PAY_INPUT_UPDATED_AT] =
                 System.currentTimeMillis()
@@ -423,6 +456,18 @@ class FinancePreferences(
 
             preferences[Keys.PIP_VALUE] =
                 input.pipValue
+
+            preferences[Keys.LOCAL_RATES_ENABLED] =
+                input.localRatesEnabled
+
+            preferences[Keys.LOCAL_WEEKDAY_HOURLY_RATE] =
+                input.localWeekdayHourlyRate
+
+            preferences[Keys.LOCAL_SATURDAY_HOURLY_RATE] =
+                input.localSaturdayHourlyRate
+
+            preferences[Keys.LOCAL_HOURS_PER_DAY] =
+                input.localHoursPerDay
 
             preferences[Keys.PAY_INPUT_UPDATED_AT] =
                 updatedAt
