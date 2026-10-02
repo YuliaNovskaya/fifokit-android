@@ -32,6 +32,7 @@ import com.fifokit.app.export.RosterExportData
 import com.fifokit.app.analytics.AnalyticsEvents
 import com.fifokit.app.analytics.AnalyticsParams
 import com.fifokit.app.growth.GrowthEngagementTracker
+import com.fifokit.app.data.cloud.RosterSharingManager
 
 @Composable
 fun RosterSetupRoute(
@@ -150,6 +151,13 @@ class RosterSetupViewModel(
 
     var rosters by mutableStateOf<List<RosterEntity>>(emptyList())
         private set
+
+    var shareCountByCloudId by
+        mutableStateOf<Map<String, Int>>(emptyMap())
+        private set
+
+    private val rosterSharingManager =
+        RosterSharingManager()
 
     private val analytics = FirebaseAnalytics.getInstance(application)
 
@@ -555,6 +563,29 @@ class RosterSetupViewModel(
                 .collectLatest { rosterList ->
                     rosters = rosterList
                 }
+        }
+    }
+
+    fun refreshSharingStatus() {
+        viewModelScope.launch {
+            runCatching {
+                rosterSharingManager
+                    .reconcileCurrentEntitlement()
+
+                rosterSharingManager
+                    .getOwnerShares()
+                    .filter { it.isActive }
+                    .groupBy { it.rosterId }
+                    .mapValues { (_, shares) ->
+                        shares
+                            .map { it.userId }
+                            .filter { it.isNotBlank() }
+                            .distinct()
+                            .size
+                    }
+            }.onSuccess { counts ->
+                shareCountByCloudId = counts
+            }
         }
     }
 
