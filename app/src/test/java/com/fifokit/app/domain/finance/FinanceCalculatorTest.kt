@@ -2,6 +2,7 @@ package com.fifokit.app.domain.finance
 
 import com.fifokit.app.domain.model.RosterPattern
 import com.fifokit.app.domain.roster.AustralianState
+import com.fifokit.app.domain.roster.ShutdownPeriod
 import junit.framework.TestCase.assertEquals
 import org.junit.Test
 import java.time.LocalDate
@@ -249,6 +250,48 @@ class FinanceCalculatorTest {
             128960.0,
             result.annualisedGross,
             0.001
+        )
+    }
+
+    @Test
+    fun shutdownRemovesRosterWorkDaysFromAnnualEarnings() {
+        val result =
+            FinanceCalculator.calculateAnnualEarnings(
+                input = PayInput(
+                    rateType = PayRateType.DAILY,
+                    rate = 100.0
+                ),
+                pattern = RosterPattern.TWO_ONE,
+                rosterStartDate =
+                    LocalDate.of(
+                        2026,
+                        1,
+                        1
+                    ),
+                year = 2026,
+                shutdowns =
+                    listOf(
+                        ShutdownPeriod(
+                            name = "Site shutdown",
+                            startDate =
+                                LocalDate.of(
+                                    2026,
+                                    1,
+                                    1
+                                ),
+                            endDate =
+                                LocalDate.of(
+                                    2026,
+                                    1,
+                                    2
+                                )
+                        )
+                    )
+            )
+
+        assertEquals(
+            244,
+            result.workDaysPerYear
         )
     }
 
