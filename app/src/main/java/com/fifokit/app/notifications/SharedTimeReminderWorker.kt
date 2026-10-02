@@ -16,6 +16,8 @@ import com.fifokit.app.data.cloud.SharedRosterManager
 import com.fifokit.app.data.local.RosterDatabase
 import com.fifokit.app.domain.model.RosterPattern
 import com.fifokit.app.domain.roster.RosterCalculator
+import com.fifokit.app.domain.roster.ShutdownPeriodCodec
+import com.fifokit.app.domain.roster.shutdownOn
 import kotlinx.coroutines.flow.first
 import java.time.LocalDate
 
@@ -74,9 +76,21 @@ class SharedTimeReminderWorker(
         val today = LocalDate.now()
         val tomorrow = today.plusDays(1)
 
+        val myShutdowns =
+            ShutdownPeriodCodec.decode(
+                myRoster.shutdownsJson
+            )
+
         fun myIsWorkDay(
             date: LocalDate
         ): Boolean {
+
+            if (
+                myShutdowns.shutdownOn(date) !=
+                null
+            ) {
+                return false
+            }
 
             val startDate =
                 runCatching {
@@ -130,9 +144,22 @@ class SharedTimeReminderWorker(
                     }.getOrNull()
                         ?: return@firstOrNull false
 
+                val partnerShutdowns =
+                    ShutdownPeriodCodec.decode(
+                        roster.shutdownsJson
+                    )
+
                 fun partnerIsWorkDay(
                     date: LocalDate
                 ): Boolean {
+
+                    if (
+                        partnerShutdowns
+                            .shutdownOn(date) !=
+                        null
+                    ) {
+                        return false
+                    }
 
                     return if (
                         roster.isCustomRoster
