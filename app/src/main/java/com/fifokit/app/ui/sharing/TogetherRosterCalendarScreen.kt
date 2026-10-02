@@ -200,7 +200,7 @@ fun TogetherRosterCalendarScreen(
             Text(
                 text =
                     "${viewModel.rosterName} + ${partnerRoster.name}",
-                style = MaterialTheme.typography.titleMedium,
+                style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.SemiBold,
                 color = MaterialTheme.colorScheme.onSurface
             )
@@ -244,7 +244,7 @@ fun TogetherRosterCalendarScreen(
 
                     Text(
                         text = "Shared time",
-                        style = MaterialTheme.typography.titleSmall,
+                        style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.SemiBold
                     )
 
@@ -255,13 +255,15 @@ fun TogetherRosterCalendarScreen(
                     Text(
                         text =
                             "${planningSummary.sharedOffDaysThisMonth} shared days off this month",
-                        style = MaterialTheme.typography.bodySmall
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.Medium
                     )
 
                     Text(
                         text =
                             "${planningSummary.sharedOffDaysNext3Months} shared days off in the next 3 months",
-                        style = MaterialTheme.typography.bodySmall
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.Medium
                     )
 
                     planningSummary.nextSharedWeekend
@@ -272,7 +274,8 @@ fun TogetherRosterCalendarScreen(
                                     "Next free weekend: " +
                                             "${weekend.startDate.format(dateFormatter)} - " +
                                             weekend.endDate.format(dateFormatter),
-                                style = MaterialTheme.typography.bodySmall
+                                style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.Medium
                             )
                         }
 
@@ -293,7 +296,8 @@ fun TogetherRosterCalendarScreen(
                                                         "${period.endDate.format(dateFormatter)} " +
                                                         "(${period.days} days)"
                                             },
-                                style = MaterialTheme.typography.bodySmall
+                                style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.Medium
                             )
                         }
                 }
@@ -360,7 +364,8 @@ fun TogetherRosterCalendarScreen(
                                         )
                                     } (${period.days} days)"
                                 },
-                            style = MaterialTheme.typography.bodyMedium
+                            style = MaterialTheme.typography.bodyLarge,
+                            fontWeight = FontWeight.Medium
                         )
 
                         Spacer(
@@ -369,7 +374,8 @@ fun TogetherRosterCalendarScreen(
 
                         Text(
                             text = "Tap to view in calendar",
-                            style = MaterialTheme.typography.labelMedium
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.Medium
                         )
                     }
                 }
@@ -426,7 +432,8 @@ fun TogetherRosterCalendarScreen(
                         text = day,
                         modifier = Modifier.weight(1f),
                         textAlign = TextAlign.Center,
-                        style = MaterialTheme.typography.labelMedium
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.SemiBold
                     )
                 }
             }
@@ -495,46 +502,52 @@ fun TogetherRosterCalendarScreen(
                                     ""
                             }
 
+                        val cellBackground =
+                            when {
+                                sharedOff ->
+                                    MaterialTheme.colorScheme
+                                        .tertiaryContainer
+
+                                myWork && partnerWork ->
+                                    MaterialTheme.colorScheme
+                                        .primaryContainer
+
+                                myWork ->
+                                    MaterialTheme.colorScheme
+                                        .surfaceVariant
+
+                                else ->
+                                    MaterialTheme.colorScheme
+                                        .surfaceContainerHigh
+                            }
+
+                        val cellContentColor =
+                            when {
+                                sharedOff ->
+                                    MaterialTheme.colorScheme
+                                        .onTertiaryContainer
+
+                                myWork && partnerWork ->
+                                    MaterialTheme.colorScheme
+                                        .onPrimaryContainer
+
+                                else ->
+                                    MaterialTheme.colorScheme
+                                        .onSurface
+                            }
+
                         Surface(
                             modifier = Modifier
                                 .aspectRatio(1f)
                                 .padding(2.dp),
                             shape = MaterialTheme.shapes.small,
-                            color =
-                                when {
-                                    sharedOff ->
-                                        MaterialTheme.colorScheme
-                                            .tertiaryContainer
-
-                                    myWork && partnerWork ->
-                                        MaterialTheme.colorScheme
-                                            .primaryContainer
-
-                                    myWork ->
-                                        MaterialTheme.colorScheme
-                                            .surfaceVariant
-
-                                    else ->
-                                        MaterialTheme.colorScheme
-                                            .surfaceContainerHigh
-                                }
+                            color = cellBackground,
+                            contentColor = cellContentColor
                         ) {
 
                             Box(
                                 modifier = Modifier.fillMaxSize()
                             ) {
-
-                                if (isPublicHoliday) {
-                                    Box(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .fillMaxHeight(0.5f)
-                                            .align(Alignment.TopCenter)
-                                            .background(
-                                                MaterialTheme.colorScheme.secondaryContainer
-                                            )
-                                    )
-                                }
 
                                 Box(
                                     modifier = Modifier.fillMaxSize()
@@ -557,9 +570,11 @@ fun TogetherRosterCalendarScreen(
                                                 .align(Alignment.TopEnd)
                                                 .padding(2.dp),
                                             style = MaterialTheme.typography.labelSmall.copy(
-                                                fontSize = 7.sp
+                                                fontSize = 8.sp,
+                                                lineHeight = 9.sp
                                             ),
-                                            fontWeight = FontWeight.Bold
+                                            fontWeight = FontWeight.Bold,
+                                            color = MaterialTheme.colorScheme.onSecondaryContainer
                                         )
                                     }
 
@@ -573,7 +588,9 @@ fun TogetherRosterCalendarScreen(
 
                                         Text(
                                             text = date.dayOfMonth.toString(),
-                                            style = MaterialTheme.typography.bodyMedium
+                                            style = MaterialTheme.typography.titleSmall,
+                                            fontWeight = FontWeight.Bold,
+                                            color = cellContentColor
                                         )
 
                                         Text(
@@ -592,9 +609,11 @@ fun TogetherRosterCalendarScreen(
                                                         "THEM\nWORK"
                                                 },
                                             style = MaterialTheme.typography.labelSmall.copy(
-                                                fontSize = 8.sp,
-                                                lineHeight = 9.sp
+                                                fontSize = 9.sp,
+                                                lineHeight = 10.sp
                                             ),
+                                            fontWeight = FontWeight.SemiBold,
+                                            color = cellContentColor,
                                             textAlign = TextAlign.Center,
                                             maxLines = 2
                                         )
@@ -679,10 +698,12 @@ private fun TogetherLegendChip(
         Text(
             text = text,
             modifier = Modifier.padding(
-                horizontal = 8.dp,
-                vertical = 4.dp
+                horizontal = 10.dp,
+                vertical = 6.dp
             ),
-            style = MaterialTheme.typography.labelSmall
+            style = MaterialTheme.typography.labelMedium,
+            fontWeight = FontWeight.SemiBold,
+            color = MaterialTheme.colorScheme.onSurface
         )
     }
 }
