@@ -42,6 +42,11 @@ class FinanceCalculatorTest {
         )
 
         assertEquals(160000.0, result.baseEarnings, 0.001)
+        assertEquals(
+            66.6667,
+            result.equivalentHourlyRate ?: 0.0,
+            0.001
+        )
     }
 
     @Test
