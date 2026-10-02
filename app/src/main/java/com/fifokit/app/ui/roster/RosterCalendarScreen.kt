@@ -627,7 +627,7 @@ private fun CalendarDay(
         color = workOffColor,
         border = when {
             isToday -> BorderStroke(
-                width = 4.dp,
+                width = 3.dp,
                 color = MaterialTheme.colorScheme.primary
             )
 
@@ -668,24 +668,8 @@ private fun CalendarDay(
                     ) {
                         Text(
                             text = date.dayOfMonth.toString(),
-                            style =
-                                if (isToday) {
-                                    MaterialTheme.typography.titleMedium
-                                } else {
-                                    MaterialTheme.typography.titleSmall
-                                },
-                            fontWeight =
-                                if (isToday) {
-                                    FontWeight.Bold
-                                } else {
-                                    FontWeight.Medium
-                                },
-                            color =
-                                if (isToday) {
-                                    MaterialTheme.colorScheme.primary
-                                } else {
-                                    MaterialTheme.colorScheme.onSurface
-                                }
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.Medium
                         )
 
                         if (isPublicHoliday) {
@@ -1000,7 +984,7 @@ private fun MiniCalendarDay(
         color = workOffColor,
         border = when {
             isToday -> BorderStroke(
-                3.dp,
+                2.dp,
                 MaterialTheme.colorScheme.primary
             )
 
