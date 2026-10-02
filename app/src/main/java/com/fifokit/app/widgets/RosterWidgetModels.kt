@@ -43,7 +43,8 @@ data class WidgetCalendarDay(
     val date: LocalDate,
     val isWorkDay: Boolean,
     val isToday: Boolean,
-    val isPublicHoliday: Boolean
+    val isPublicHoliday: Boolean,
+    val isShutdown: Boolean
 )
 
 class RosterWidgetDataSource(
@@ -285,7 +286,12 @@ object CompactRosterCalendarCalculator {
                                 states =
                                     roster
                                         .selectedStates
-                            )
+                            ),
+                    isShutdown =
+                        roster.shutdowns
+                            .shutdownOn(
+                                date
+                            ) != null
                 )
         }
 
