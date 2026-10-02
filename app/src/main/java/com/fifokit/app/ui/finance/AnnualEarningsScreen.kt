@@ -195,11 +195,14 @@ fun AnnualEarningsScreen(
                 },
                 label = {
                     Text(
-                        when (rateType) {
-                            PayRateType.HOURLY -> "Hourly rate"
-                            PayRateType.DAILY -> "Daily rate"
-                            PayRateType.ANNUAL_SALARY -> "Annual salary"
-                        }
+                        text =
+                            when (rateType) {
+                                PayRateType.HOURLY -> "Hourly rate"
+                                PayRateType.DAILY -> "Daily rate"
+                                PayRateType.ANNUAL_SALARY -> "Annual salary"
+                            },
+                        style = MaterialTheme.typography.bodyLarge,
+                        fontWeight = FontWeight.Medium
                     )
                 },
                 keyboardOptions = KeyboardOptions(
@@ -222,14 +225,17 @@ fun AnnualEarningsScreen(
                 },
                 label = {
                     Text(
-                        when (rateType) {
-                            PayRateType.HOURLY ->
-                                "Hours per work day"
+                        text =
+                            when (rateType) {
+                                PayRateType.HOURLY ->
+                                    "Hours per work day"
 
-                            PayRateType.DAILY,
-                            PayRateType.ANNUAL_SALARY ->
-                                "Hours per work day (for annual hours)"
-                        }
+                                PayRateType.DAILY,
+                                PayRateType.ANNUAL_SALARY ->
+                                    "Hours per work day (for annual hours)"
+                            },
+                        style = MaterialTheme.typography.bodyLarge,
+                        fontWeight = FontWeight.Medium
                     )
                 },
                 keyboardOptions = KeyboardOptions(
@@ -251,7 +257,11 @@ fun AnnualEarningsScreen(
                     validationError = null
                 },
                 label = {
-                    Text("Allowance per work day")
+                    Text(
+                        text = "Allowance per work day",
+                        style = MaterialTheme.typography.bodyLarge,
+                        fontWeight = FontWeight.Medium
+                    )
                 },
                 keyboardOptions = KeyboardOptions(
                     keyboardType = KeyboardType.Decimal
