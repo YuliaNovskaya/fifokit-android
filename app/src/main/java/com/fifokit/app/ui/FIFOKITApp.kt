@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -40,6 +41,9 @@ import com.fifokit.app.ui.sharing.RosterInviteScreen
 import com.fifokit.app.ui.sharing.SharedRosterCalendarScreen
 import com.fifokit.app.ui.sharing.SharedRostersScreen
 import com.fifokit.app.ui.sharing.TogetherRosterCalendarScreen
+import com.fifokit.app.ui.components.FifokitBottomNavigation
+import com.fifokit.app.ui.components.RosterActionsSheet
+import com.fifokit.app.ui.components.ToolsActionsSheet
 import com.google.firebase.analytics.FirebaseAnalytics
 import com.google.firebase.analytics.logEvent
 
@@ -75,7 +79,11 @@ fun FIFOKITApp(
 
     var showSettings by remember { mutableStateOf(false) }
 
-    var openToolsSheet by remember {
+    var showRosterActionsSheet by remember {
+        mutableStateOf(false)
+    }
+
+    var showToolsActionsSheet by remember {
         mutableStateOf(false)
     }
     var showPayCalculator by remember { mutableStateOf(false) }
@@ -141,7 +149,7 @@ fun FIFOKITApp(
                 showPayCalculator = false
                 showSettings = false
                 screenOverride = true
-                openToolsSheet = true
+                showToolsActionsSheet = true
             }
 
             AppLinkDestination.INVITE -> {
@@ -227,15 +235,114 @@ fun FIFOKITApp(
         }
     }
 
-    Surface(
-        modifier = Modifier.fillMaxSize(),
-        color = MaterialTheme.colorScheme.background
-    ) {
-        Box(
+    if (showRosterActionsSheet) {
+        RosterActionsSheet(
+            onDismiss = {
+                showRosterActionsSheet = false
+            },
+            onShareRoster = {
+                showRosterActionsSheet = false
+                showShareRoster = true
+            },
+            onSharedRosters = {
+                showRosterActionsSheet = false
+                analytics.logEvent(
+                    AnalyticsEvents.FEATURE_OPENED
+                ) {
+                    param(
+                        AnalyticsParams.FEATURE,
+                        "partner_sharing"
+                    )
+                }
+                showSharedRosters = true
+            },
+            onExportRoster = {
+                showRosterActionsSheet = false
+                showRosterExport = true
+            }
+        )
+    }
+
+    if (showToolsActionsSheet) {
+        ToolsActionsSheet(
+            onDismiss = {
+                showToolsActionsSheet = false
+            },
+            onPayCalculator = {
+                showToolsActionsSheet = false
+                showPayCalculator = true
+            },
+            onAnnualEarnings = {
+                showToolsActionsSheet = false
+
+                if (
+                    ProAccess.canUse(
+                        ProFeature.DETAILED_ANNUAL_EARNINGS
+                    )
+                ) {
+                    showAnnualEarnings = true
+                } else {
+                    analytics.logEvent(
+                        AnalyticsEvents.PRO_FEATURE_LOCKED
+                    ) {
+                        param(
+                            AnalyticsParams.FEATURE,
+                            "annual_earnings"
+                        )
+                    }
+                    showPro = true
+                }
+            },
+            onFinancialGoal = {
+                showToolsActionsSheet = false
+                showFinancialGoal = true
+            }
+        )
+    }
+
+    val showPersistentNavigation =
+        rosterSetupViewModel.hasSavedRoster == true &&
+                !showAcceptInvite
+
+    Scaffold(
+        bottomBar = {
+            if (showPersistentNavigation) {
+                FifokitBottomNavigation(
+                    onEdit = {
+                        screenOverride = false
+                    },
+                    onRoster = {
+                        showRosterActionsSheet = true
+                    },
+                    onTools = {
+                        analytics.logEvent(
+                            AnalyticsEvents.FEATURE_OPENED
+                        ) {
+                            param(
+                                AnalyticsParams.FEATURE,
+                                "finance_tools"
+                            )
+                        }
+                        showToolsActionsSheet = true
+                    },
+                    onSettings = {
+                        showSettings = true
+                    }
+                )
+            }
+        }
+    ) { appPadding ->
+        Surface(
             modifier = Modifier
                 .fillMaxSize()
-                .safeDrawingPadding()
+                .padding(appPadding),
+            color = MaterialTheme.colorScheme.background
         ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .safeDrawingPadding()
+            ) {
             val activeCloudRosterId =
                 rosterSetupViewModel.rosters
                     .firstOrNull {
@@ -426,47 +533,8 @@ fun FIFOKITApp(
                     onBack = {
                         screenOverride = false
                     },
-                    onShareRoster = {
-                        showShareRoster = true
-                    },
-                    onExportRoster = { month ->
+                    onMonthChanged = { month ->
                         exportStartMonth = month
-                        showRosterExport = true
-                    },
-                    onSettings = {
-                        showSettings = true
-                    },
-                    onSharedRosters = {
-                        showSharedRosters = true
-                    },
-                    onPayCalculator = {
-                        showPayCalculator = true
-                    },
-                    onAnnualEarnings = {
-                        if (
-                            ProAccess.canUse(
-                                ProFeature.DETAILED_ANNUAL_EARNINGS
-                            )
-                        ) {
-                            showAnnualEarnings = true
-                        } else {
-                            analytics.logEvent(
-                                AnalyticsEvents.PRO_FEATURE_LOCKED
-                            ) {
-                                param(
-                                    AnalyticsParams.FEATURE,
-                                    "annual_earnings"
-                                )
-                            }
-                            showPro = true
-                        }
-                    },
-                    onFinancialGoal = {
-                        showFinancialGoal = true
-                    },
-                    openToolsSheet = openToolsSheet,
-                    onToolsSheetOpened = {
-                        openToolsSheet = false
                     },
                     onProRequested = { feature ->
                         analytics.logEvent(AnalyticsEvents.PRO_FEATURE_LOCKED) {
@@ -514,6 +582,7 @@ fun FIFOKITApp(
                         rosterSetupViewModel.refreshFromLocalStorage()
                     }
                 )
+            }
             }
         }
     }
