@@ -30,7 +30,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import java.time.format.DateTimeFormatter
 import android.Manifest
@@ -49,22 +48,6 @@ import com.fifokit.app.notifications.RosterNotificationManager
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.EventNote
-import androidx.compose.material.icons.filled.Build
-import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.filled.Share
-import androidx.compose.material.icons.filled.People
-import androidx.compose.material.icons.filled.FileDownload
-import androidx.compose.material.icons.filled.Calculate
-import androidx.compose.material.icons.filled.TrendingUp
-import androidx.compose.material.icons.filled.Flag
-import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.foundation.layout.size
 import androidx.compose.material3.ExperimentalMaterial3Api
 import com.google.firebase.analytics.FirebaseAnalytics
 import com.google.firebase.analytics.logEvent
@@ -94,16 +77,8 @@ private enum class CalendarViewMode {
 fun RosterCalendarScreen(
     viewModel: RosterSetupViewModel,
     onBack: () -> Unit,
-    onSettings: () -> Unit,
-    onShareRoster: () -> Unit,
-    onExportRoster: (YearMonth) -> Unit,
     onProRequested: (String) -> Unit,
-    onSharedRosters: () -> Unit,
-    onPayCalculator: () -> Unit,
-    onAnnualEarnings: () -> Unit,
-    onFinancialGoal: () -> Unit,
-    openToolsSheet: Boolean = false,
-    onToolsSheetOpened: () -> Unit = {},
+    onMonthChanged: (YearMonth) -> Unit = {}
 ) {
     val context = LocalContext.current
     val analytics = remember(context) {
@@ -128,6 +103,10 @@ fun RosterCalendarScreen(
     }
     var month by remember {
         mutableStateOf(YearMonth.now())
+    }
+
+    LaunchedEffect(month) {
+        onMonthChanged(month)
     }
 
     var calendarViewMode by remember {
@@ -160,21 +139,6 @@ fun RosterCalendarScreen(
 
     var rosterMenuExpanded by remember {
         mutableStateOf(false)
-    }
-
-    var showRosterActionsSheet by remember {
-        mutableStateOf(false)
-    }
-
-    var showToolsSheet by remember {
-        mutableStateOf(false)
-    }
-
-    LaunchedEffect(openToolsSheet) {
-        if (openToolsSheet) {
-            showToolsSheet = true
-            onToolsSheetOpened()
-        }
     }
 
     if (showReviewPrompt) {
@@ -235,174 +199,10 @@ fun RosterCalendarScreen(
         )
     }
 
-    if (showRosterActionsSheet) {
-        ModalBottomSheet(
-            onDismissRequest = {
-                showRosterActionsSheet = false
-            }
-        ) {
-            ActionSheetHeader(
-                title = "Roster",
-                onClose = {
-                    showRosterActionsSheet = false
-                }
-            )
-
-            ActionSheetItem(
-                icon = Icons.Default.Share,
-                title = "Share roster",
-                description =
-                    "Invite a partner or family member to view the selected roster.",
-                onClick = {
-                    showRosterActionsSheet = false
-                    onShareRoster()
-                }
-            )
-
-            HorizontalDivider()
-
-            ActionSheetItem(
-                icon = Icons.Default.People,
-                title = "Shared rosters",
-                description =
-                    "View rosters other people have shared with you.",
-                onClick = {
-                    showRosterActionsSheet = false
-                    analytics.logEvent(
-                        AnalyticsEvents.FEATURE_OPENED
-                    ) {
-                        param(
-                            AnalyticsParams.FEATURE,
-                            "partner_sharing"
-                        )
-                    }
-                    onSharedRosters()
-                }
-            )
-
-            HorizontalDivider()
-
-            ActionSheetItem(
-                icon = Icons.Default.FileDownload,
-                title = "Export roster",
-                description =
-                    "Save or share the selected roster as an image or PDF.",
-                onClick = {
-                    showRosterActionsSheet = false
-                    onExportRoster(month)
-                }
-            )
-
-            Spacer(
-                modifier = Modifier.height(24.dp)
-            )
-        }
-    }
-
-    if (showToolsSheet) {
-        ModalBottomSheet(
-            onDismissRequest = {
-                showToolsSheet = false
-            }
-        ) {
-            ActionSheetHeader(
-                title = "Tools",
-                onClose = {
-                    showToolsSheet = false
-                }
-            )
-
-            ActionSheetItem(
-                icon = Icons.Default.Calculate,
-                title = "FIFO Pay Calculator",
-                description =
-                    "Calculate pay using your hourly, daily or salary rate.",
-                onClick = {
-                    showToolsSheet = false
-                    analytics.logEvent(
-                        AnalyticsEvents.FINANCE_TOOL_SELECTED
-                    ) {
-                        param(
-                            AnalyticsParams.TOOL,
-                            "pay_calculator"
-                        )
-                    }
-                    onPayCalculator()
-                }
-            )
-
-            HorizontalDivider()
-
-            ActionSheetItem(
-                icon = Icons.Default.TrendingUp,
-                title = "Annual Earnings · PRO",
-                description =
-                    "Estimate yearly work days, hours and gross earnings.",
-                onClick = {
-                    showToolsSheet = false
-                    analytics.logEvent(
-                        AnalyticsEvents.FINANCE_TOOL_SELECTED
-                    ) {
-                        param(
-                            AnalyticsParams.TOOL,
-                            "annual_earnings"
-                        )
-                    }
-                    onAnnualEarnings()
-                }
-            )
-
-            HorizontalDivider()
-
-            ActionSheetItem(
-                icon = Icons.Default.Flag,
-                title = "Financial Goal",
-                description =
-                    "Estimate how long it will take to reach a savings target.",
-                onClick = {
-                    showToolsSheet = false
-                    analytics.logEvent(
-                        AnalyticsEvents.FINANCE_TOOL_SELECTED
-                    ) {
-                        param(
-                            AnalyticsParams.TOOL,
-                            "financial_goal"
-                        )
-                    }
-                    onFinancialGoal()
-                }
-            )
-
-            Spacer(
-                modifier = Modifier.height(24.dp)
-            )
-        }
-    }
-
     Scaffold(
         topBar = {
             FifokitTopBar(
                 title = "Roster Calendar"
-            )
-        },
-        bottomBar = {
-            CalendarBottomNavigation(
-                onEdit = onBack,
-                onRoster = {
-                    showRosterActionsSheet = true
-                },
-                onTools = {
-                    analytics.logEvent(
-                        AnalyticsEvents.FEATURE_OPENED
-                    ) {
-                        param(
-                            AnalyticsParams.FEATURE,
-                            "finance_tools"
-                        )
-                    }
-                    showToolsSheet = true
-                },
-                onSettings = onSettings
             )
         }
     ) { innerPadding ->
@@ -708,165 +508,6 @@ fun RosterCalendarScreen(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-        }
-    }
-}
-
-@Composable
-private fun CalendarBottomNavigation(
-    onEdit: () -> Unit,
-    onRoster: () -> Unit,
-    onTools: () -> Unit,
-    onSettings: () -> Unit
-) {
-    Surface(
-        tonalElevation = 3.dp
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(
-                    horizontal = 4.dp,
-                    vertical = 4.dp
-                ),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            CalendarNavItem(
-                modifier = Modifier.weight(1f),
-                icon = Icons.Default.Edit,
-                label = "Edit",
-                onClick = onEdit
-            )
-
-            CalendarNavItem(
-                modifier = Modifier.weight(1f),
-                icon = Icons.Default.EventNote,
-                label = "Roster",
-                onClick = onRoster
-            )
-
-            CalendarNavItem(
-                modifier = Modifier.weight(1f),
-                icon = Icons.Default.Build,
-                label = "Tools",
-                onClick = onTools
-            )
-
-            CalendarNavItem(
-                modifier = Modifier.weight(1f),
-                icon = Icons.Default.Settings,
-                label = "Settings",
-                onClick = onSettings
-            )
-        }
-    }
-}
-
-@Composable
-private fun CalendarNavItem(
-    modifier: Modifier,
-    icon: ImageVector,
-    label: String,
-    onClick: () -> Unit
-) {
-    TextButton(
-        modifier = modifier,
-        onClick = onClick
-    ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                modifier = Modifier.size(22.dp)
-            )
-
-            Spacer(
-                modifier = Modifier.height(2.dp)
-            )
-
-            Text(
-                text = label,
-                style = MaterialTheme.typography.labelLarge
-            )
-        }
-    }
-}
-
-@Composable
-private fun ActionSheetHeader(
-    title: String,
-    onClose: () -> Unit
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(
-                start = 24.dp,
-                end = 12.dp,
-                bottom = 8.dp
-            ),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween
-    ) {
-        Text(
-            text = title,
-            style = MaterialTheme.typography.headlineSmall,
-            fontWeight = FontWeight.SemiBold
-        )
-
-        TextButton(
-            onClick = onClose
-        ) {
-            Text("Close")
-        }
-    }
-}
-
-@Composable
-private fun ActionSheetItem(
-    icon: ImageVector,
-    title: String,
-    description: String,
-    onClick: () -> Unit
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick)
-            .padding(
-                horizontal = 24.dp,
-                vertical = 16.dp
-            ),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = null,
-            modifier = Modifier.size(28.dp)
-        )
-
-        Column(
-            modifier = Modifier
-                .weight(1f)
-                .padding(start = 16.dp)
-        ) {
-            Text(
-                text = title,
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold
-            )
-
-            Spacer(
-                modifier = Modifier.height(4.dp)
-            )
-
-            Text(
-                text = description,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
         }
     }
 }
