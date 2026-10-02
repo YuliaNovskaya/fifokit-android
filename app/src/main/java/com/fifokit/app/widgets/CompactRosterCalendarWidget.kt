@@ -168,19 +168,8 @@ private fun CompactRosterCalendarContent(
             .clickable(
                 openAction
             )
-            .padding(12.dp)
+            .padding(8.dp)
     ) {
-        Text(
-            text = "FIFOKIT",
-            style = TextStyle(
-                color =
-                    compactOrange,
-                fontSize = 11.sp,
-                fontWeight =
-                    FontWeight.Bold
-            )
-        )
-
         when {
             !isPro -> {
                 Text(
@@ -235,30 +224,29 @@ private fun CompactRosterCalendarContent(
             else -> {
                 Text(
                     text =
-                        month.month
-                            .getDisplayName(
-                                JavaTextStyle
-                                    .FULL,
-                                Locale
-                                    .getDefault()
-                            ) +
+                        "FIFOKIT · " +
+                                month.month
+                                    .getDisplayName(
+                                        JavaTextStyle
+                                            .FULL,
+                                        Locale
+                                            .getDefault()
+                                    ) +
                                 " " +
                                 month.year,
                     style = TextStyle(
-                        color =
-                            compactWhite,
-                        fontSize = 16.sp,
-                        fontWeight =
-                            FontWeight.Bold
-                    )
+                        color = compactWhite,
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.Bold
+                    ),
+                    maxLines = 1
                 )
 
                 Text(
                     text = roster.name,
                     style = TextStyle(
-                        color =
-                            compactSecondary,
-                        fontSize = 10.sp
+                        color = compactSecondary,
+                        fontSize = 11.sp
                     ),
                     maxLines = 1
                 )
@@ -282,7 +270,7 @@ private fun CompactRosterCalendarContent(
                     style = TextStyle(
                         color =
                             compactSecondary,
-                        fontSize = 9.sp
+                        fontSize = 10.sp
                     ),
                     maxLines = 1
                 )
@@ -316,7 +304,7 @@ private fun WeekdayRow() {
                 style = TextStyle(
                     color =
                         compactSecondary,
-                    fontSize = 9.sp,
+                    fontSize = 10.sp,
                     fontWeight =
                         FontWeight.Bold,
                     textAlign =
@@ -424,7 +412,7 @@ private fun CompactCalendarRows(
                                             if (day.isToday) {
                                                 11.sp
                                             } else {
-                                                10.sp
+                                                11.sp
                                             },
                                         fontWeight =
                                             if (
