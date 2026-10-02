@@ -1,6 +1,7 @@
 package com.fifokit.app.domain.finance
 
 import com.fifokit.app.domain.model.RosterPattern
+import com.fifokit.app.domain.roster.AustralianState
 import junit.framework.TestCase.assertEquals
 import org.junit.Test
 import java.time.LocalDate
@@ -56,6 +57,11 @@ class FinanceCalculatorTest {
         )
 
         assertEquals(150000.0, result.baseEarnings, 0.001)
+        assertEquals(
+            62.5,
+            result.equivalentHourlyRate ?: 0.0,
+            0.001
+        )
     }
 
     @Test
@@ -72,6 +78,33 @@ class FinanceCalculatorTest {
 
         assertEquals(246, result.workDaysPerYear)
         assertEquals(119, result.restDaysPerYear)
+    }
+
+    @Test
+    fun publicHolidaysWorkedFollowActiveRoster() {
+        val result =
+            FinanceCalculator.calculateAnnualEarnings(
+                input = PayInput(
+                    rateType = PayRateType.DAILY,
+                    rate = 1.0
+                ),
+                pattern = RosterPattern.TWO_ONE,
+                rosterStartDate = LocalDate.of(
+                    2026,
+                    1,
+                    1
+                ),
+                year = 2026,
+                selectedStates =
+                    setOf(
+                        AustralianState.WA
+                    )
+            )
+
+        assertEquals(
+            11,
+            result.publicHolidaysWorked
+        )
     }
 
     @Test
