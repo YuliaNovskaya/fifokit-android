@@ -111,8 +111,8 @@ fun FinancialGoalScreen(
         mutableStateOf(false)
     }
 
-    var deleteGoalId by remember {
-        mutableStateOf<String?>(null)
+    var pendingDeleteGoal by remember {
+        mutableStateOf<FinancialGoal?>(null)
     }
 
     var newGoalName by remember {
@@ -153,13 +153,9 @@ fun FinancialGoalScreen(
     val editingGoal =
         draftGoal ?: storedEditingGoal
 
-    val deleteGoal =
-        deleteGoalId?.let { id ->
-            goals.firstOrNull {
-                it.id == id
-            } ?: draftGoal?.takeIf {
-                it.id == id
-            }
+    val hasFreeGoal =
+        goals.any {
+            it.id == "primary"
         }
 
     fun calculationFor(
@@ -321,9 +317,13 @@ fun FinancialGoalScreen(
                         val draft =
                             FinancialGoal(
                                 id =
-                                    UUID
-                                        .randomUUID()
-                                        .toString(),
+                                    if (hasFreeGoal) {
+                                        UUID
+                                            .randomUUID()
+                                            .toString()
+                                    } else {
+                                        "primary"
+                                    },
                                 name =
                                     newGoalName
                                         .trim()
@@ -366,12 +366,10 @@ fun FinancialGoalScreen(
         )
     }
 
-    if (
-        deleteGoal != null
-    ) {
+    pendingDeleteGoal?.let { deleteGoal ->
         AlertDialog(
             onDismissRequest = {
-                deleteGoalId =
+                pendingDeleteGoal =
                     null
             },
             title = {
@@ -387,7 +385,7 @@ fun FinancialGoalScreen(
                     ) {
                         "Delete \"" +
                                 deleteGoal.name +
-                                "\"? This will clear its saved values and keep an empty free goal slot."
+                                "\"? This cannot be undone."
                     } else {
                         "Delete \"" +
                                 deleteGoal.name +
@@ -406,7 +404,7 @@ fun FinancialGoalScreen(
                                 it.id == id
                             }
 
-                        deleteGoalId =
+                        pendingDeleteGoal =
                             null
 
                         if (isStored) {
@@ -432,7 +430,7 @@ fun FinancialGoalScreen(
             dismissButton = {
                 TextButton(
                     onClick = {
-                        deleteGoalId =
+                        pendingDeleteGoal =
                             null
                     }
                 ) {
@@ -523,7 +521,10 @@ fun FinancialGoalScreen(
                     modifier =
                         Modifier.fillMaxWidth(),
                     onClick = {
-                        if (
+                        if (!hasFreeGoal) {
+                            showCreateDialog =
+                                true
+                        } else if (
                             ProAccess.canUse(
                                 ProFeature
                                     .ADVANCED_FINANCIAL_GOALS
@@ -539,7 +540,11 @@ fun FinancialGoalScreen(
                     }
                 ) {
                     Text(
-                        "+ New goal · PRO"
+                        if (hasFreeGoal) {
+                            "+ New goal · PRO"
+                        } else {
+                            "+ New goal"
+                        }
                     )
                 }
 
@@ -586,8 +591,8 @@ fun FinancialGoalScreen(
                             }
                         },
                         onDelete = {
-                            deleteGoalId =
-                                goal.id
+                            pendingDeleteGoal =
+                                goal
                         }
                     )
 
@@ -808,8 +813,8 @@ fun FinancialGoalScreen(
                         modifier =
                             Modifier.fillMaxWidth(),
                         onClick = {
-                            deleteGoalId =
-                                goal.id
+                            pendingDeleteGoal =
+                                goal
                         }
                     ) {
                         Text(
