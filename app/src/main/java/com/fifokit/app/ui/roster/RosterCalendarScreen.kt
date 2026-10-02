@@ -32,19 +32,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import java.time.format.DateTimeFormatter
-import android.Manifest
 import android.app.Activity
 import android.content.Context
 import android.content.ContextWrapper
-import android.content.pm.PackageManager
-import android.os.Build
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.platform.LocalContext
-import androidx.core.content.ContextCompat
-import com.fifokit.app.notifications.RosterNotificationManager
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.material3.Scaffold
@@ -85,20 +78,7 @@ fun RosterCalendarScreen(
     val analytics = remember(context) {
         FirebaseAnalytics.getInstance(context)
     }
-    val notificationPermissionLauncher =
-        rememberLauncherForActivityResult(
-            contract = ActivityResultContracts.RequestPermission(),
-            onResult = { granted ->
-                if (granted) {
-                    analytics.logEvent(AnalyticsEvents.NOTIFICATION_ENABLED, null)
-                } else {
-                    analytics.logEvent(AnalyticsEvents.NOTIFICATION_DENIED, null)
-                }
-            }
-        )
-
     LaunchedEffect(Unit) {
-        RosterNotificationManager.createChannel(context)
         analytics.logEvent(AnalyticsEvents.CALENDAR_VIEWED, null)
         viewModel.refreshSharingStatus()
     }
@@ -464,24 +444,6 @@ fun RosterCalendarScreen(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            if (
-                Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
-                ContextCompat.checkSelfPermission(
-                    context,
-                    Manifest.permission.POST_NOTIFICATIONS
-                ) != PackageManager.PERMISSION_GRANTED
-            ) {
-                NotificationPermissionPrompt(
-                    onEnable = {
-                        notificationPermissionLauncher.launch(
-                            Manifest.permission.POST_NOTIFICATIONS
-                        )
-                    }
-                )
-
-                Spacer(modifier = Modifier.height(12.dp))
-            }
-
             if (calendarViewMode == CalendarViewMode.MONTH) {
 
                 WeekdayHeader()
@@ -530,40 +492,6 @@ fun RosterCalendarScreen(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-        }
-    }
-}
-
-@Composable
-private fun NotificationPermissionPrompt(
-    onEnable: () -> Unit
-) {
-    Surface(
-        modifier = Modifier.fillMaxWidth(),
-        shape = MaterialTheme.shapes.medium,
-        color = MaterialTheme.colorScheme.surfaceVariant
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(
-                    horizontal = 12.dp,
-                    vertical = 6.dp
-                ),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Text(
-                text = "Notifications are off",
-                style = MaterialTheme.typography.bodyMedium,
-                fontWeight = FontWeight.Medium
-            )
-
-            TextButton(
-                onClick = onEnable
-            ) {
-                Text("Enable")
-            }
         }
     }
 }
