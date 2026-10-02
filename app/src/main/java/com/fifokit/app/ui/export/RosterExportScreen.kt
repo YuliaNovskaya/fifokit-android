@@ -35,6 +35,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import com.fifokit.app.ui.components.FifokitBackButton
 import com.fifokit.app.ui.components.FifokitTopBar
+import com.fifokit.app.ui.components.calendarHorizontalSwipe
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -527,7 +528,15 @@ fun RosterExportScreen(
 
             ExportMonthPreview(
                 data = data,
-                month = selectedMonth
+                month = selectedMonth,
+                onPrevious = {
+                    selectedMonth =
+                        selectedMonth.minusMonths(1)
+                },
+                onNext = {
+                    selectedMonth =
+                        selectedMonth.plusMonths(1)
+                }
             )
 
             Spacer(
@@ -672,7 +681,9 @@ private fun monthLabel(
 @Composable
 private fun ExportMonthPreview(
     data: RosterExportData,
-    month: YearMonth
+    month: YearMonth,
+    onPrevious: () -> Unit,
+    onNext: () -> Unit
 ) {
     val cells =
         RosterExportCalendar.monthDays(
@@ -681,7 +692,12 @@ private fun ExportMonthPreview(
         )
 
     Surface(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .calendarHorizontalSwipe(
+                onPrevious = onPrevious,
+                onNext = onNext
+            ),
         shape = MaterialTheme.shapes.medium,
         color = MaterialTheme.colorScheme.surfaceVariant
     ) {
