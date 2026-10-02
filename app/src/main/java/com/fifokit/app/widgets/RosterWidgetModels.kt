@@ -44,7 +44,7 @@ data class WidgetCalendarDay(
     val isWorkDay: Boolean,
     val isToday: Boolean,
     val isPublicHoliday: Boolean,
-    val isShutdown: Boolean
+    val isShutdown: Boolean = false
 )
 
 class RosterWidgetDataSource(
