@@ -3,6 +3,7 @@ package com.fifokit.app.ui
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -309,6 +310,19 @@ fun FIFOKITApp(
             if (showPersistentNavigation) {
                 FifokitBottomNavigation(
                     onEdit = {
+                        showTogetherRoster = false
+                        selectedSharedRoster = null
+                        showSharedRosters = false
+                        showShareRoster = false
+                        showRosterExport = false
+                        showPro = false
+                        showAccount = false
+                        showFinancialGoal = false
+                        showAnnualEarnings = false
+                        showPayCalculator = false
+                        showSettings = false
+                        showRosterActionsSheet = false
+                        showToolsActionsSheet = false
                         screenOverride = false
                     },
                     onRoster = {
@@ -326,7 +340,20 @@ fun FIFOKITApp(
                         showToolsActionsSheet = true
                     },
                     onSettings = {
+                        showTogetherRoster = false
+                        selectedSharedRoster = null
+                        showSharedRosters = false
+                        showShareRoster = false
+                        showRosterExport = false
+                        showPro = false
+                        showAccount = false
+                        showFinancialGoal = false
+                        showAnnualEarnings = false
+                        showPayCalculator = false
+                        showRosterActionsSheet = false
+                        showToolsActionsSheet = false
                         showSettings = true
+                        screenOverride = true
                     }
                 )
             }
