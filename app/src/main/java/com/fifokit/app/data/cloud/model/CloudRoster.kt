@@ -8,13 +8,14 @@ data class CloudRoster(
     val customWorkDays: Int = 0,
     val customOffDays: Int = 0,
     val startDate: String = "",
+    val shutdownsJson: String = "[]",
     val selectedStates: List<String> = listOf("WA"),
     val isActive: Boolean = false,
 
     val createdAt: Long = 0L,
     val updatedAt: Long = 0L,
     val deviceId: String = "",
-    val schemaVersion: Int = 1,
+    val schemaVersion: Int = 2,
     val isDeleted: Boolean = false,
     val deletedAt: Long = 0L,
 
