@@ -26,7 +26,6 @@ import com.fifokit.app.domain.sharing.SharedRoster
 import com.fifokit.app.ui.auth.AccountScreen
 import com.fifokit.app.ui.auth.AuthViewModel
 import com.fifokit.app.ui.finance.AnnualEarningsScreen
-import com.fifokit.app.ui.finance.FinanceToolsScreen
 import com.fifokit.app.ui.finance.FinancialGoalScreen
 import com.fifokit.app.ui.finance.PayCalculatorScreen
 import com.fifokit.app.ui.export.RosterExportScreen
@@ -76,7 +75,7 @@ fun FIFOKITApp(
 
     var showSettings by remember { mutableStateOf(false) }
 
-    var showFinance by remember {
+    var openToolsSheet by remember {
         mutableStateOf(false)
     }
     var showPayCalculator by remember { mutableStateOf(false) }
@@ -124,7 +123,6 @@ fun FIFOKITApp(
                 showFinancialGoal = false
                 showAnnualEarnings = false
                 showPayCalculator = false
-                showFinance = false
                 showSettings = false
                 screenOverride = null
             }
@@ -142,7 +140,8 @@ fun FIFOKITApp(
                 showAnnualEarnings = false
                 showPayCalculator = false
                 showSettings = false
-                showFinance = true
+                screenOverride = true
+                openToolsSheet = true
             }
 
             AppLinkDestination.INVITE -> {
@@ -156,7 +155,6 @@ fun FIFOKITApp(
                 showFinancialGoal = false
                 showAnnualEarnings = false
                 showPayCalculator = false
-                showFinance = false
                 showSettings = false
                 showAcceptInvite =
                     inviteId != null
@@ -183,7 +181,6 @@ fun FIFOKITApp(
             showFinancialGoal ||
             showAnnualEarnings ||
             showPayCalculator ||
-            showFinance ||
             showSettings
     ) {
         when {
@@ -226,7 +223,6 @@ fun FIFOKITApp(
                 showPayCalculator = false
 
             showFinance ->
-                showFinance = false
 
             showSettings ->
                 showSettings = false
@@ -383,37 +379,6 @@ fun FIFOKITApp(
                         showPayCalculator = false
                     }
                 )
-            } else if (showFinance) {
-                FinanceToolsScreen(
-                    selectedPattern = rosterSetupViewModel.selectedPattern,
-                    isCustomRoster = rosterSetupViewModel.isCustomRoster,
-                    customWorkDays = rosterSetupViewModel.customWorkDays,
-                    customOffDays = rosterSetupViewModel.customOffDays,
-                    rosterStartDate = rosterSetupViewModel.startDate,
-                    onBack = {
-                        showFinance = false
-                    },
-                    onPayCalculator = {
-                        showPayCalculator = true
-                    },
-                    onAnnualEarnings = {
-                        if (
-                            ProAccess.canUse(
-                                ProFeature.DETAILED_ANNUAL_EARNINGS
-                            )
-                        ) {
-                            showAnnualEarnings = true
-                        } else {
-                            analytics.logEvent(AnalyticsEvents.PRO_FEATURE_LOCKED) {
-                                param(AnalyticsParams.FEATURE, "annual_earnings")
-                            }
-                            showPro = true
-                        }
-                    },
-                    onFinancialGoal = {
-                        showFinancialGoal = true
-                    }
-                )
             } else if (showAccount) {
                 AccountScreen(
                     authViewModel = authViewModel,
@@ -473,11 +438,37 @@ fun FIFOKITApp(
                     onSettings = {
                         showSettings = true
                     },
-                    onFinance = {
-                        showFinance = true
-                    },
                     onSharedRosters = {
                         showSharedRosters = true
+                    },
+                    onPayCalculator = {
+                        showPayCalculator = true
+                    },
+                    onAnnualEarnings = {
+                        if (
+                            ProAccess.canUse(
+                                ProFeature.DETAILED_ANNUAL_EARNINGS
+                            )
+                        ) {
+                            showAnnualEarnings = true
+                        } else {
+                            analytics.logEvent(
+                                AnalyticsEvents.PRO_FEATURE_LOCKED
+                            ) {
+                                param(
+                                    AnalyticsParams.FEATURE,
+                                    "annual_earnings"
+                                )
+                            }
+                            showPro = true
+                        }
+                    },
+                    onFinancialGoal = {
+                        showFinancialGoal = true
+                    },
+                    openToolsSheet = openToolsSheet,
+                    onToolsSheetOpened = {
+                        openToolsSheet = false
                     },
                     onProRequested = { feature ->
                         analytics.logEvent(AnalyticsEvents.PRO_FEATURE_LOCKED) {
