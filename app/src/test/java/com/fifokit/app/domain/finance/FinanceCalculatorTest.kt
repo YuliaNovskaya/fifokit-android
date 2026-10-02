@@ -113,6 +113,112 @@ class FinanceCalculatorTest {
     }
 
     @Test
+    fun hourlyPipIsAddedToAnnualEarnings() {
+        val result =
+            FinanceCalculator.calculateAnnualEarnings(
+                input = PayInput(
+                    rateType = PayRateType.HOURLY,
+                    rate = 50.0,
+                    hoursPerWorkDay = 10.0,
+                    pipType = PipType.PER_HOUR,
+                    pipValue = 5.0
+                ),
+                workDaysPerYear = 100
+            )
+
+        assertEquals(
+            5000.0,
+            result.pipEarnings,
+            0.001
+        )
+
+        assertEquals(
+            55000.0,
+            result.totalGrossEarnings,
+            0.001
+        )
+    }
+
+    @Test
+    fun dailyPipIsAddedToAnnualEarnings() {
+        val result =
+            FinanceCalculator.calculateAnnualEarnings(
+                input = PayInput(
+                    rateType = PayRateType.DAILY,
+                    rate = 800.0,
+                    hoursPerWorkDay = 12.0,
+                    pipType = PipType.PER_DAY,
+                    pipValue = 50.0
+                ),
+                workDaysPerYear = 100
+            )
+
+        assertEquals(
+            5000.0,
+            result.pipEarnings,
+            0.001
+        )
+
+        assertEquals(
+            85000.0,
+            result.totalGrossEarnings,
+            0.001
+        )
+    }
+
+    @Test
+    fun percentagePipUsesBaseEarnings() {
+        val result =
+            FinanceCalculator.calculateAnnualEarnings(
+                input = PayInput(
+                    rateType = PayRateType.ANNUAL_SALARY,
+                    rate = 150000.0,
+                    pipType = PipType.PERCENT_BASE,
+                    pipValue = 10.0
+                ),
+                workDaysPerYear = 200
+            )
+
+        assertEquals(
+            15000.0,
+            result.pipEarnings,
+            0.001
+        )
+
+        assertEquals(
+            165000.0,
+            result.totalGrossEarnings,
+            0.001
+        )
+    }
+
+    @Test
+    fun fixedPipIsAddedOnce() {
+        val result =
+            FinanceCalculator.calculateAnnualEarnings(
+                input = PayInput(
+                    rateType = PayRateType.ANNUAL_SALARY,
+                    rate = 150000.0,
+                    pipType = PipType.FIXED_AMOUNT,
+                    pipValue = 12000.0
+                ),
+                workDaysPerYear = 200
+            )
+
+        assertEquals(
+            12000.0,
+            result.pipEarnings,
+            0.001
+        )
+
+        assertEquals(
+            162000.0,
+            result.totalGrossEarnings,
+            0.001
+        )
+    }
+
+    @Test
     fun financialGoalCalculatesRequiredContributions() {
         val goal = FinancialGoal(
             targetAmount = 10000.0,
