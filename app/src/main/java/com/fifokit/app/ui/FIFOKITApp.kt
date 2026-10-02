@@ -302,7 +302,7 @@ fun FIFOKITApp(
     }
 
     val showPersistentNavigation =
-        rosterSetupViewModel.hasSavedRoster == true &&
+        rosterSetupViewModel.rosters.isNotEmpty() &&
                 !showAcceptInvite
 
     Scaffold(
