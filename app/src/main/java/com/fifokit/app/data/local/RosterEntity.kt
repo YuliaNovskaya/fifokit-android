@@ -28,6 +28,8 @@ data class RosterEntity(
 
     val customOffDays: Int,
 
+    val shutdownsJson: String = "[]",
+
     val createdAt: Long = System.currentTimeMillis(),
 
     val updatedAt: Long = System.currentTimeMillis(),
