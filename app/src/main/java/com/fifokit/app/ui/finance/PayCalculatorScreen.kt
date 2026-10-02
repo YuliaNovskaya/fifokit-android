@@ -82,6 +82,7 @@ fun PayCalculatorScreen(
     )
 
     val scope = rememberCoroutineScope()
+    val scrollState = rememberScrollState()
 
     var rateType by remember {
         mutableStateOf(PayRateType.HOURLY)
@@ -150,6 +151,14 @@ fun PayCalculatorScreen(
             }
     }
 
+    LaunchedEffect(annualResult) {
+        if (annualResult != null) {
+            scrollState.animateScrollTo(
+                scrollState.maxValue
+            )
+        }
+    }
+
     Scaffold(
         topBar = {
             FifokitTopBar(
@@ -163,7 +172,7 @@ fun PayCalculatorScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .verticalScroll(rememberScrollState())
+                .verticalScroll(scrollState)
                 .padding(16.dp),
             verticalArrangement = Arrangement.Top
         ) {
@@ -435,6 +444,16 @@ fun PayCalculatorScreen(
                 )
 
                 Text(
+                    text = "Results",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold
+                )
+
+                Spacer(
+                    modifier = Modifier.height(8.dp)
+                )
+
+                Text(
                     text = when (rateType) {
                         PayRateType.HOURLY ->
                             "Gross per work day: ${FinanceFormatter.money(amount)}"
@@ -509,6 +528,10 @@ fun PayCalculatorScreen(
                                 result.publicHolidaysWorked,
                     style = MaterialTheme.typography.bodyLarge,
                     fontWeight = FontWeight.Medium
+                )
+
+                Spacer(
+                    modifier = Modifier.height(24.dp)
                 )
             }
 
