@@ -275,7 +275,7 @@ fun TogetherRosterCalendarScreen(
                                             "${weekend.startDate.format(dateFormatter)} - " +
                                             weekend.endDate.format(dateFormatter),
                                 style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.Medium
+                                fontWeight = FontWeight.Medium
                             )
                         }
 
@@ -297,7 +297,7 @@ fun TogetherRosterCalendarScreen(
                                                         "(${period.days} days)"
                                             },
                                 style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.Medium
+                                fontWeight = FontWeight.Medium
                             )
                         }
                 }
@@ -549,11 +549,7 @@ fun TogetherRosterCalendarScreen(
                                 modifier = Modifier.fillMaxSize()
                             ) {
 
-                                Box(
-                                    modifier = Modifier.fillMaxSize()
-                                ) {
-
-                                    if (isPublicHoliday) {
+                                if (isPublicHoliday) {
                                         Box(
                                             modifier = Modifier
                                                 .fillMaxWidth()
@@ -618,7 +614,6 @@ fun TogetherRosterCalendarScreen(
                                             maxLines = 2
                                         )
                                     }
-                                }
                             }
                         }
                     }
@@ -644,14 +639,20 @@ fun TogetherRosterCalendarScreen(
                         text = "BOTH OFF",
                         background =
                             MaterialTheme.colorScheme
-                                .tertiaryContainer
+                                .tertiaryContainer,
+                        contentColor =
+                            MaterialTheme.colorScheme
+                                .onTertiaryContainer
                     )
 
                     TogetherLegendChip(
                         text = "BOTH WORK",
                         background =
                             MaterialTheme.colorScheme
-                                .primaryContainer
+                                .primaryContainer,
+                        contentColor =
+                            MaterialTheme.colorScheme
+                                .onPrimaryContainer
                     )
                 }
 
@@ -664,21 +665,30 @@ fun TogetherRosterCalendarScreen(
                         text = "ME WORK",
                         background =
                             MaterialTheme.colorScheme
-                                .surfaceVariant
+                                .surfaceVariant,
+                        contentColor =
+                            MaterialTheme.colorScheme
+                                .onSurfaceVariant
                     )
 
                     TogetherLegendChip(
                         text = "THEM WORK",
                         background =
                             MaterialTheme.colorScheme
-                                .surfaceContainerHigh
+                                .surfaceContainerHigh,
+                        contentColor =
+                            MaterialTheme.colorScheme
+                                .onSurface
                     )
 
                     TogetherLegendChip(
                         text = "PH ME/THEM",
                         background =
                             MaterialTheme.colorScheme
-                                .secondaryContainer
+                                .secondaryContainer,
+                        contentColor =
+                            MaterialTheme.colorScheme
+                                .onSecondaryContainer
                     )
                 }
             }
@@ -689,11 +699,13 @@ fun TogetherRosterCalendarScreen(
 @Composable
 private fun TogetherLegendChip(
     text: String,
-    background: Color
+    background: Color,
+    contentColor: Color
 ) {
     Surface(
         shape = MaterialTheme.shapes.small,
-        color = background
+        color = background,
+        contentColor = contentColor
     ) {
         Text(
             text = text,
@@ -703,7 +715,7 @@ private fun TogetherLegendChip(
             ),
             style = MaterialTheme.typography.labelMedium,
             fontWeight = FontWeight.SemiBold,
-            color = MaterialTheme.colorScheme.onSurface
+            color = contentColor
         )
     }
 }
