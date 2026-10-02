@@ -367,8 +367,7 @@ fun FinancialGoalScreen(
     }
 
     if (
-        deleteGoal != null &&
-        deleteGoal.id != "primary"
+        deleteGoal != null
     ) {
         AlertDialog(
             onDismissRequest = {
@@ -382,9 +381,18 @@ fun FinancialGoalScreen(
             },
             text = {
                 Text(
-                    "Delete \"" +
-                            deleteGoal.name +
-                            "\"? This cannot be undone."
+                    if (
+                        deleteGoal.id ==
+                        "primary"
+                    ) {
+                        "Delete \"" +
+                                deleteGoal.name +
+                                "\"? This will clear its saved values and keep an empty free goal slot."
+                    } else {
+                        "Delete \"" +
+                                deleteGoal.name +
+                                "\"? This cannot be undone."
+                    }
                 )
             },
             confirmButton = {
@@ -508,6 +516,35 @@ fun FinancialGoalScreen(
 
                 Spacer(
                     modifier =
+                        Modifier.height(12.dp)
+                )
+
+                OutlinedButton(
+                    modifier =
+                        Modifier.fillMaxWidth(),
+                    onClick = {
+                        if (
+                            ProAccess.canUse(
+                                ProFeature
+                                    .ADVANCED_FINANCIAL_GOALS
+                            )
+                        ) {
+                            showCreateDialog =
+                                true
+                        } else {
+                            onProRequested(
+                                "advanced_financial_goals"
+                            )
+                        }
+                    }
+                ) {
+                    Text(
+                        "+ New goal · PRO"
+                    )
+                }
+
+                Spacer(
+                    modifier =
                         Modifier.height(16.dp)
                 )
 
@@ -548,18 +585,10 @@ fun FinancialGoalScreen(
                                 )
                             }
                         },
-                        onDelete =
-                            if (
-                                goal.id !=
-                                "primary"
-                            ) {
-                                {
-                                    deleteGoalId =
-                                        goal.id
-                                }
-                            } else {
-                                null
-                            }
+                        onDelete = {
+                            deleteGoalId =
+                                goal.id
+                        }
                     )
 
                     Spacer(
@@ -570,29 +599,6 @@ fun FinancialGoalScreen(
                     )
                 }
 
-                OutlinedButton(
-                    modifier =
-                        Modifier.fillMaxWidth(),
-                    onClick = {
-                        if (
-                            ProAccess.canUse(
-                                ProFeature
-                                    .ADVANCED_FINANCIAL_GOALS
-                            )
-                        ) {
-                            showCreateDialog =
-                                true
-                        } else {
-                            onProRequested(
-                                "advanced_financial_goals"
-                            )
-                        }
-                    }
-                ) {
-                    Text(
-                        "+ New goal · PRO"
-                    )
-                }
             } else {
                 val goal =
                     editingGoal
@@ -791,29 +797,24 @@ fun FinancialGoalScreen(
                         )
                     }
 
-                    if (
-                        goal.id !=
-                        "primary"
-                    ) {
-                        Spacer(
-                            modifier =
-                                Modifier.height(
-                                    8.dp
-                                )
-                        )
-
-                        OutlinedButton(
-                            modifier =
-                                Modifier.fillMaxWidth(),
-                            onClick = {
-                                deleteGoalId =
-                                    goal.id
-                            }
-                        ) {
-                            Text(
-                                "Delete goal"
+                    Spacer(
+                        modifier =
+                            Modifier.height(
+                                8.dp
                             )
+                    )
+
+                    OutlinedButton(
+                        modifier =
+                            Modifier.fillMaxWidth(),
+                        onClick = {
+                            deleteGoalId =
+                                goal.id
                         }
+                    ) {
+                        Text(
+                            "Delete goal"
+                        )
                     }
 
                     validationError
@@ -845,7 +846,7 @@ private fun FinancialGoalCard(
     calculation: FinancialGoalResult?,
     isProGoal: Boolean,
     onEdit: () -> Unit,
-    onDelete: (() -> Unit)?
+    onDelete: () -> Unit
 ) {
     Surface(
         modifier =
@@ -984,24 +985,20 @@ private fun FinancialGoalCard(
                 )
             }
 
-            if (
-                onDelete != null
-            ) {
-                Spacer(
-                    modifier =
-                        Modifier.height(8.dp)
-                )
+            Spacer(
+                modifier =
+                    Modifier.height(8.dp)
+            )
 
-                OutlinedButton(
-                    modifier =
-                        Modifier.fillMaxWidth(),
-                    onClick =
-                        onDelete
-                ) {
-                    Text(
-                        "Delete goal"
-                    )
-                }
+            OutlinedButton(
+                modifier =
+                    Modifier.fillMaxWidth(),
+                onClick =
+                    onDelete
+            ) {
+                Text(
+                    "Delete goal"
+                )
             }
         }
     }
