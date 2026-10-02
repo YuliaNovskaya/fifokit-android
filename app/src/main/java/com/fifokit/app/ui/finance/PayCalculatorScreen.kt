@@ -427,9 +427,10 @@ fun PayCalculatorScreen(
                     Text(
                         text =
                             "Equivalent hourly rate: " +
-                                    FinanceFormatter.money(hourly),
-                        style = MaterialTheme.typography.bodyLarge,
-                        fontWeight = FontWeight.Medium
+                                    FinanceFormatter.money(hourly) +
+                                    " / hour",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
                     )
                 }
 
