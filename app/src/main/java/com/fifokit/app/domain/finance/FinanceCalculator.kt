@@ -32,14 +32,23 @@ object FinanceCalculator {
             input.allowancePerWorkDay * workDaysPerYear
 
         val equivalentHourlyRate =
-            if (
-                input.rateType ==
-                PayRateType.ANNUAL_SALARY &&
-                workHoursPerYear > 0.0
-            ) {
-                input.rate / workHoursPerYear
-            } else {
-                null
+            when (input.rateType) {
+                PayRateType.DAILY ->
+                    if (input.hoursPerWorkDay > 0.0) {
+                        input.rate / input.hoursPerWorkDay
+                    } else {
+                        null
+                    }
+
+                PayRateType.ANNUAL_SALARY ->
+                    if (workHoursPerYear > 0.0) {
+                        input.rate / workHoursPerYear
+                    } else {
+                        null
+                    }
+
+                PayRateType.HOURLY ->
+                    null
             }
 
         return EarningsResult(
