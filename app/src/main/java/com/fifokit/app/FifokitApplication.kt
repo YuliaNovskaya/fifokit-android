@@ -4,6 +4,7 @@ import android.app.Application
 import com.fifokit.app.data.billing.BillingRepository
 import com.fifokit.app.widgets.RosterWidgetObserver
 import com.fifokit.app.growth.InstallAttributionTracker
+import com.fifokit.app.notifications.RosterNotificationManager
 
 class FifokitApplication : Application() {
 
@@ -17,6 +18,9 @@ class FifokitApplication : Application() {
         super.onCreate()
 
         billingRepository = BillingRepository(this)
+
+        RosterNotificationManager.createChannel(this)
+        RosterNotificationManager.createSharedTimeChannel(this)
 
         rosterWidgetObserver =
             RosterWidgetObserver(this)
