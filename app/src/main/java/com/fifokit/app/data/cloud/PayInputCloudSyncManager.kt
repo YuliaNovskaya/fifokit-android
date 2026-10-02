@@ -60,9 +60,17 @@ class PayInputCloudSyncManager(
                         localInput.pipType.name,
                     pipValue =
                         localInput.pipValue,
+                    localRatesEnabled =
+                        localInput.localRatesEnabled,
+                    localWeekdayHourlyRate =
+                        localInput.localWeekdayHourlyRate,
+                    localSaturdayHourlyRate =
+                        localInput.localSaturdayHourlyRate,
+                    localHoursPerDay =
+                        localInput.localHoursPerDay,
                     updatedAt = localUpdatedAt,
                     deviceId = deviceId,
-                    schemaVersion = 2
+                    schemaVersion = 3
                 )
             )
 
@@ -102,7 +110,15 @@ class PayInputCloudSyncManager(
                         cloudInput.allowancePerWorkDay,
                     pipType = pipType,
                     pipValue =
-                        cloudInput.pipValue
+                        cloudInput.pipValue,
+                    localRatesEnabled =
+                        cloudInput.localRatesEnabled,
+                    localWeekdayHourlyRate =
+                        cloudInput.localWeekdayHourlyRate,
+                    localSaturdayHourlyRate =
+                        cloudInput.localSaturdayHourlyRate,
+                    localHoursPerDay =
+                        cloudInput.localHoursPerDay
                 ),
                 updatedAt =
                     cloudInput.updatedAt
@@ -129,11 +145,19 @@ class PayInputCloudSyncManager(
                         localInput.pipType.name,
                     pipValue =
                         localInput.pipValue,
+                    localRatesEnabled =
+                        localInput.localRatesEnabled,
+                    localWeekdayHourlyRate =
+                        localInput.localWeekdayHourlyRate,
+                    localSaturdayHourlyRate =
+                        localInput.localSaturdayHourlyRate,
+                    localHoursPerDay =
+                        localInput.localHoursPerDay,
                     updatedAt =
                         localUpdatedAt,
                     deviceId =
                         deviceId,
-                    schemaVersion = 2
+                    schemaVersion = 3
                 )
             )
 
