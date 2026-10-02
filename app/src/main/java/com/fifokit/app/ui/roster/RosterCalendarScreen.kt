@@ -67,6 +67,7 @@ import com.fifokit.app.analytics.AnalyticsEvents
 import com.fifokit.app.analytics.AnalyticsParams
 import com.fifokit.app.growth.GrowthEngagementTracker
 import com.fifokit.app.growth.InAppReviewLauncher
+import com.fifokit.app.ui.components.FifokitTopBar
 
 private enum class CalendarViewMode {
     MONTH,
@@ -201,66 +202,8 @@ fun RosterCalendarScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = {
-                    Text("Roster Calendar")
-                },
-                actions = {
-                    TextButton(
-                        onClick = {
-                            analytics.logEvent(
-                                AnalyticsEvents.FEATURE_OPENED
-                            ) {
-                                param(
-                                    AnalyticsParams.FEATURE,
-                                    "finance_tools"
-                                )
-                            }
-                            onFinance()
-                        }
-                    ) {
-                        Text("Tools")
-                    }
-                    TextButton(
-                        onClick = {
-                            onExportRoster(month)
-                        }
-                    ) {
-                        Text("Export")
-                    }
-
-                    TextButton(
-                        onClick = onShareRoster
-                    ) {
-                        Text("Share")
-                    }
-                    TextButton(
-                        onClick = {
-                            analytics.logEvent(
-                                AnalyticsEvents.FEATURE_OPENED
-                            ) {
-                                param(
-                                    AnalyticsParams.FEATURE,
-                                    "partner_sharing"
-                                )
-                            }
-                            onSharedRosters()
-                        }
-                    ) {
-                        Text("Shared")
-                    }
-                    TextButton(
-                        onClick = onSettings
-                    ) {
-                        Text("Settings")
-                    }
-
-                    TextButton(
-                        onClick = onBack
-                    ) {
-                        Text("Edit")
-                    }
-                }
+            FifokitTopBar(
+                title = "Roster Calendar"
             )
         }
     ) { innerPadding ->
@@ -566,6 +509,106 @@ fun RosterCalendarScreen(
 
             Spacer(modifier = Modifier.height(12.dp))
 
+            CalendarActions(
+                onTools = {
+                    analytics.logEvent(
+                        AnalyticsEvents.FEATURE_OPENED
+                    ) {
+                        param(
+                            AnalyticsParams.FEATURE,
+                            "finance_tools"
+                        )
+                    }
+                    onFinance()
+                },
+                onExport = {
+                    onExportRoster(month)
+                },
+                onShare = onShareRoster,
+                onShared = {
+                    analytics.logEvent(
+                        AnalyticsEvents.FEATURE_OPENED
+                    ) {
+                        param(
+                            AnalyticsParams.FEATURE,
+                            "partner_sharing"
+                        )
+                    }
+                    onSharedRosters()
+                },
+                onSettings = onSettings,
+                onEdit = onBack
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+        }
+    }
+}
+
+@Composable
+private fun CalendarActions(
+    onTools: () -> Unit,
+    onExport: () -> Unit,
+    onShare: () -> Unit,
+    onShared: () -> Unit,
+    onSettings: () -> Unit,
+    onEdit: () -> Unit
+) {
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            OutlinedButton(
+                modifier = Modifier.weight(1f),
+                onClick = onTools
+            ) {
+                Text("Tools")
+            }
+
+            OutlinedButton(
+                modifier = Modifier.weight(1f),
+                onClick = onShare
+            ) {
+                Text("Share")
+            }
+
+            OutlinedButton(
+                modifier = Modifier.weight(1f),
+                onClick = onEdit
+            ) {
+                Text("Edit")
+            }
+        }
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            OutlinedButton(
+                modifier = Modifier.weight(1f),
+                onClick = onExport
+            ) {
+                Text("Export")
+            }
+
+            OutlinedButton(
+                modifier = Modifier.weight(1f),
+                onClick = onShared
+            ) {
+                Text("Shared")
+            }
+
+            OutlinedButton(
+                modifier = Modifier.weight(1f),
+                onClick = onSettings
+            ) {
+                Text("Settings")
+            }
         }
     }
 }
