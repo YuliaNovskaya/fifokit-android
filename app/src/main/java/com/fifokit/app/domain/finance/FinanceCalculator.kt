@@ -3,6 +3,8 @@ package com.fifokit.app.domain.finance
 import kotlin.math.ceil
 import com.fifokit.app.domain.model.RosterPattern
 import com.fifokit.app.domain.roster.RosterCalculator
+import com.fifokit.app.domain.roster.AustralianState
+import com.fifokit.app.domain.roster.PublicHolidayProvider
 import java.time.LocalDate
 
 object FinanceCalculator {
@@ -29,13 +31,25 @@ object FinanceCalculator {
         val allowances =
             input.allowancePerWorkDay * workDaysPerYear
 
+        val equivalentHourlyRate =
+            if (
+                input.rateType ==
+                PayRateType.ANNUAL_SALARY &&
+                workHoursPerYear > 0.0
+            ) {
+                input.rate / workHoursPerYear
+            } else {
+                null
+            }
+
         return EarningsResult(
             workDaysPerYear = workDaysPerYear,
             restDaysPerYear = 365 - workDaysPerYear,
             workHoursPerYear = workHoursPerYear,
             baseEarnings = baseEarnings,
             allowances = allowances,
-            totalGrossEarnings = baseEarnings + allowances
+            totalGrossEarnings = baseEarnings + allowances,
+            equivalentHourlyRate = equivalentHourlyRate
         )
     }
 
@@ -68,7 +82,8 @@ object FinanceCalculator {
         input: PayInput,
         pattern: RosterPattern,
         rosterStartDate: LocalDate,
-        year: Int
+        year: Int,
+        selectedStates: Set<AustralianState> = emptySet()
     ): EarningsResult {
 
         val firstDay = LocalDate.of(year, 1, 1)
@@ -100,15 +115,28 @@ object FinanceCalculator {
         )
 
         return result.copy(
-            restDaysPerYear = totalDays - workDays
+            restDaysPerYear = totalDays - workDays,
+            publicHolidaysWorked =
+                countPublicHolidaysWorked(
+                    year = year,
+                    states = selectedStates
+                ) { holidayDate ->
+                    RosterCalculator.isWorkDay(
+                        date = holidayDate,
+                        startDate = rosterStartDate,
+                        pattern = pattern
+                    )
+                }
         )
     }
+
     fun calculateAnnualEarnings(
         input: PayInput,
         rosterStartDate: LocalDate,
         workDays: Int,
         offDays: Int,
-        year: Int
+        year: Int,
+        selectedStates: Set<AustralianState> = emptySet()
     ): EarningsResult {
 
         val firstDay = LocalDate.of(year, 1, 1)
@@ -139,8 +167,39 @@ object FinanceCalculator {
             input = input,
             workDaysPerYear = workDaysInYear
         ).copy(
-            restDaysPerYear = totalDays - workDaysInYear
+            restDaysPerYear = totalDays - workDaysInYear,
+            publicHolidaysWorked =
+                countPublicHolidaysWorked(
+                    year = year,
+                    states = selectedStates
+                ) { holidayDate ->
+                    RosterCalculator.isWorkDay(
+                        date = holidayDate,
+                        startDate = rosterStartDate,
+                        workDays = workDays,
+                        offDays = offDays
+                    )
+                }
         )
+    }
+
+    private fun countPublicHolidaysWorked(
+        year: Int,
+        states: Set<AustralianState>,
+        isWorkDay: (LocalDate) -> Boolean
+    ): Int {
+        if (states.isEmpty()) {
+            return 0
+        }
+
+        return PublicHolidayProvider
+            .holidaysFor(
+                year = year,
+                states = states
+            )
+            .map { it.date }
+            .distinct()
+            .count(isWorkDay)
     }
 
 }
