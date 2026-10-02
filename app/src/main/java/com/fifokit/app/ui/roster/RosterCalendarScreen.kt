@@ -367,7 +367,6 @@ fun RosterCalendarScreen(
         },
         bottomBar = {
             CalendarBottomNavigation(
-                onCalendar = {},
                 onEdit = onBack,
                 onRoster = {
                     showRosterActionsSheet = true
@@ -695,7 +694,6 @@ fun RosterCalendarScreen(
 
 @Composable
 private fun CalendarBottomNavigation(
-    onCalendar: () -> Unit,
     onEdit: () -> Unit,
     onRoster: () -> Unit,
     onTools: () -> Unit,
@@ -713,18 +711,6 @@ private fun CalendarBottomNavigation(
                 ),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            TextButton(
-                modifier = Modifier.weight(1f),
-                onClick = onCalendar
-            ) {
-                Text(
-                    text = "Calendar",
-                    style = MaterialTheme.typography.labelLarge,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.primary
-                )
-            }
-
             TextButton(
                 modifier = Modifier.weight(1f),
                 onClick = onEdit
