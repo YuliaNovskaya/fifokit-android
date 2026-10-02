@@ -54,6 +54,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.TopAppBar
 import com.fifokit.app.ui.components.FifokitBackButton
 import com.fifokit.app.ui.components.FifokitTopBar
+import com.fifokit.app.ui.components.calendarHorizontalSwipe
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.sp
 
@@ -185,6 +186,14 @@ fun TogetherRosterCalendarScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
+                .calendarHorizontalSwipe(
+                    onPrevious = {
+                        month = month.minusMonths(1)
+                    },
+                    onNext = {
+                        month = month.plusMonths(1)
+                    }
+                )
                 .padding(horizontal = 16.dp)
         ) {
 
