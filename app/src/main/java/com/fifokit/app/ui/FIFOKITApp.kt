@@ -487,6 +487,19 @@ fun FIFOKITApp(
                 FinancialGoalScreen(
                     onBack = {
                         showFinancialGoal = false
+                    },
+                    onProRequested = { feature ->
+                        analytics.logEvent(
+                            AnalyticsEvents.PRO_FEATURE_LOCKED
+                        ) {
+                            param(
+                                AnalyticsParams.FEATURE,
+                                feature
+                            )
+                        }
+
+                        showFinancialGoal = false
+                        showPro = true
                     }
                 )
             } else if (showAnnualEarnings) {
