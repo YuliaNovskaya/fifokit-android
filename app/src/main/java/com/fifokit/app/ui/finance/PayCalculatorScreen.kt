@@ -29,6 +29,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.fifokit.app.domain.finance.PayRateType
+import com.fifokit.app.domain.finance.PipType
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.text.input.KeyboardType
 import com.fifokit.app.domain.finance.EarningsResult
@@ -98,6 +99,14 @@ fun PayCalculatorScreen(
         mutableStateOf("")
     }
 
+    var pipType by remember {
+        mutableStateOf(PipType.NONE)
+    }
+
+    var pipValue by remember {
+        mutableStateOf("")
+    }
+
     var validationError by remember {
         mutableStateOf<String?>(null)
     }
@@ -128,6 +137,16 @@ fun PayCalculatorScreen(
                 ""
             } else {
                 savedPayInput.allowancePerWorkDay.toString()
+            }
+
+        pipType =
+            savedPayInput.pipType
+
+        pipValue =
+            if (savedPayInput.pipValue == 0.0) {
+                ""
+            } else {
+                savedPayInput.pipValue.toString()
             }
     }
 
@@ -263,6 +282,28 @@ fun PayCalculatorScreen(
             )
 
             Spacer(
+                modifier = Modifier.height(20.dp)
+            )
+
+            PipInputSection(
+                pipType = pipType,
+                pipValue = pipValue,
+                onPipTypeChange = {
+                    pipType = it
+                    pipValue = ""
+                    calculatedAmount = null
+                    annualResult = null
+                    validationError = null
+                },
+                onPipValueChange = {
+                    pipValue = it
+                    calculatedAmount = null
+                    annualResult = null
+                    validationError = null
+                }
+            )
+
+            Spacer(
                 modifier = Modifier.height(24.dp)
             )
 
@@ -275,6 +316,13 @@ fun PayCalculatorScreen(
                     val allowanceValue =
                         allowancePerDay.toDoubleOrNull() ?: 0.0
 
+                    val pipNumericValue =
+                        if (pipType == PipType.NONE) {
+                            0.0
+                        } else {
+                            pipValue.toDoubleOrNull()
+                        }
+
                     validationError = when {
                         rateValue == null || rateValue <= 0.0 ->
                             "Enter a valid pay rate"
@@ -284,6 +332,10 @@ fun PayCalculatorScreen(
 
                         allowanceValue < 0.0 ->
                             "Allowance cannot be negative"
+
+                        pipNumericValue == null ||
+                                pipNumericValue < 0.0 ->
+                            "Enter a valid PIP value"
 
                         else ->
                             null
@@ -295,7 +347,9 @@ fun PayCalculatorScreen(
                             rateType = rateType,
                             rate = rateValue!!,
                             hoursPerWorkDay = hoursValue!!,
-                            allowancePerWorkDay = allowanceValue
+                            allowancePerWorkDay = allowanceValue,
+                            pipType = pipType,
+                            pipValue = pipNumericValue!!
                         )
                         scope.launch {
                             financePreferences.savePayInput(input)
@@ -418,7 +472,22 @@ fun PayCalculatorScreen(
                 )
 
                 Text(
-                    text = "Annual gross: ${FinanceFormatter.money(result.totalGrossEarnings)}",
+                    text = "Base: ${FinanceFormatter.money(result.baseEarnings)}",
+                    style = MaterialTheme.typography.bodyLarge
+                )
+
+                Text(
+                    text = "PIP: ${FinanceFormatter.money(result.pipEarnings)}",
+                    style = MaterialTheme.typography.bodyLarge
+                )
+
+                Text(
+                    text = "Allowances: ${FinanceFormatter.money(result.allowances)}",
+                    style = MaterialTheme.typography.bodyLarge
+                )
+
+                Text(
+                    text = "Total annual gross: ${FinanceFormatter.money(result.totalGrossEarnings)}",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold
                 )
