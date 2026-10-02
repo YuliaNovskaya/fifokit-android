@@ -381,6 +381,14 @@ fun AnnualEarningsScreen(
                     "Work hours: ${"%.1f".format(result.workHoursPerYear)}"
                 )
 
+                Text(
+                    text =
+                        "Public holidays worked: " +
+                                result.publicHolidaysWorked,
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontWeight = FontWeight.Medium
+                )
+
                 Spacer(
                     modifier = Modifier.height(12.dp)
                 )
@@ -398,6 +406,17 @@ fun AnnualEarningsScreen(
                     fontWeight = FontWeight.Bold
                 )
 
+                result.equivalentHourlyRate?.let { hourly ->
+                    Text(
+                        text =
+                            "Equivalent hourly rate: " +
+                                    FinanceFormatter.money(hourly) +
+                                    " / hour",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+
                 Text(
                     "Allowances: ${FinanceFormatter.money(result.allowances)}"
                 )
@@ -412,23 +431,7 @@ fun AnnualEarningsScreen(
                     fontWeight = FontWeight.Bold
                 )
 
-                result.equivalentHourlyRate?.let { hourly ->
-                    Text(
-                        text =
-                            "Equivalent hourly rate: " +
-                                    FinanceFormatter.money(hourly),
-                        style = MaterialTheme.typography.bodyLarge,
-                        fontWeight = FontWeight.Medium
-                    )
-                }
 
-                Text(
-                    text =
-                        "Public holidays worked: " +
-                                result.publicHolidaysWorked,
-                    style = MaterialTheme.typography.bodyLarge,
-                    fontWeight = FontWeight.Medium
-                )
             }
 
         }
