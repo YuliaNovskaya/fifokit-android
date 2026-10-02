@@ -27,103 +27,155 @@ class FinancialGoalCloudSyncManager(
         val deviceId =
             deviceIdProvider.getDeviceId()
 
-        val localGoal =
-            financePreferences.financialGoal.first()
+        val localGoals =
+            financePreferences
+                .financialGoalsForSync
+                .first()
 
-        val localUpdatedAt =
-            financePreferences.financialGoalUpdatedAt.first()
-
-        val cloudGoal =
+        val cloudGoals =
             cloudRepository
                 .getFinancialGoals(uid)
-                .firstOrNull { it.id == "primary" }
 
-        if (cloudGoal == null) {
-
-            if (localUpdatedAt == 0L) {
-                return FinancialGoalSyncResult(
-                    uploaded = false,
-                    downloaded = false
-                )
+        val localById =
+            localGoals.associateBy {
+                it.id
             }
 
-            cloudRepository.saveFinancialGoal(
-                uid = uid,
-                goal = CloudFinancialGoal(
-                    id = "primary",
-                    targetAmount = localGoal.targetAmount,
-                    currentAmount = localGoal.currentAmount,
-                    contributionPerPay =
-                        localGoal.contributionPerPay,
-                    payFrequencyDays =
-                        localGoal.payFrequencyDays,
-                    createdAt = localUpdatedAt,
-                    updatedAt = localUpdatedAt,
-                    deviceId = deviceId,
-                    schemaVersion = 1
-                )
-            )
+        val cloudById =
+            cloudGoals.associateBy {
+                it.id
+            }
 
-            return FinancialGoalSyncResult(
-                uploaded = true,
-                downloaded = false
-            )
-        }
+        val allIds =
+            localById.keys + cloudById.keys
 
-        if (cloudGoal.updatedAt > localUpdatedAt) {
+        var uploaded = false
+        var downloaded = false
 
-            financePreferences.applyCloudFinancialGoal(
-                goal = FinancialGoal(
-                    targetAmount =
-                        cloudGoal.targetAmount,
-                    currentAmount =
-                        cloudGoal.currentAmount,
-                    contributionPerPay =
-                        cloudGoal.contributionPerPay,
-                    payFrequencyDays =
-                        cloudGoal.payFrequencyDays
-                ),
-                updatedAt =
-                    cloudGoal.updatedAt
-            )
+        for (goalId in allIds) {
 
-            return FinancialGoalSyncResult(
-                uploaded = false,
-                downloaded = true
-            )
-        }
+            val local =
+                localById[goalId]
 
-        if (localUpdatedAt > cloudGoal.updatedAt) {
+            val cloud =
+                cloudById[goalId]
 
-            cloudRepository.saveFinancialGoal(
-                uid = uid,
-                goal = CloudFinancialGoal(
-                    id = "primary",
-                    targetAmount = localGoal.targetAmount,
-                    currentAmount = localGoal.currentAmount,
-                    contributionPerPay =
-                        localGoal.contributionPerPay,
-                    payFrequencyDays =
-                        localGoal.payFrequencyDays,
-                    createdAt =
-                        cloudGoal.createdAt,
-                    updatedAt =
-                        localUpdatedAt,
-                    deviceId =
-                        deviceId,
-                    schemaVersion = 1
-                )
-            )
+            when {
+                local != null &&
+                        cloud == null -> {
 
-            return FinancialGoalSyncResult(
-                uploaded = true,
-                downloaded = false
-            )
+                    if (
+                        local.updatedAt > 0L ||
+                        local.id != "primary"
+                    ) {
+                        cloudRepository
+                            .saveFinancialGoal(
+                                uid = uid,
+                                goal =
+                                    local.toCloud(
+                                        deviceId
+                                    )
+                            )
+
+                        uploaded = true
+                    }
+                }
+
+                local == null &&
+                        cloud != null -> {
+
+                    financePreferences
+                        .applyCloudFinancialGoal(
+                            goal =
+                                cloud.toLocal(),
+                            updatedAt =
+                                cloud.updatedAt
+                        )
+
+                    downloaded = true
+                }
+
+                local != null &&
+                        cloud != null -> {
+
+                    when {
+                        cloud.updatedAt >
+                                local.updatedAt -> {
+
+                            financePreferences
+                                .applyCloudFinancialGoal(
+                                    goal =
+                                        cloud.toLocal(),
+                                    updatedAt =
+                                        cloud.updatedAt
+                                )
+
+                            downloaded = true
+                        }
+
+                        local.updatedAt >
+                                cloud.updatedAt -> {
+
+                            cloudRepository
+                                .saveFinancialGoal(
+                                    uid = uid,
+                                    goal =
+                                        local.toCloud(
+                                            deviceId
+                                        )
+                                )
+
+                            uploaded = true
+                        }
+                    }
+                }
+            }
         }
 
         return FinancialGoalSyncResult(
-            uploaded = false,
-            downloaded = false
+            uploaded = uploaded,
+            downloaded = downloaded
+        )
+    }
+
+    private fun FinancialGoal.toCloud(
+        deviceId: String
+    ): CloudFinancialGoal {
+
+        return CloudFinancialGoal(
+            id = id,
+            name = name,
+            targetAmount = targetAmount,
+            currentAmount = currentAmount,
+            contributionPerPay =
+                contributionPerPay,
+            payFrequencyDays =
+                payFrequencyDays,
+            isDeleted = isDeleted,
+            deletedAt = deletedAt,
+            createdAt = createdAt,
+            updatedAt = updatedAt,
+            deviceId = deviceId,
+            schemaVersion = 2
+        )
+    }
+
+    private fun CloudFinancialGoal.toLocal():
+            FinancialGoal {
+
+        return FinancialGoal(
+            id = id,
+            name = name,
+            targetAmount = targetAmount,
+            currentAmount = currentAmount,
+            contributionPerPay =
+                contributionPerPay,
+            payFrequencyDays =
+                payFrequencyDays,
+            isDeleted = isDeleted,
+            deletedAt = deletedAt,
+            createdAt = createdAt,
+            updatedAt = updatedAt
         )
     }
 }
