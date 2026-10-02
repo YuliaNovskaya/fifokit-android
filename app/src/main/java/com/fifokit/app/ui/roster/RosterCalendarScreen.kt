@@ -285,6 +285,22 @@ fun RosterCalendarScreen(
                         )
                     }
 
+                    viewModel.shutdownOn(
+                        selectedDate
+                    )?.let { shutdown ->
+                        Spacer(
+                            modifier = Modifier.height(12.dp)
+                        )
+
+                        Text(
+                            text =
+                                "Shutdown: " +
+                                        shutdown.name,
+                            style = MaterialTheme.typography.bodyLarge,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+
                     if (holidays.isNotEmpty()) {
                         Spacer(
                             modifier = Modifier.height(12.dp)
@@ -596,6 +612,9 @@ fun RosterCalendarScreen(
                             viewModel.selectedStates
                         )
                     },
+                    isShutdown = {
+                        viewModel.shutdownOn(it) != null
+                    },
                     onDateSelected = {
                         selectedCalendarDate = it
                     }
@@ -658,6 +677,7 @@ private fun CalendarGrid(
     startDate: LocalDate,
     isWorkDay: (LocalDate) -> Boolean,
     isPublicHoliday: (LocalDate) -> Boolean,
+    isShutdown: (LocalDate) -> Boolean,
     onDateSelected: (LocalDate) -> Unit,
     modifier: Modifier = Modifier
 )
@@ -701,6 +721,7 @@ private fun CalendarGrid(
                         isWorkDay = isWorkDay(date),
                         isStartDate = date == startDate,
                         isPublicHoliday = isPublicHoliday(date),
+                        isShutdown = isShutdown(date),
                         onClick = {
                             onDateSelected(date)
                         }
@@ -718,6 +739,7 @@ private fun CalendarDay(
     isWorkDay: Boolean,
     isStartDate: Boolean,
     isPublicHoliday: Boolean,
+    isShutdown: Boolean,
     onClick: () -> Unit
 ) {
     val isToday = date == LocalDate.now()
@@ -799,6 +821,7 @@ private fun CalendarDay(
                     Text(
                         text = when {
                             !isRosterActive -> ""
+                            isShutdown -> "SHUT"
                             isWorkDay -> "WORK"
                             else -> "OFF"
                         },
@@ -853,6 +876,19 @@ private fun CalendarLegend() {
             ) {
                 Text(
                     text = "PH",
+                    modifier = Modifier.padding(
+                        horizontal = 10.dp,
+                        vertical = 5.dp
+                    ),
+                    style = MaterialTheme.typography.labelMedium
+                )
+            }
+            Surface(
+                shape = MaterialTheme.shapes.small,
+                color = MaterialTheme.colorScheme.secondaryContainer
+            ) {
+                Text(
+                    text = "SHUT",
                     modifier = Modifier.padding(
                         horizontal = 10.dp,
                         vertical = 5.dp
