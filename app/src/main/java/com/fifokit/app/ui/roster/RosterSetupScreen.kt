@@ -10,6 +10,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import com.fifokit.app.domain.roster.ShutdownPeriod
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.Button
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
@@ -45,11 +48,14 @@ fun RosterSetupScreen(
     customWorkDays: Int = 14,
     customOffDays: Int = 7,
     startDate: LocalDate = LocalDate.now(),
+    shutdowns: List<ShutdownPeriod> = emptyList(),
     onRosterSelected: (RosterPattern) -> Unit = {},
     onCustomRosterSelected: () -> Unit = {},
     onCustomWorkDaysChanged: (Int) -> Unit = {},
     onCustomOffDaysChanged: (Int) -> Unit = {},
     onStartDateSelected: (LocalDate) -> Unit = {},
+    onAddShutdown: (String, LocalDate, LocalDate) -> Unit = { _, _, _ -> },
+    onRemoveShutdown: (String) -> Unit = {},
     showCancelNewRoster: Boolean = false,
     onCancelNewRoster: () -> Unit = {},
     showCancelExistingRoster: Boolean = false,
@@ -61,6 +67,11 @@ fun RosterSetupScreen(
 ) {
     var showDatePicker by remember { mutableStateOf(false) }
     var showDeleteRosterConfirmation by remember { mutableStateOf(false) }
+    var showShutdownDialog by remember { mutableStateOf(false) }
+    var shutdownName by remember { mutableStateOf("Shutdown") }
+    var shutdownStartDate by remember { mutableStateOf(LocalDate.now()) }
+    var shutdownEndDate by remember { mutableStateOf(LocalDate.now()) }
+    var shutdownDateTarget by remember { mutableStateOf<String?>(null) }
 
     Scaffold(
         topBar = {
@@ -80,6 +91,7 @@ fun RosterSetupScreen(
         modifier = modifier
             .fillMaxSize()
             .padding(innerPadding)
+            .verticalScroll(rememberScrollState())
             .padding(24.dp)
     ) {
         Text("Roster name")
@@ -236,6 +248,67 @@ fun RosterSetupScreen(
             )
         }
 
+        Spacer(modifier = Modifier.height(28.dp))
+
+        Text("Shutdowns")
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Text(
+            "Shutdown dates override the roster as OFF without shifting the underlying swing."
+        )
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        shutdowns.forEach { shutdown ->
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Column(
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text(shutdown.name)
+
+                    Text(
+                        shutdown.startDate.format(
+                            DateTimeFormatter.ofPattern("dd MMM yyyy")
+                        ) +
+                                " - " +
+                                shutdown.endDate.format(
+                                    DateTimeFormatter.ofPattern("dd MMM yyyy")
+                                )
+                    )
+                }
+
+                TextButton(
+                    onClick = {
+                        onRemoveShutdown(
+                            shutdown.id
+                        )
+                    }
+                ) {
+                    Text("Remove")
+                }
+            }
+
+            Spacer(
+                modifier = Modifier.height(8.dp)
+            )
+        }
+
+        OutlinedButton(
+            modifier = Modifier.fillMaxWidth(),
+            onClick = {
+                shutdownName = "Shutdown"
+                shutdownStartDate = LocalDate.now()
+                shutdownEndDate = LocalDate.now()
+                showShutdownDialog = true
+            }
+        ) {
+            Text("+ Add shutdown")
+        }
+
         Spacer(modifier = Modifier.height(32.dp))
 
         if (showCancelNewRoster || showCancelExistingRoster) {
@@ -277,6 +350,184 @@ fun RosterSetupScreen(
         }
     }
 
+    }
+
+    if (showShutdownDialog) {
+        AlertDialog(
+            onDismissRequest = {
+                showShutdownDialog = false
+            },
+            title = {
+                Text("Add shutdown")
+            },
+            text = {
+                Column {
+                    OutlinedTextField(
+                        value = shutdownName,
+                        onValueChange = {
+                            shutdownName = it
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        label = {
+                            Text("Name")
+                        },
+                        singleLine = true
+                    )
+
+                    Spacer(
+                        modifier = Modifier.height(12.dp)
+                    )
+
+                    OutlinedButton(
+                        modifier = Modifier.fillMaxWidth(),
+                        onClick = {
+                            shutdownDateTarget = "start"
+                        }
+                    ) {
+                        Text(
+                            "Start: " +
+                                    shutdownStartDate.format(
+                                        DateTimeFormatter.ofPattern(
+                                            "dd MMM yyyy"
+                                        )
+                                    )
+                        )
+                    }
+
+                    Spacer(
+                        modifier = Modifier.height(8.dp)
+                    )
+
+                    OutlinedButton(
+                        modifier = Modifier.fillMaxWidth(),
+                        onClick = {
+                            shutdownDateTarget = "end"
+                        }
+                    ) {
+                        Text(
+                            "End: " +
+                                    shutdownEndDate.format(
+                                        DateTimeFormatter.ofPattern(
+                                            "dd MMM yyyy"
+                                        )
+                                    )
+                        )
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    enabled =
+                        !shutdownEndDate
+                            .isBefore(
+                                shutdownStartDate
+                            ),
+                    onClick = {
+                        onAddShutdown(
+                            shutdownName,
+                            shutdownStartDate,
+                            shutdownEndDate
+                        )
+                        showShutdownDialog = false
+                    }
+                ) {
+                    Text("Add")
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = {
+                        showShutdownDialog = false
+                    }
+                ) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
+
+    shutdownDateTarget?.let { target ->
+        val selected =
+            if (target == "start") {
+                shutdownStartDate
+            } else {
+                shutdownEndDate
+            }
+
+        val state =
+            rememberDatePickerState(
+                initialSelectedDateMillis =
+                    selected
+                        .atStartOfDay(
+                            ZoneOffset.UTC
+                        )
+                        .toInstant()
+                        .toEpochMilli()
+            )
+
+        DatePickerDialog(
+            onDismissRequest = {
+                shutdownDateTarget = null
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        state.selectedDateMillis
+                            ?.let { millis ->
+                                val date =
+                                    Instant
+                                        .ofEpochMilli(
+                                            millis
+                                        )
+                                        .atZone(
+                                            ZoneOffset.UTC
+                                        )
+                                        .toLocalDate()
+
+                                if (
+                                    target ==
+                                    "start"
+                                ) {
+                                    shutdownStartDate =
+                                        date
+
+                                    if (
+                                        shutdownEndDate
+                                            .isBefore(
+                                                date
+                                            )
+                                    ) {
+                                        shutdownEndDate =
+                                            date
+                                    }
+                                } else {
+                                    shutdownEndDate =
+                                        date
+                                }
+                            }
+
+                        shutdownDateTarget =
+                            null
+                    }
+                ) {
+                    Text("OK")
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = {
+                        shutdownDateTarget =
+                            null
+                    }
+                ) {
+                    Text("Cancel")
+                }
+            }
+        ) {
+            DatePicker(
+                state = state
+            )
+        }
     }
 
     if (showDeleteRosterConfirmation) {
