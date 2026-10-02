@@ -66,7 +66,7 @@ private enum class ExportKind(
     val monthCount: Int
 ) {
     MONTH_IMAGE(
-        label = "This month image",
+        label = "Selected month image",
         format = "png",
         mimeType = "image/png",
         monthCount = 1
