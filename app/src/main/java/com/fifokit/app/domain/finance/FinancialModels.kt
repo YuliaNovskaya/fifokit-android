@@ -6,11 +6,21 @@ enum class PayRateType {
     ANNUAL_SALARY
 }
 
+enum class PipType {
+    NONE,
+    PER_HOUR,
+    PER_DAY,
+    PERCENT_BASE,
+    FIXED_AMOUNT
+}
+
 data class PayInput(
     val rateType: PayRateType = PayRateType.HOURLY,
     val rate: Double = 0.0,
     val hoursPerWorkDay: Double = 12.0,
-    val allowancePerWorkDay: Double = 0.0
+    val allowancePerWorkDay: Double = 0.0,
+    val pipType: PipType = PipType.NONE,
+    val pipValue: Double = 0.0
 )
 
 data class EarningsResult(
@@ -18,6 +28,7 @@ data class EarningsResult(
     val restDaysPerYear: Int,
     val workHoursPerYear: Double,
     val baseEarnings: Double,
+    val pipEarnings: Double,
     val allowances: Double,
     val totalGrossEarnings: Double,
     val equivalentHourlyRate: Double? = null,
