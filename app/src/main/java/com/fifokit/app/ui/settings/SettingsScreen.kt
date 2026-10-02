@@ -199,14 +199,22 @@ fun SettingsScreen(
             Spacer(modifier = Modifier.height(24.dp))
 
             Text(
-                text = if (notificationsEnabled) {
-                    "Notifications are enabled"
-                } else {
-                    "Notifications are disabled"
-                }
+                text = "Notifications",
+                style = androidx.compose.material3.MaterialTheme.typography.titleMedium
             )
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Text(
+                text =
+                    if (notificationsEnabled) {
+                        "System notifications: enabled"
+                    } else {
+                        "System notifications: disabled"
+                    }
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
 
             OutlinedButton(
                 modifier = Modifier.fillMaxWidth(),
@@ -223,12 +231,21 @@ fun SettingsScreen(
                     context.startActivity(intent)
                 }
             ) {
-                Text("Open notification settings")
+                Text(
+                    if (notificationsEnabled) {
+                        "Open notification settings"
+                    } else {
+                        "Enable notifications"
+                    }
+                )
             }
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            Text("Roster reminders")
+            Text(
+                text = "Roster reminders",
+                style = androidx.compose.material3.MaterialTheme.typography.titleMedium
+            )
 
             Spacer(modifier = Modifier.height(12.dp))
 
