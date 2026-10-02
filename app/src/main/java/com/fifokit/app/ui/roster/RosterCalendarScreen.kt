@@ -250,55 +250,81 @@ fun RosterCalendarScreen(
                             style = MaterialTheme.typography.bodyMedium
                         )
                     } else {
-                        val daysFromStart =
-                            ChronoUnit.DAYS.between(
-                                viewModel.startDate,
+                        val shutdown =
+                            viewModel.shutdownOn(
                                 selectedDate
                             )
 
-                        val cycleLength =
-                            workDays + offDays
+                        if (shutdown != null) {
+                            Text(
+                                text =
+                                    "SHUTDOWN · OFF override",
+                                style =
+                                    MaterialTheme.typography
+                                        .titleMedium,
+                                fontWeight =
+                                    FontWeight.Bold
+                            )
 
-                        val cycleDay =
-                            Math.floorMod(
-                                daysFromStart,
-                                cycleLength.toLong()
-                            ).toInt()
+                            Spacer(
+                                modifier =
+                                    Modifier.height(
+                                        6.dp
+                                    )
+                            )
 
-                        val statusText =
-                            if (cycleDay < workDays) {
-                                "WORK day " +
-                                        (cycleDay + 1) +
-                                        " of " +
-                                        workDays
-                            } else {
-                                "OFF day " +
-                                        (cycleDay - workDays + 1) +
-                                        " of " +
-                                        offDays
-                            }
+                            Text(
+                                text =
+                                    shutdown.name,
+                                style =
+                                    MaterialTheme.typography
+                                        .bodyLarge
+                            )
+                        } else {
+                            val daysFromStart =
+                                ChronoUnit.DAYS.between(
+                                    viewModel.startDate,
+                                    selectedDate
+                                )
 
-                        Text(
-                            text = statusText,
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
+                            val cycleLength =
+                                workDays + offDays
 
-                    viewModel.shutdownOn(
-                        selectedDate
-                    )?.let { shutdown ->
-                        Spacer(
-                            modifier = Modifier.height(12.dp)
-                        )
+                            val cycleDay =
+                                Math.floorMod(
+                                    daysFromStart,
+                                    cycleLength.toLong()
+                                ).toInt()
 
-                        Text(
-                            text =
-                                "Shutdown: " +
-                                        shutdown.name,
-                            style = MaterialTheme.typography.bodyLarge,
-                            fontWeight = FontWeight.Bold
-                        )
+                            val statusText =
+                                if (
+                                    cycleDay <
+                                    workDays
+                                ) {
+                                    "WORK day " +
+                                            (cycleDay + 1) +
+                                            " of " +
+                                            workDays
+                                } else {
+                                    "OFF day " +
+                                            (
+                                                cycleDay -
+                                                        workDays +
+                                                        1
+                                                ) +
+                                            " of " +
+                                            offDays
+                                }
+
+                            Text(
+                                text = statusText,
+                                style =
+                                    MaterialTheme.typography
+                                        .titleMedium,
+                                fontWeight =
+                                    FontWeight.Bold
+                            )
+                        }
                     }
 
                     if (holidays.isNotEmpty()) {
