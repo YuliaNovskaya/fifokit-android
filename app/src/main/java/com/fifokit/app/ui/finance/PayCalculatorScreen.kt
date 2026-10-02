@@ -33,6 +33,7 @@ import com.fifokit.app.domain.finance.PipType
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.text.input.KeyboardType
 import com.fifokit.app.domain.finance.EarningsResult
+import com.fifokit.app.domain.finance.LocalPayResult
 import com.fifokit.app.domain.finance.FinanceCalculator
 import com.fifokit.app.domain.finance.PayInput
 import com.fifokit.app.domain.model.RosterPattern
@@ -108,6 +109,26 @@ fun PayCalculatorScreen(
         mutableStateOf("")
     }
 
+    var localRatesEnabled by remember {
+        mutableStateOf(false)
+    }
+
+    var localWeekdayRate by remember {
+        mutableStateOf("")
+    }
+
+    var localSaturdayRate by remember {
+        mutableStateOf("")
+    }
+
+    var localHoursPerDay by remember {
+        mutableStateOf("8")
+    }
+
+    var localResult by remember {
+        mutableStateOf<LocalPayResult?>(null)
+    }
+
     var validationError by remember {
         mutableStateOf<String?>(null)
     }
@@ -149,10 +170,36 @@ fun PayCalculatorScreen(
             } else {
                 savedPayInput.pipValue.toString()
             }
+
+        localRatesEnabled =
+            savedPayInput.localRatesEnabled
+
+        localWeekdayRate =
+            if (savedPayInput.localWeekdayHourlyRate == 0.0) {
+                ""
+            } else {
+                savedPayInput.localWeekdayHourlyRate.toString()
+            }
+
+        localSaturdayRate =
+            if (savedPayInput.localSaturdayHourlyRate == 0.0) {
+                ""
+            } else {
+                savedPayInput.localSaturdayHourlyRate.toString()
+            }
+
+        localHoursPerDay =
+            savedPayInput.localHoursPerDay.toString()
     }
 
-    LaunchedEffect(annualResult) {
-        if (annualResult != null) {
+    LaunchedEffect(
+        annualResult,
+        localResult
+    ) {
+        if (
+            annualResult != null ||
+            localResult != null
+        ) {
             scrollState.animateScrollTo(
                 scrollState.maxValue
             )
@@ -177,11 +224,71 @@ fun PayCalculatorScreen(
             verticalArrangement = Arrangement.Top
         ) {
 
-            Text("Pay type")
+            Text(
+                text = "Work type",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold
+            )
 
             Spacer(
                 modifier = Modifier.height(8.dp)
             )
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                if (!localRatesEnabled) {
+                    Button(
+                        modifier = Modifier.weight(1f),
+                        onClick = {}
+                    ) {
+                        Text("FIFO")
+                    }
+
+                    TextButton(
+                        modifier = Modifier.weight(1f),
+                        onClick = {
+                            localRatesEnabled = true
+                            calculatedAmount = null
+                            annualResult = null
+                            localResult = null
+                            validationError = null
+                        }
+                    ) {
+                        Text("Local rates")
+                    }
+                } else {
+                    TextButton(
+                        modifier = Modifier.weight(1f),
+                        onClick = {
+                            localRatesEnabled = false
+                            localResult = null
+                            validationError = null
+                        }
+                    ) {
+                        Text("FIFO")
+                    }
+
+                    Button(
+                        modifier = Modifier.weight(1f),
+                        onClick = {}
+                    ) {
+                        Text("Local rates")
+                    }
+                }
+            }
+
+            Spacer(
+                modifier = Modifier.height(16.dp)
+            )
+
+            if (!localRatesEnabled) {
+                Text("Pay type")
+
+                Spacer(
+                    modifier = Modifier.height(8.dp)
+                )
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -533,6 +640,207 @@ fun PayCalculatorScreen(
                 Spacer(
                     modifier = Modifier.height(24.dp)
                 )
+            }
+            } else {
+                OutlinedTextField(
+                    value = localWeekdayRate,
+                    onValueChange = {
+                        localWeekdayRate = it
+                        localResult = null
+                        validationError = null
+                    },
+                    label = {
+                        Text(
+                            text = "Mon-Fri hourly rate",
+                            style = MaterialTheme.typography.bodyLarge,
+                            fontWeight = FontWeight.Medium
+                        )
+                    },
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Decimal
+                    ),
+                    textStyle = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                Spacer(
+                    modifier = Modifier.height(12.dp)
+                )
+
+                OutlinedTextField(
+                    value = localSaturdayRate,
+                    onValueChange = {
+                        localSaturdayRate = it
+                        localResult = null
+                        validationError = null
+                    },
+                    label = {
+                        Text(
+                            text = "Saturday hourly rate",
+                            style = MaterialTheme.typography.bodyLarge,
+                            fontWeight = FontWeight.Medium
+                        )
+                    },
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Decimal
+                    ),
+                    textStyle = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                Spacer(
+                    modifier = Modifier.height(12.dp)
+                )
+
+                OutlinedTextField(
+                    value = localHoursPerDay,
+                    onValueChange = {
+                        localHoursPerDay = it
+                        localResult = null
+                        validationError = null
+                    },
+                    label = {
+                        Text(
+                            text = "Hours per work day",
+                            style = MaterialTheme.typography.bodyLarge,
+                            fontWeight = FontWeight.Medium
+                        )
+                    },
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Decimal
+                    ),
+                    textStyle = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                Spacer(
+                    modifier = Modifier.height(8.dp)
+                )
+
+                Text(
+                    text = "Local week: 5 weekdays + Saturday. Sunday excluded.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+
+                Spacer(
+                    modifier = Modifier.height(20.dp)
+                )
+
+                Button(
+                    modifier = Modifier.fillMaxWidth(),
+                    onClick = {
+                        keyboardController?.hide()
+                        focusManager.clearFocus()
+
+                        val weekday =
+                            localWeekdayRate.toDoubleOrNull()
+                        val saturday =
+                            localSaturdayRate.toDoubleOrNull()
+                        val hours =
+                            localHoursPerDay.toDoubleOrNull()
+
+                        validationError = when {
+                            weekday == null || weekday <= 0.0 ->
+                                "Enter a valid Mon-Fri hourly rate"
+
+                            saturday == null || saturday <= 0.0 ->
+                                "Enter a valid Saturday hourly rate"
+
+                            hours == null || hours <= 0.0 ->
+                                "Enter valid work hours"
+
+                            else ->
+                                null
+                        }
+
+                        if (validationError == null) {
+                            localResult =
+                                FinanceCalculator.calculateLocalPay(
+                                    weekdayHourlyRate = weekday!!,
+                                    saturdayHourlyRate = saturday!!,
+                                    hoursPerDay = hours!!
+                                )
+
+                            val input =
+                                savedPayInput.copy(
+                                    localRatesEnabled = true,
+                                    localWeekdayHourlyRate = weekday,
+                                    localSaturdayHourlyRate = saturday,
+                                    localHoursPerDay = hours
+                                )
+
+                            scope.launch {
+                                financePreferences.savePayInput(input)
+                            }
+                        } else {
+                            localResult = null
+                        }
+                    }
+                ) {
+                    Text("Calculate local pay")
+                }
+
+                validationError?.let { error ->
+                    Spacer(
+                        modifier = Modifier.height(12.dp)
+                    )
+
+                    Text(error)
+                }
+
+                localResult?.let { result ->
+                    Spacer(
+                        modifier = Modifier.height(24.dp)
+                    )
+
+                    Text(
+                        text = "Results",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold
+                    )
+
+                    Spacer(
+                        modifier = Modifier.height(8.dp)
+                    )
+
+                    Text(
+                        text = "Mon-Fri gross: " +
+                                FinanceFormatter.money(result.weekdayGrossPerWeek),
+                        style = MaterialTheme.typography.bodyLarge
+                    )
+
+                    Text(
+                        text = "Saturday gross: " +
+                                FinanceFormatter.money(result.saturdayGrossPerWeek),
+                        style = MaterialTheme.typography.bodyLarge
+                    )
+
+                    Text(
+                        text = "Weekly gross: " +
+                                FinanceFormatter.money(result.weeklyGross),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+
+                    Text(
+                        text = "Annualised gross: " +
+                                FinanceFormatter.money(result.annualisedGross),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+
+                    Text(
+                        text = "Effective hourly rate: " +
+                                FinanceFormatter.money(result.effectiveHourlyRate) +
+                                " / hour",
+                        style = MaterialTheme.typography.bodyLarge
+                    )
+
+                    Spacer(
+                        modifier = Modifier.height(24.dp)
+                    )
+                }
             }
 
         }
