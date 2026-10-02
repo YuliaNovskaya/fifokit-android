@@ -159,6 +159,13 @@ fun FinancialGoalScreen(
         draftGoal
             ?: storedSelectedGoal
 
+    val isSavedSecondaryGoal =
+        draftGoal == null &&
+                storedSelectedGoal.id != "primary" &&
+                goals.any {
+                    it.id == storedSelectedGoal.id
+                }
+
     fun loadGoalFields(
         goal: FinancialGoal
     ) {
@@ -405,8 +412,7 @@ fun FinancialGoalScreen(
 
     if (
         showDeleteGoalDialog &&
-        selectedGoal.id != "primary" &&
-        draftGoal == null
+        isSavedSecondaryGoal
     ) {
         AlertDialog(
             onDismissRequest = {
@@ -421,7 +427,7 @@ fun FinancialGoalScreen(
             text = {
                 Text(
                     "Delete \"" +
-                            selectedGoal.name +
+                            storedSelectedGoal.name +
                             "\"? This will also be removed from cloud sync."
                 )
             },
@@ -429,7 +435,7 @@ fun FinancialGoalScreen(
                 TextButton(
                     onClick = {
                         val goalId =
-                            selectedGoal.id
+                            storedSelectedGoal.id
 
                         showDeleteGoalDialog =
                             false
@@ -968,8 +974,7 @@ fun FinancialGoalScreen(
                 }
 
                 if (
-                    draftGoal == null &&
-                    selectedGoal.id != "primary"
+                    isSavedSecondaryGoal
                 ) {
                     Spacer(
                         modifier =
@@ -1103,8 +1108,7 @@ fun FinancialGoalScreen(
                     }
 
                     if (
-                        selectedGoal.id !=
-                        "primary"
+                        isSavedSecondaryGoal
                     ) {
                         OutlinedButton(
                             modifier =
