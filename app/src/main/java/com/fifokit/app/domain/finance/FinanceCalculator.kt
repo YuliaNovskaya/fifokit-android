@@ -5,6 +5,8 @@ import com.fifokit.app.domain.model.RosterPattern
 import com.fifokit.app.domain.roster.RosterCalculator
 import com.fifokit.app.domain.roster.AustralianState
 import com.fifokit.app.domain.roster.PublicHolidayProvider
+import com.fifokit.app.domain.roster.ShutdownPeriod
+import com.fifokit.app.domain.roster.shutdownOn
 import java.time.LocalDate
 
 object FinanceCalculator {
@@ -168,7 +170,8 @@ object FinanceCalculator {
         pattern: RosterPattern,
         rosterStartDate: LocalDate,
         year: Int,
-        selectedStates: Set<AustralianState> = emptySet()
+        selectedStates: Set<AustralianState> = emptySet(),
+        shutdowns: List<ShutdownPeriod> = emptyList()
     ): EarningsResult {
 
         val firstDay = LocalDate.of(year, 1, 1)
@@ -181,6 +184,7 @@ object FinanceCalculator {
 
         while (!date.isAfter(lastDay)) {
             if (
+                shutdowns.shutdownOn(date) == null &&
                 RosterCalculator.isWorkDay(
                     date = date,
                     startDate = rosterStartDate,
@@ -206,11 +210,14 @@ object FinanceCalculator {
                     year = year,
                     states = selectedStates
                 ) { holidayDate ->
-                    RosterCalculator.isWorkDay(
-                        date = holidayDate,
-                        startDate = rosterStartDate,
-                        pattern = pattern
-                    )
+                    shutdowns.shutdownOn(
+                        holidayDate
+                    ) == null &&
+                            RosterCalculator.isWorkDay(
+                                date = holidayDate,
+                                startDate = rosterStartDate,
+                                pattern = pattern
+                            )
                 }
         )
     }
@@ -221,7 +228,8 @@ object FinanceCalculator {
         workDays: Int,
         offDays: Int,
         year: Int,
-        selectedStates: Set<AustralianState> = emptySet()
+        selectedStates: Set<AustralianState> = emptySet(),
+        shutdowns: List<ShutdownPeriod> = emptyList()
     ): EarningsResult {
 
         val firstDay = LocalDate.of(year, 1, 1)
@@ -234,6 +242,7 @@ object FinanceCalculator {
         while (!date.isAfter(lastDay)) {
 
             if (
+                shutdowns.shutdownOn(date) == null &&
                 RosterCalculator.isWorkDay(
                     date = date,
                     startDate = rosterStartDate,
@@ -258,12 +267,15 @@ object FinanceCalculator {
                     year = year,
                     states = selectedStates
                 ) { holidayDate ->
-                    RosterCalculator.isWorkDay(
-                        date = holidayDate,
-                        startDate = rosterStartDate,
-                        workDays = workDays,
-                        offDays = offDays
-                    )
+                    shutdowns.shutdownOn(
+                        holidayDate
+                    ) == null &&
+                            RosterCalculator.isWorkDay(
+                                date = holidayDate,
+                                startDate = rosterStartDate,
+                                workDays = workDays,
+                                offDays = offDays
+                            )
                 }
         )
     }
