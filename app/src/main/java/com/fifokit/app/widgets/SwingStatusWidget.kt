@@ -132,31 +132,24 @@ private fun SwingStatusContent(
             .clickable(
                 openAppAction
             )
-            .padding(16.dp)
+            .padding(12.dp)
     ) {
-        Text(
-            text = "FIFOKIT",
-            style = TextStyle(
-                color = widgetOrange,
-                fontSize = 12.sp,
-                fontWeight =
-                    FontWeight.Bold
-            )
-        )
-
-        Spacer(
-            modifier =
-                GlanceModifier
-                    .height(6.dp)
-        )
-
         if (roster == null) {
+            Text(
+                text = "FIFOKIT",
+                style = TextStyle(
+                    color = widgetOrange,
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Bold
+                )
+            )
+
             Text(
                 text =
                     "No active roster",
                 style = TextStyle(
                     color = widgetWhite,
-                    fontSize = 18.sp,
+                    fontSize = 20.sp,
                     fontWeight =
                         FontWeight.Bold
                 )
@@ -174,7 +167,7 @@ private fun SwingStatusContent(
                 style = TextStyle(
                     color =
                         widgetSecondary,
-                    fontSize = 12.sp
+                    fontSize = 13.sp
                 )
             )
         } else {
@@ -209,53 +202,51 @@ private fun SwingStatusContent(
                 }
 
             Text(
-                text = statusLabel,
+                text =
+                    "FIFOKIT · " + roster.name,
                 style = TextStyle(
-                    color = widgetWhite,
-                    fontSize = 20.sp,
-                    fontWeight =
-                        FontWeight.Bold
-                )
+                    color = widgetOrange,
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Bold
+                ),
+                maxLines = 1
             )
 
             Spacer(
                 modifier =
                     GlanceModifier
-                        .height(4.dp)
+                        .height(2.dp)
+            )
+
+            Text(
+                text = statusLabel,
+                style = TextStyle(
+                    color = widgetWhite,
+                    fontSize = 24.sp,
+                    fontWeight = FontWeight.Bold
+                )
             )
 
             Text(
                 text =
                     "Day " +
-                            status
-                                .dayInPeriod +
+                            status.dayInPeriod +
                             " of " +
-                            status
-                                .periodLength,
-                style = TextStyle(
-                    color =
-                        widgetSecondary,
-                    fontSize = 13.sp
-                )
-            )
-
-            Text(
-                text =
-                    status
-                        .daysUntilTransition
-                        .toString() +
+                            status.periodLength +
+                            " · " +
+                            status.daysUntilTransition +
                             " days until change",
                 style = TextStyle(
-                    color =
-                        widgetSecondary,
-                    fontSize = 13.sp
-                )
+                    color = widgetSecondary,
+                    fontSize = 14.sp
+                ),
+                maxLines = 1
             )
 
             Spacer(
                 modifier =
                     GlanceModifier
-                        .height(6.dp)
+                        .height(3.dp)
             )
 
             Text(
@@ -268,28 +259,10 @@ private fun SwingStatusContent(
                                     widgetDateFormatter
                                 ),
                 style = TextStyle(
-                    color =
-                        widgetOrange,
-                    fontSize = 13.sp,
-                    fontWeight =
-                        FontWeight.Bold
+                    color = widgetOrange,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Bold
                 )
-            )
-
-            Spacer(
-                modifier =
-                    GlanceModifier
-                        .height(4.dp)
-            )
-
-            Text(
-                text = roster.name,
-                style = TextStyle(
-                    color =
-                        widgetSecondary,
-                    fontSize = 11.sp
-                ),
-                maxLines = 1
             )
         }
     }
