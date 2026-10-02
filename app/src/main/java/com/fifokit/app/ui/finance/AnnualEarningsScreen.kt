@@ -32,6 +32,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.fifokit.app.domain.finance.PayRateType
 import com.fifokit.app.domain.model.RosterPattern
+import com.fifokit.app.domain.roster.AustralianState
 import java.time.LocalDate
 import com.fifokit.app.domain.finance.EarningsResult
 import com.fifokit.app.domain.finance.FinanceCalculator
@@ -56,6 +57,7 @@ fun AnnualEarningsScreen(
     customWorkDays: Int,
     customOffDays: Int,
     rosterStartDate: LocalDate,
+    selectedStates: Set<AustralianState>,
     onBack: () -> Unit
 ) {
     val context = LocalContext.current
@@ -315,14 +317,16 @@ fun AnnualEarningsScreen(
                                     rosterStartDate = rosterStartDate,
                                     workDays = customWorkDays,
                                     offDays = customOffDays,
-                                    year = year
+                                    year = year,
+                                    selectedStates = selectedStates
                                 )
                             } else {
                                 FinanceCalculator.calculateAnnualEarnings(
                                     input = input,
                                     pattern = selectedPattern,
                                     rosterStartDate = rosterStartDate,
-                                    year = year
+                                    year = year,
+                                    selectedStates = selectedStates
                                 )
                             }
                         analytics.logEvent(
@@ -406,6 +410,24 @@ fun AnnualEarningsScreen(
                     text = "Total gross earnings: ${FinanceFormatter.money(result.totalGrossEarnings)}",
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold
+                )
+
+                result.equivalentHourlyRate?.let { hourly ->
+                    Text(
+                        text =
+                            "Equivalent hourly rate: " +
+                                    FinanceFormatter.money(hourly),
+                        style = MaterialTheme.typography.bodyLarge,
+                        fontWeight = FontWeight.Medium
+                    )
+                }
+
+                Text(
+                    text =
+                        "Public holidays worked: " +
+                                result.publicHolidaysWorked,
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontWeight = FontWeight.Medium
                 )
             }
 
