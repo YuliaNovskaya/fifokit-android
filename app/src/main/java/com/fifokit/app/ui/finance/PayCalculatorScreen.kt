@@ -191,11 +191,14 @@ fun PayCalculatorScreen(
                 },
                 label = {
                     Text(
-                        when (rateType) {
-                            PayRateType.HOURLY -> "Hourly rate"
-                            PayRateType.DAILY -> "Daily rate"
-                            PayRateType.ANNUAL_SALARY -> "Annual salary"
-                        }
+                        text =
+                            when (rateType) {
+                                PayRateType.HOURLY -> "Hourly rate"
+                                PayRateType.DAILY -> "Daily rate"
+                                PayRateType.ANNUAL_SALARY -> "Annual salary"
+                            },
+                        style = MaterialTheme.typography.bodyLarge,
+                        fontWeight = FontWeight.Medium
                     )
                 },
                 keyboardOptions = KeyboardOptions(
@@ -218,7 +221,11 @@ fun PayCalculatorScreen(
                     validationError = null
                 },
                 label = {
-                    Text("Hours per work day")
+                    Text(
+                        text = "Hours per work day",
+                        style = MaterialTheme.typography.bodyLarge,
+                        fontWeight = FontWeight.Medium
+                    )
                 },
                 keyboardOptions = KeyboardOptions(
                     keyboardType = KeyboardType.Decimal
@@ -240,7 +247,11 @@ fun PayCalculatorScreen(
                     validationError = null
                 },
                 label = {
-                    Text("Allowance per work day")
+                    Text(
+                        text = "Allowance per work day",
+                        style = MaterialTheme.typography.bodyLarge,
+                        fontWeight = FontWeight.Medium
+                    )
                 },
                 keyboardOptions = KeyboardOptions(
                     keyboardType = KeyboardType.Decimal
