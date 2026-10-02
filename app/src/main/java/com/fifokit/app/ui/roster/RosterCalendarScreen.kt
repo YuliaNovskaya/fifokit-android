@@ -51,6 +51,20 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.EventNote
+import androidx.compose.material.icons.filled.Build
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Share
+import androidx.compose.material.icons.filled.People
+import androidx.compose.material.icons.filled.FileDownload
+import androidx.compose.material.icons.filled.Calculate
+import androidx.compose.material.icons.filled.TrendingUp
+import androidx.compose.material.icons.filled.Flag
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.foundation.layout.size
 import androidx.compose.material3.ExperimentalMaterial3Api
 import com.google.firebase.analytics.FirebaseAnalytics
 import com.google.firebase.analytics.logEvent
@@ -235,6 +249,7 @@ fun RosterCalendarScreen(
             )
 
             ActionSheetItem(
+                icon = Icons.Default.Share,
                 title = "Share roster",
                 description =
                     "Invite a partner or family member to view the selected roster.",
@@ -247,6 +262,7 @@ fun RosterCalendarScreen(
             HorizontalDivider()
 
             ActionSheetItem(
+                icon = Icons.Default.People,
                 title = "Shared rosters",
                 description =
                     "View rosters other people have shared with you.",
@@ -267,6 +283,7 @@ fun RosterCalendarScreen(
             HorizontalDivider()
 
             ActionSheetItem(
+                icon = Icons.Default.FileDownload,
                 title = "Export roster",
                 description =
                     "Save or share the selected roster as an image or PDF.",
@@ -296,6 +313,7 @@ fun RosterCalendarScreen(
             )
 
             ActionSheetItem(
+                icon = Icons.Default.Calculate,
                 title = "FIFO Pay Calculator",
                 description =
                     "Calculate pay using your hourly, daily or salary rate.",
@@ -316,6 +334,7 @@ fun RosterCalendarScreen(
             HorizontalDivider()
 
             ActionSheetItem(
+                icon = Icons.Default.TrendingUp,
                 title = "Annual Earnings · PRO",
                 description =
                     "Estimate yearly work days, hours and gross earnings.",
@@ -336,6 +355,7 @@ fun RosterCalendarScreen(
             HorizontalDivider()
 
             ActionSheetItem(
+                icon = Icons.Default.Flag,
                 title = "Financial Goal",
                 description =
                     "Estimate how long it will take to reach a savings target.",
@@ -707,49 +727,69 @@ private fun CalendarBottomNavigation(
                 .fillMaxWidth()
                 .padding(
                     horizontal = 4.dp,
-                    vertical = 6.dp
+                    vertical = 4.dp
                 ),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            TextButton(
+            CalendarNavItem(
                 modifier = Modifier.weight(1f),
+                icon = Icons.Default.Edit,
+                label = "Edit",
                 onClick = onEdit
-            ) {
-                Text(
-                    text = "Edit",
-                    style = MaterialTheme.typography.labelLarge
-                )
-            }
+            )
 
-            Button(
+            CalendarNavItem(
                 modifier = Modifier.weight(1f),
+                icon = Icons.Default.EventNote,
+                label = "Roster",
                 onClick = onRoster
-            ) {
-                Text(
-                    text = "Roster",
-                    style = MaterialTheme.typography.labelLarge
-                )
-            }
+            )
 
-            TextButton(
+            CalendarNavItem(
                 modifier = Modifier.weight(1f),
+                icon = Icons.Default.Build,
+                label = "Tools",
                 onClick = onTools
-            ) {
-                Text(
-                    text = "Tools",
-                    style = MaterialTheme.typography.labelLarge
-                )
-            }
+            )
 
-            TextButton(
+            CalendarNavItem(
                 modifier = Modifier.weight(1f),
+                icon = Icons.Default.Settings,
+                label = "Settings",
                 onClick = onSettings
-            ) {
-                Text(
-                    text = "Settings",
-                    style = MaterialTheme.typography.labelLarge
-                )
-            }
+            )
+        }
+    }
+}
+
+@Composable
+private fun CalendarNavItem(
+    modifier: Modifier,
+    icon: ImageVector,
+    label: String,
+    onClick: () -> Unit
+) {
+    TextButton(
+        modifier = modifier,
+        onClick = onClick
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                modifier = Modifier.size(22.dp)
+            )
+
+            Spacer(
+                modifier = Modifier.height(2.dp)
+            )
+
+            Text(
+                text = label,
+                style = MaterialTheme.typography.labelLarge
+            )
         }
     }
 }
@@ -786,34 +826,48 @@ private fun ActionSheetHeader(
 
 @Composable
 private fun ActionSheetItem(
+    icon: ImageVector,
     title: String,
     description: String,
     onClick: () -> Unit
 ) {
-    Column(
+    Row(
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onClick)
             .padding(
                 horizontal = 24.dp,
                 vertical = 16.dp
-            )
+            ),
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(
-            text = title,
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.SemiBold
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            modifier = Modifier.size(28.dp)
         )
 
-        Spacer(
-            modifier = Modifier.height(4.dp)
-        )
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .padding(start = 16.dp)
+        ) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold
+            )
 
-        Text(
-            text = description,
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
+            Spacer(
+                modifier = Modifier.height(4.dp)
+            )
+
+            Text(
+                text = description,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
     }
 }
 
