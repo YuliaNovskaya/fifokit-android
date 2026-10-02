@@ -32,6 +32,8 @@ import com.fifokit.app.domain.model.RosterPattern
 import com.fifokit.app.domain.roster.RosterCalculator
 import com.fifokit.app.domain.roster.PublicHolidayProvider
 import com.fifokit.app.domain.roster.AustralianState
+import com.fifokit.app.domain.roster.ShutdownPeriodCodec
+import com.fifokit.app.domain.roster.shutdownOn
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -104,7 +106,21 @@ fun SharedRosterCalendarScreen(
         mutableStateOf(YearMonth.now())
     }
 
+    val shutdowns =
+        remember(roster.shutdownsJson) {
+            ShutdownPeriodCodec.decode(
+                roster.shutdownsJson
+            )
+        }
+
     fun isWorkDay(date: LocalDate): Boolean {
+        if (
+            shutdowns.shutdownOn(date) !=
+            null
+        ) {
+            return false
+        }
+
         return if (roster.isCustomRoster) {
 
             RosterCalculator.isWorkDay(
