@@ -244,6 +244,41 @@ class FinancePreferences(
         }
     }
 
+    suspend fun cleanupLegacyEmptySecondaryGoals() {
+        val now = System.currentTimeMillis()
+
+        context.financeDataStore.edit { preferences ->
+            val goals = decodeGoals(preferences).toMutableList()
+            var changed = false
+
+            goals.indices.forEach { index ->
+                val goal = goals[index]
+
+                val shouldArchive =
+                    goal.id != "primary" &&
+                    !goal.isDeleted &&
+                    goal.targetAmount == 0.0 &&
+                    goal.currentAmount == 0.0 &&
+                    goal.contributionPerPay == 0.0 &&
+                    goal.payFrequencyDays == 14
+
+                if (shouldArchive) {
+                    goals[index] = goal.copy(
+                        isDeleted = true,
+                        deletedAt = now,
+                        updatedAt = now
+                    )
+                    changed = true
+                }
+            }
+
+            if (changed) {
+                preferences[Keys.FINANCIAL_GOALS_JSON] =
+                    encodeGoals(goals)
+            }
+        }
+    }
+
     suspend fun deleteFinancialGoal(
         goalId: String
     ) {
