@@ -471,18 +471,15 @@ fun RosterCalendarScreen(
                     Manifest.permission.POST_NOTIFICATIONS
                 ) != PackageManager.PERMISSION_GRANTED
             ) {
-                OutlinedButton(
-                    modifier = Modifier.fillMaxWidth(),
-                    onClick = {
+                NotificationPermissionPrompt(
+                    onEnable = {
                         notificationPermissionLauncher.launch(
                             Manifest.permission.POST_NOTIFICATIONS
                         )
                     }
-                ) {
-                    Text("Enable notifications")
-                }
+                )
 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(12.dp))
             }
 
             if (calendarViewMode == CalendarViewMode.MONTH) {
@@ -533,6 +530,40 @@ fun RosterCalendarScreen(
 
             Spacer(modifier = Modifier.height(12.dp))
 
+        }
+    }
+}
+
+@Composable
+private fun NotificationPermissionPrompt(
+    onEnable: () -> Unit
+) {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.medium,
+        color = MaterialTheme.colorScheme.surfaceVariant
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(
+                    horizontal = 12.dp,
+                    vertical = 6.dp
+                ),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text(
+                text = "Notifications are off",
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.Medium
+            )
+
+            TextButton(
+                onClick = onEnable
+            ) {
+                Text("Enable")
+            }
         }
     }
 }
