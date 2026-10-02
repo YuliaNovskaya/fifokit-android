@@ -67,6 +67,7 @@ import com.fifokit.app.analytics.AnalyticsParams
 import com.fifokit.app.growth.GrowthEngagementTracker
 import com.fifokit.app.growth.InAppReviewLauncher
 import com.fifokit.app.ui.components.FifokitTopBar
+import com.fifokit.app.ui.components.calendarHorizontalSwipe
 
 private enum class CalendarViewMode {
     MONTH,
@@ -211,6 +212,30 @@ fun RosterCalendarScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
+                .calendarHorizontalSwipe(
+                    onPrevious = {
+                        month =
+                            if (
+                                calendarViewMode ==
+                                CalendarViewMode.MONTH
+                            ) {
+                                month.minusMonths(1)
+                            } else {
+                                month.minusYears(1)
+                            }
+                    },
+                    onNext = {
+                        month =
+                            if (
+                                calendarViewMode ==
+                                CalendarViewMode.MONTH
+                            ) {
+                                month.plusMonths(1)
+                            } else {
+                                month.plusYears(1)
+                            }
+                    }
+                )
                 .padding(horizontal = 16.dp)
         ) {
             Box(
