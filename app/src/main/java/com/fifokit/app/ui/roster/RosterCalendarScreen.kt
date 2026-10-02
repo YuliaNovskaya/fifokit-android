@@ -30,8 +30,10 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import java.time.format.DateTimeFormatter
+import java.time.temporal.ChronoUnit
 import android.app.Activity
 import android.content.Context
 import android.content.ContextWrapper
@@ -122,6 +124,10 @@ fun RosterCalendarScreen(
         mutableStateOf(false)
     }
 
+    var selectedCalendarDate by remember {
+        mutableStateOf<LocalDate?>(null)
+    }
+
     if (showReviewPrompt) {
         AlertDialog(
             onDismissRequest = {
@@ -175,6 +181,136 @@ fun RosterCalendarScreen(
                     }
                 ) {
                     Text("Not now")
+                }
+            }
+        )
+    }
+
+    selectedCalendarDate?.let { selectedDate ->
+        val workDays =
+            if (viewModel.isCustomRoster) {
+                viewModel.customWorkDays
+            } else {
+                viewModel.selectedPattern.workDays
+            }
+
+        val offDays =
+            if (viewModel.isCustomRoster) {
+                viewModel.customOffDays
+            } else {
+                viewModel.selectedPattern.offDays
+            }
+
+        val isRosterActive =
+            !selectedDate.isBefore(
+                viewModel.startDate
+            )
+
+        val holidays =
+            PublicHolidayProvider.holidaysOn(
+                selectedDate,
+                viewModel.selectedStates
+            )
+
+        AlertDialog(
+            onDismissRequest = {
+                selectedCalendarDate = null
+            },
+            title = {
+                Text(
+                    selectedDate.format(
+                        DateTimeFormatter.ofPattern(
+                            "EEEE, d MMMM yyyy",
+                            Locale.getDefault()
+                        )
+                    )
+                )
+            },
+            text = {
+                Column {
+                    if (!isRosterActive) {
+                        Text(
+                            text = "Roster has not started yet.",
+                            style = MaterialTheme.typography.bodyLarge
+                        )
+
+                        Spacer(
+                            modifier = Modifier.height(8.dp)
+                        )
+
+                        Text(
+                            text =
+                                "Roster starts " +
+                                        viewModel.startDate.format(
+                                            DateTimeFormatter.ofPattern(
+                                                "d MMM yyyy",
+                                                Locale.getDefault()
+                                            )
+                                        ),
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    } else {
+                        val daysFromStart =
+                            ChronoUnit.DAYS.between(
+                                viewModel.startDate,
+                                selectedDate
+                            )
+
+                        val cycleLength =
+                            workDays + offDays
+
+                        val cycleDay =
+                            Math.floorMod(
+                                daysFromStart,
+                                cycleLength.toLong()
+                            ).toInt()
+
+                        val statusText =
+                            if (cycleDay < workDays) {
+                                "WORK day " +
+                                        (cycleDay + 1) +
+                                        " of " +
+                                        workDays
+                            } else {
+                                "OFF day " +
+                                        (cycleDay - workDays + 1) +
+                                        " of " +
+                                        offDays
+                            }
+
+                        Text(
+                            text = statusText,
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+
+                    if (holidays.isNotEmpty()) {
+                        Spacer(
+                            modifier = Modifier.height(12.dp)
+                        )
+
+                        Text(
+                            text =
+                                "Public holiday: " +
+                                        holidays.joinToString(
+                                            separator = ", "
+                                        ) {
+                                            it.name
+                                        },
+                            style = MaterialTheme.typography.bodyLarge,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        selectedCalendarDate = null
+                    }
+                ) {
+                    Text("Close")
                 }
             }
         )
@@ -459,6 +595,9 @@ fun RosterCalendarScreen(
                             date,
                             viewModel.selectedStates
                         )
+                    },
+                    onDateSelected = {
+                        selectedCalendarDate = it
                     }
                 )
 
@@ -519,6 +658,7 @@ private fun CalendarGrid(
     startDate: LocalDate,
     isWorkDay: (LocalDate) -> Boolean,
     isPublicHoliday: (LocalDate) -> Boolean,
+    onDateSelected: (LocalDate) -> Unit,
     modifier: Modifier = Modifier
 )
 {
@@ -560,7 +700,10 @@ private fun CalendarGrid(
                         isRosterActive = !date.isBefore(startDate),
                         isWorkDay = isWorkDay(date),
                         isStartDate = date == startDate,
-                        isPublicHoliday = isPublicHoliday(date)
+                        isPublicHoliday = isPublicHoliday(date),
+                        onClick = {
+                            onDateSelected(date)
+                        }
                     )
                 }
             }
@@ -574,7 +717,8 @@ private fun CalendarDay(
     isRosterActive: Boolean,
     isWorkDay: Boolean,
     isStartDate: Boolean,
-    isPublicHoliday: Boolean
+    isPublicHoliday: Boolean,
+    onClick: () -> Unit
 ) {
     val isToday = date == LocalDate.now()
     val workOffColor = when {
@@ -585,7 +729,8 @@ private fun CalendarDay(
     Surface(
         modifier = Modifier
             .aspectRatio(1f)
-            .padding(2.dp),
+            .padding(2.dp)
+            .clickable(onClick = onClick),
         shape = MaterialTheme.shapes.small,
         color = workOffColor,
         border = when {
