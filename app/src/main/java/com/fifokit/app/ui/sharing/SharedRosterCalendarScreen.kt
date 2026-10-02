@@ -46,6 +46,7 @@ import com.google.firebase.analytics.FirebaseAnalytics
 import com.google.firebase.analytics.logEvent
 import com.fifokit.app.ui.components.FifokitBackButton
 import com.fifokit.app.ui.components.FifokitTopBar
+import com.fifokit.app.ui.components.calendarHorizontalSwipe
 import androidx.compose.material3.Scaffold
 
 @Composable
@@ -158,6 +159,14 @@ fun SharedRosterCalendarScreen(
         modifier = Modifier
             .fillMaxSize()
             .padding(innerPadding)
+            .calendarHorizontalSwipe(
+                onPrevious = {
+                    month = month.minusMonths(1)
+                },
+                onNext = {
+                    month = month.plusMonths(1)
+                }
+            )
             .padding(16.dp)
     ) {
 
