@@ -222,8 +222,6 @@ fun FIFOKITApp(
             showPayCalculator ->
                 showPayCalculator = false
 
-            showFinance ->
-
             showSettings ->
                 showSettings = false
         }
