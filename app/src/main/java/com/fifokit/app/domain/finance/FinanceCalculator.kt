@@ -9,6 +9,57 @@ import java.time.LocalDate
 
 object FinanceCalculator {
 
+    fun calculateLocalPay(
+        weekdayHourlyRate: Double,
+        saturdayHourlyRate: Double,
+        hoursPerDay: Double
+    ): LocalPayResult {
+        val weekdayGross =
+            weekdayHourlyRate *
+                    hoursPerDay *
+                    5.0
+
+        val saturdayGross =
+            saturdayHourlyRate *
+                    hoursPerDay
+
+        val weeklyGross =
+            weekdayGross +
+                    saturdayGross
+
+        val annualHours =
+            hoursPerDay *
+                    6.0 *
+                    52.0
+
+        val annualisedGross =
+            weeklyGross *
+                    52.0
+
+        val effectiveHourlyRate =
+            if (annualHours > 0.0) {
+                annualisedGross /
+                        annualHours
+            } else {
+                0.0
+            }
+
+        return LocalPayResult(
+            weekdayGrossPerWeek =
+                weekdayGross,
+            saturdayGrossPerWeek =
+                saturdayGross,
+            weeklyGross =
+                weeklyGross,
+            annualisedGross =
+                annualisedGross,
+            annualHours =
+                annualHours,
+            effectiveHourlyRate =
+                effectiveHourlyRate
+        )
+    }
+
     fun calculateAnnualEarnings(
         input: PayInput,
         workDaysPerYear: Int
