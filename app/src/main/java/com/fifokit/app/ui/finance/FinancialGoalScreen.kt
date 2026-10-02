@@ -21,6 +21,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -51,6 +52,7 @@ import com.fifokit.app.ui.components.FifokitTopBar
 import com.google.firebase.analytics.FirebaseAnalytics
 import kotlinx.coroutines.launch
 import java.time.LocalDate
+import java.util.UUID
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -59,25 +61,46 @@ fun FinancialGoalScreen(
     onProRequested: (String) -> Unit = {}
 ) {
     val context = LocalContext.current
-    val keyboardController = LocalSoftwareKeyboardController.current
-    val focusManager = LocalFocusManager.current
+    val keyboardController =
+        LocalSoftwareKeyboardController.current
+    val focusManager =
+        LocalFocusManager.current
 
-    val analytics = remember(context) {
-        FirebaseAnalytics.getInstance(context)
-    }
+    val analytics =
+        remember(context) {
+            FirebaseAnalytics.getInstance(
+                context
+            )
+        }
 
-    val financePreferences = remember(context) {
-        FinancePreferences(context)
-    }
+    val financePreferences =
+        remember(context) {
+            FinancePreferences(context)
+        }
 
-    val goals by financePreferences.financialGoals.collectAsState(
-        initial = listOf(FinancialGoal())
-    )
+    val goals by
+        financePreferences
+            .financialGoals
+            .collectAsState(
+                initial =
+                    listOf(
+                        FinancialGoal()
+                    )
+            )
 
-    val scope = rememberCoroutineScope()
+    val scope =
+        rememberCoroutineScope()
 
     var selectedGoalId by remember {
         mutableStateOf("primary")
+    }
+
+    var draftGoal by remember {
+        mutableStateOf<FinancialGoal?>(null)
+    }
+
+    var isEditing by remember {
+        mutableStateOf(false)
     }
 
     var goalMenuExpanded by remember {
@@ -124,60 +147,133 @@ fun FinancialGoalScreen(
         mutableStateOf<FinancialGoalResult?>(null)
     }
 
-    val selectedGoal =
+    val storedSelectedGoal =
         goals.firstOrNull {
             it.id == selectedGoalId
         } ?: goals.firstOrNull {
             it.id == "primary"
         } ?: FinancialGoal()
 
+    val selectedGoal =
+        draftGoal
+            ?: storedSelectedGoal
+
+    fun loadGoalFields(
+        goal: FinancialGoal
+    ) {
+        goalName =
+            goal.name
+
+        targetAmount =
+            if (goal.targetAmount == 0.0) {
+                ""
+            } else {
+                goal.targetAmount.toString()
+            }
+
+        currentAmount =
+            if (goal.currentAmount == 0.0) {
+                ""
+            } else {
+                goal.currentAmount.toString()
+            }
+
+        contributionPerPay =
+            if (
+                goal.contributionPerPay ==
+                0.0
+            ) {
+                ""
+            } else {
+                goal.contributionPerPay
+                    .toString()
+            }
+
+        payFrequencyDays =
+            goal.payFrequencyDays
+                .toString()
+
+        validationError = null
+    }
+
+    fun calculateSavedGoal(
+        goal: FinancialGoal
+    ): FinancialGoalResult? {
+        return if (
+            goal.targetAmount > 0.0 &&
+            goal.currentAmount >= 0.0 &&
+            goal.contributionPerPay >= 0.0 &&
+            goal.payFrequencyDays > 0 &&
+            (
+                goal.currentAmount >=
+                    goal.targetAmount ||
+                goal.contributionPerPay > 0.0
+            )
+        ) {
+            FinanceCalculator
+                .calculateFinancialGoal(
+                    goal
+                )
+        } else {
+            null
+        }
+    }
+
     LaunchedEffect(
         goals,
-        selectedGoalId
+        selectedGoalId,
+        draftGoal?.id
     ) {
+        val draft =
+            draftGoal
+
         if (
+            draft != null &&
+            goals.any {
+                it.id == draft.id
+            }
+        ) {
+            selectedGoalId =
+                draft.id
+            draftGoal = null
+        } else if (
+            draft == null &&
             goals.none {
                 it.id == selectedGoalId
             }
         ) {
             selectedGoalId =
-                goals.firstOrNull()?.id
+                goals
+                    .firstOrNull()
+                    ?.id
                     ?: "primary"
         }
     }
 
     LaunchedEffect(
         selectedGoal.id,
-        selectedGoal.updatedAt
+        selectedGoal.updatedAt,
+        draftGoal?.id
     ) {
-        goalName = selectedGoal.name
+        loadGoalFields(
+            selectedGoal
+        )
 
-        targetAmount =
-            if (selectedGoal.targetAmount == 0.0) {
-                ""
-            } else {
-                selectedGoal.targetAmount.toString()
-            }
+        if (draftGoal != null) {
+            goalResult =
+                calculateSavedGoal(
+                    selectedGoal
+                )
+        } else {
+            goalResult =
+                calculateSavedGoal(
+                    selectedGoal
+                )
 
-        currentAmount =
-            if (selectedGoal.currentAmount == 0.0) {
-                ""
-            } else {
-                selectedGoal.currentAmount.toString()
-            }
-
-        contributionPerPay =
-            if (selectedGoal.contributionPerPay == 0.0) {
-                ""
-            } else {
-                selectedGoal.contributionPerPay.toString()
-            }
-
-        payFrequencyDays =
-            selectedGoal.payFrequencyDays.toString()
-
-        goalResult = null
-        validationError = null
+            isEditing =
+                selectedGoal.targetAmount <=
+                        0.0
+        }
     }
 
     if (showCreateGoalDialog) {
@@ -187,7 +283,9 @@ fun FinancialGoalScreen(
                 newGoalName = ""
             },
             title = {
-                Text("New financial goal")
+                Text(
+                    "New financial goal"
+                )
             },
             text = {
                 OutlinedTextField(
@@ -198,43 +296,56 @@ fun FinancialGoalScreen(
                     label = {
                         Text(
                             text = "Goal name",
-                            style = MaterialTheme.typography.bodyLarge
+                            style =
+                                MaterialTheme
+                                    .typography
+                                    .bodyLarge
                         )
                     },
                     singleLine = true,
-                    modifier = Modifier.fillMaxWidth()
+                    modifier =
+                        Modifier.fillMaxWidth()
                 )
             },
             confirmButton = {
                 TextButton(
                     enabled =
-                        newGoalName.trim().isNotEmpty(),
+                        newGoalName
+                            .trim()
+                            .isNotEmpty(),
                     onClick = {
                         val name =
                             newGoalName.trim()
 
-                        showCreateGoalDialog = false
+                        showCreateGoalDialog =
+                            false
                         newGoalName = ""
 
-                        scope.launch {
-                            val created =
-                                financePreferences
-                                    .createFinancialGoal(
-                                        name
-                                    )
+                        val draft =
+                            FinancialGoal(
+                                id =
+                                    UUID
+                                        .randomUUID()
+                                        .toString(),
+                                name = name
+                            )
 
-                            selectedGoalId =
-                                created.id
-                        }
+                        draftGoal =
+                            draft
+                        selectedGoalId =
+                            draft.id
+                        isEditing = true
+                        goalResult = null
                     }
                 ) {
-                    Text("Create")
+                    Text("Continue")
                 }
             },
             dismissButton = {
                 TextButton(
                     onClick = {
-                        showCreateGoalDialog = false
+                        showCreateGoalDialog =
+                            false
                         newGoalName = ""
                     }
                 ) {
@@ -246,14 +357,18 @@ fun FinancialGoalScreen(
 
     if (
         showDeleteGoalDialog &&
-        selectedGoal.id != "primary"
+        selectedGoal.id != "primary" &&
+        draftGoal == null
     ) {
         AlertDialog(
             onDismissRequest = {
-                showDeleteGoalDialog = false
+                showDeleteGoalDialog =
+                    false
             },
             title = {
-                Text("Delete financial goal?")
+                Text(
+                    "Delete financial goal?"
+                )
             },
             text = {
                 Text(
@@ -268,8 +383,11 @@ fun FinancialGoalScreen(
                         val goalId =
                             selectedGoal.id
 
-                        showDeleteGoalDialog = false
-                        selectedGoalId = "primary"
+                        showDeleteGoalDialog =
+                            false
+                        selectedGoalId =
+                            "primary"
+                        isEditing = false
 
                         scope.launch {
                             financePreferences
@@ -285,7 +403,8 @@ fun FinancialGoalScreen(
             dismissButton = {
                 TextButton(
                     onClick = {
-                        showDeleteGoalDialog = false
+                        showDeleteGoalDialog =
+                            false
                     }
                 ) {
                     Text("Cancel")
@@ -314,18 +433,25 @@ fun FinancialGoalScreen(
         ) {
             Text(
                 text = "Saved goals",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold
+                style =
+                    MaterialTheme
+                        .typography
+                        .titleMedium,
+                fontWeight =
+                    FontWeight.SemiBold
             )
 
             Spacer(
-                modifier = Modifier.height(8.dp)
+                modifier =
+                    Modifier.height(8.dp)
             )
 
             OutlinedButton(
-                modifier = Modifier.fillMaxWidth(),
+                modifier =
+                    Modifier.fillMaxWidth(),
                 onClick = {
-                    goalMenuExpanded = true
+                    goalMenuExpanded =
+                        true
                 }
             ) {
                 Text(
@@ -342,9 +468,11 @@ fun FinancialGoalScreen(
             }
 
             DropdownMenu(
-                expanded = goalMenuExpanded,
+                expanded =
+                    goalMenuExpanded,
                 onDismissRequest = {
-                    goalMenuExpanded = false
+                    goalMenuExpanded =
+                        false
                 }
             ) {
                 goals.forEach { goal ->
@@ -363,7 +491,8 @@ fun FinancialGoalScreen(
                             )
                         },
                         onClick = {
-                            goalMenuExpanded = false
+                            goalMenuExpanded =
+                                false
 
                             if (
                                 goal.id ==
@@ -373,8 +502,11 @@ fun FinancialGoalScreen(
                                         .ADVANCED_FINANCIAL_GOALS
                                 )
                             ) {
+                                draftGoal = null
                                 selectedGoalId =
                                     goal.id
+                                isEditing =
+                                    false
                             } else {
                                 onProRequested(
                                     "advanced_financial_goals"
@@ -386,10 +518,13 @@ fun FinancialGoalScreen(
 
                 DropdownMenuItem(
                     text = {
-                        Text("+ New goal · PRO")
+                        Text(
+                            "+ New goal · PRO"
+                        )
                     },
                     onClick = {
-                        goalMenuExpanded = false
+                        goalMenuExpanded =
+                            false
 
                         if (
                             ProAccess.canUse(
@@ -397,7 +532,8 @@ fun FinancialGoalScreen(
                                     .ADVANCED_FINANCIAL_GOALS
                             )
                         ) {
-                            showCreateGoalDialog = true
+                            showCreateGoalDialog =
+                                true
                         } else {
                             onProRequested(
                                 "advanced_financial_goals"
@@ -407,312 +543,683 @@ fun FinancialGoalScreen(
                 )
             }
 
-            if (
-                selectedGoal.id != "primary"
-            ) {
+            Spacer(
+                modifier =
+                    Modifier.height(20.dp)
+            )
+
+            if (isEditing) {
+                Text(
+                    text =
+                        if (
+                            draftGoal != null
+                        ) {
+                            "New goal"
+                        } else {
+                            "Edit goal"
+                        },
+                    style =
+                        MaterialTheme
+                            .typography
+                            .titleMedium,
+                    fontWeight =
+                        FontWeight.SemiBold
+                )
+
                 Spacer(
-                    modifier = Modifier.height(8.dp)
+                    modifier =
+                        Modifier.height(12.dp)
+                )
+
+                OutlinedTextField(
+                    value = goalName,
+                    onValueChange = {
+                        goalName = it
+                        goalResult = null
+                    },
+                    label = {
+                        Text(
+                            text = "Goal name",
+                            style =
+                                MaterialTheme
+                                    .typography
+                                    .bodyLarge,
+                            fontWeight =
+                                FontWeight.Medium
+                        )
+                    },
+                    textStyle =
+                        MaterialTheme
+                            .typography
+                            .titleMedium,
+                    singleLine = true,
+                    modifier =
+                        Modifier.fillMaxWidth()
+                )
+
+                Spacer(
+                    modifier =
+                        Modifier.height(12.dp)
+                )
+
+                OutlinedTextField(
+                    value = targetAmount,
+                    onValueChange = {
+                        targetAmount = it
+                        goalResult = null
+                        validationError = null
+                    },
+                    label = {
+                        Text(
+                            text =
+                                "Target amount",
+                            style =
+                                MaterialTheme
+                                    .typography
+                                    .bodyLarge,
+                            fontWeight =
+                                FontWeight.Medium
+                        )
+                    },
+                    keyboardOptions =
+                        KeyboardOptions(
+                            keyboardType =
+                                KeyboardType
+                                    .Decimal
+                        ),
+                    textStyle =
+                        MaterialTheme
+                            .typography
+                            .titleMedium,
+                    modifier =
+                        Modifier.fillMaxWidth()
+                )
+
+                Spacer(
+                    modifier =
+                        Modifier.height(12.dp)
+                )
+
+                OutlinedTextField(
+                    value = currentAmount,
+                    onValueChange = {
+                        currentAmount = it
+                        goalResult = null
+                        validationError = null
+                    },
+                    label = {
+                        Text(
+                            text =
+                                "Current savings",
+                            style =
+                                MaterialTheme
+                                    .typography
+                                    .bodyLarge,
+                            fontWeight =
+                                FontWeight.Medium
+                        )
+                    },
+                    keyboardOptions =
+                        KeyboardOptions(
+                            keyboardType =
+                                KeyboardType
+                                    .Decimal
+                        ),
+                    textStyle =
+                        MaterialTheme
+                            .typography
+                            .titleMedium,
+                    modifier =
+                        Modifier.fillMaxWidth()
+                )
+
+                Spacer(
+                    modifier =
+                        Modifier.height(12.dp)
+                )
+
+                OutlinedTextField(
+                    value =
+                        contributionPerPay,
+                    onValueChange = {
+                        contributionPerPay = it
+                        goalResult = null
+                        validationError = null
+                    },
+                    label = {
+                        Text(
+                            text =
+                                "Contribution per pay",
+                            style =
+                                MaterialTheme
+                                    .typography
+                                    .bodyLarge,
+                            fontWeight =
+                                FontWeight.Medium
+                        )
+                    },
+                    keyboardOptions =
+                        KeyboardOptions(
+                            keyboardType =
+                                KeyboardType
+                                    .Decimal
+                        ),
+                    textStyle =
+                        MaterialTheme
+                            .typography
+                            .titleMedium,
+                    modifier =
+                        Modifier.fillMaxWidth()
+                )
+
+                Spacer(
+                    modifier =
+                        Modifier.height(12.dp)
+                )
+
+                OutlinedTextField(
+                    value =
+                        payFrequencyDays,
+                    onValueChange = {
+                        payFrequencyDays = it
+                        goalResult = null
+                        validationError = null
+                    },
+                    label = {
+                        Text(
+                            text =
+                                "Pay frequency in days",
+                            style =
+                                MaterialTheme
+                                    .typography
+                                    .bodyLarge,
+                            fontWeight =
+                                FontWeight.Medium
+                        )
+                    },
+                    keyboardOptions =
+                        KeyboardOptions(
+                            keyboardType =
+                                KeyboardType
+                                    .Number
+                        ),
+                    textStyle =
+                        MaterialTheme
+                            .typography
+                            .titleMedium,
+                    modifier =
+                        Modifier.fillMaxWidth()
+                )
+
+                Spacer(
+                    modifier =
+                        Modifier.height(24.dp)
+                )
+
+                Button(
+                    onClick = {
+                        keyboardController
+                            ?.hide()
+
+                        focusManager.clearFocus()
+
+                        val targetValue =
+                            targetAmount
+                                .toDoubleOrNull()
+
+                        val currentValue =
+                            currentAmount
+                                .toDoubleOrNull()
+
+                        val contributionValue =
+                            contributionPerPay
+                                .toDoubleOrNull()
+
+                        val frequencyValue =
+                            payFrequencyDays
+                                .toIntOrNull()
+
+                        validationError =
+                            when {
+                                goalName
+                                    .trim()
+                                    .isEmpty() ->
+                                    "Enter a goal name"
+
+                                targetValue == null ||
+                                        targetValue <=
+                                        0.0 ->
+                                    "Enter a valid target amount"
+
+                                currentValue == null ||
+                                        currentValue <
+                                        0.0 ->
+                                    "Enter valid current savings"
+
+                                contributionValue ==
+                                        null ||
+                                        contributionValue <
+                                        0.0 ->
+                                    "Enter a valid contribution"
+
+                                currentValue <
+                                        targetValue &&
+                                        contributionValue ==
+                                        0.0 ->
+                                    "Enter a contribution greater than zero"
+
+                                frequencyValue ==
+                                        null ||
+                                        frequencyValue <=
+                                        0 ->
+                                    "Enter a valid pay frequency"
+
+                                else ->
+                                    null
+                            }
+
+                        if (
+                            validationError ==
+                            null
+                        ) {
+                            val goal =
+                                selectedGoal.copy(
+                                    name =
+                                        goalName
+                                            .trim(),
+                                    targetAmount =
+                                        targetValue!!,
+                                    currentAmount =
+                                        currentValue!!,
+                                    contributionPerPay =
+                                        contributionValue!!,
+                                    payFrequencyDays =
+                                        frequencyValue!!
+                                )
+
+                            val result =
+                                FinanceCalculator
+                                    .calculateFinancialGoal(
+                                        goal
+                                    )
+
+                            if (
+                                draftGoal !=
+                                null
+                            ) {
+                                draftGoal =
+                                    goal
+                            }
+
+                            goalResult =
+                                result
+                            isEditing =
+                                false
+
+                            scope.launch {
+                                financePreferences
+                                    .saveFinancialGoal(
+                                        goal
+                                    )
+                            }
+
+                            analytics.logEvent(
+                                AnalyticsEvents
+                                    .FINANCIAL_GOAL_CALCULATED,
+                                Bundle().apply {
+                                    putString(
+                                        AnalyticsParams
+                                            .TOOL,
+                                        "financial_goal"
+                                    )
+                                    putLong(
+                                        AnalyticsParams
+                                            .PAY_FREQUENCY_DAYS,
+                                        frequencyValue
+                                            .toLong()
+                                    )
+                                }
+                            )
+                        }
+                    },
+                    modifier =
+                        Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        "Save & calculate"
+                    )
+                }
+
+                Spacer(
+                    modifier =
+                        Modifier.height(8.dp)
                 )
 
                 OutlinedButton(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier =
+                        Modifier.fillMaxWidth(),
                     onClick = {
-                        showDeleteGoalDialog = true
-                    }
-                ) {
-                    Text("Delete this goal")
-                }
-            }
+                        keyboardController
+                            ?.hide()
+                        focusManager
+                            .clearFocus()
 
-            Spacer(
-                modifier = Modifier.height(20.dp)
-            )
-
-            OutlinedTextField(
-                value = goalName,
-                onValueChange = {
-                    goalName = it
-                    goalResult = null
-                },
-                label = {
-                    Text(
-                        text = "Goal name",
-                        style = MaterialTheme.typography.bodyLarge,
-                        fontWeight = FontWeight.Medium
-                    )
-                },
-                textStyle = MaterialTheme.typography.titleMedium,
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            Spacer(
-                modifier = Modifier.height(12.dp)
-            )
-
-            OutlinedTextField(
-                value = targetAmount,
-                onValueChange = {
-                    targetAmount = it
-                    goalResult = null
-                    validationError = null
-                },
-                label = {
-                    Text(
-                        text = "Target amount",
-                        style = MaterialTheme.typography.bodyLarge,
-                        fontWeight = FontWeight.Medium
-                    )
-                },
-                keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Decimal
-                ),
-                textStyle = MaterialTheme.typography.titleMedium,
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            Spacer(
-                modifier = Modifier.height(12.dp)
-            )
-
-            OutlinedTextField(
-                value = currentAmount,
-                onValueChange = {
-                    currentAmount = it
-                    goalResult = null
-                    validationError = null
-                },
-                label = {
-                    Text(
-                        text = "Current savings",
-                        style = MaterialTheme.typography.bodyLarge,
-                        fontWeight = FontWeight.Medium
-                    )
-                },
-                keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Decimal
-                ),
-                textStyle = MaterialTheme.typography.titleMedium,
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            Spacer(
-                modifier = Modifier.height(12.dp)
-            )
-
-            OutlinedTextField(
-                value = contributionPerPay,
-                onValueChange = {
-                    contributionPerPay = it
-                    goalResult = null
-                    validationError = null
-                },
-                label = {
-                    Text(
-                        text = "Contribution per pay",
-                        style = MaterialTheme.typography.bodyLarge,
-                        fontWeight = FontWeight.Medium
-                    )
-                },
-                keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Decimal
-                ),
-                textStyle = MaterialTheme.typography.titleMedium,
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            Spacer(
-                modifier = Modifier.height(12.dp)
-            )
-
-            OutlinedTextField(
-                value = payFrequencyDays,
-                onValueChange = {
-                    payFrequencyDays = it
-                    goalResult = null
-                    validationError = null
-                },
-                label = {
-                    Text(
-                        text = "Pay frequency in days",
-                        style = MaterialTheme.typography.bodyLarge,
-                        fontWeight = FontWeight.Medium
-                    )
-                },
-                keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Number
-                ),
-                textStyle = MaterialTheme.typography.titleMedium,
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            Spacer(
-                modifier = Modifier.height(24.dp)
-            )
-
-            Button(
-                onClick = {
-                    keyboardController?.hide()
-                    focusManager.clearFocus()
-
-                    val targetValue =
-                        targetAmount.toDoubleOrNull()
-
-                    val currentValue =
-                        currentAmount.toDoubleOrNull()
-
-                    val contributionValue =
-                        contributionPerPay.toDoubleOrNull()
-
-                    val frequencyValue =
-                        payFrequencyDays.toIntOrNull()
-
-                    validationError =
-                        when {
-                            goalName.trim().isEmpty() ->
-                                "Enter a goal name"
-
-                            targetValue == null ||
-                                    targetValue <= 0.0 ->
-                                "Enter a valid target amount"
-
-                            currentValue == null ||
-                                    currentValue < 0.0 ->
-                                "Enter valid current savings"
-
-                            contributionValue == null ||
-                                    contributionValue < 0.0 ->
-                                "Enter a valid contribution"
-
-                            currentValue < targetValue &&
-                                    contributionValue == 0.0 ->
-                                "Enter a contribution greater than zero"
-
-                            frequencyValue == null ||
-                                    frequencyValue <= 0 ->
-                                "Enter a valid pay frequency"
-
-                            else ->
-                                null
-                        }
-
-                    if (
-                        validationError == null
-                    ) {
-                        val goal =
-                            selectedGoal.copy(
-                                name = goalName.trim(),
-                                targetAmount = targetValue!!,
-                                currentAmount = currentValue!!,
-                                contributionPerPay =
-                                    contributionValue!!,
-                                payFrequencyDays =
-                                    frequencyValue!!
+                        if (
+                            draftGoal != null
+                        ) {
+                            draftGoal = null
+                            selectedGoalId =
+                                "primary"
+                        } else {
+                            loadGoalFields(
+                                selectedGoal
                             )
-
-                        scope.launch {
-                            financePreferences
-                                .saveFinancialGoal(
-                                    goal
-                                )
                         }
 
                         goalResult =
-                            FinanceCalculator
-                                .calculateFinancialGoal(
-                                    goal
-                                )
+                            calculateSavedGoal(
+                                if (
+                                    draftGoal !=
+                                    null
+                                ) {
+                                    storedSelectedGoal
+                                } else {
+                                    selectedGoal
+                                }
+                            )
 
-                        analytics.logEvent(
-                            AnalyticsEvents
-                                .FINANCIAL_GOAL_CALCULATED,
-                            Bundle().apply {
-                                putString(
-                                    AnalyticsParams.TOOL,
-                                    "financial_goal"
-                                )
-                                putLong(
-                                    AnalyticsParams
-                                        .PAY_FREQUENCY_DAYS,
-                                    frequencyValue.toLong()
-                                )
-                            }
-                        )
-                    } else {
-                        goalResult = null
+                        isEditing =
+                            false
+                        validationError =
+                            null
                     }
-                },
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text("Calculate & save goal")
+                ) {
+                    Text(
+                        if (
+                            draftGoal != null
+                        ) {
+                            "Cancel new goal"
+                        } else {
+                            "Cancel edit"
+                        }
+                    )
+                }
+            } else {
+                Text(
+                    text =
+                        selectedGoal.name,
+                    style =
+                        MaterialTheme
+                            .typography
+                            .titleLarge,
+                    fontWeight =
+                        FontWeight.Bold
+                )
+
+                Spacer(
+                    modifier =
+                        Modifier.height(12.dp)
+                )
+
+                Surface(
+                    modifier =
+                        Modifier.fillMaxWidth(),
+                    shape =
+                        MaterialTheme
+                            .shapes
+                            .medium,
+                    color =
+                        MaterialTheme
+                            .colorScheme
+                            .surfaceVariant
+                ) {
+                    Column(
+                        modifier =
+                            Modifier.padding(
+                                16.dp
+                            )
+                    ) {
+                        Text(
+                            text =
+                                "Target: " +
+                                        FinanceFormatter.money(
+                                            selectedGoal
+                                                .targetAmount
+                                        ),
+                            style =
+                                MaterialTheme
+                                    .typography
+                                    .bodyLarge
+                        )
+
+                        Text(
+                            text =
+                                "Current savings: " +
+                                        FinanceFormatter.money(
+                                            selectedGoal
+                                                .currentAmount
+                                        ),
+                            style =
+                                MaterialTheme
+                                    .typography
+                                    .bodyLarge
+                        )
+
+                        Text(
+                            text =
+                                "Contribution per pay: " +
+                                        FinanceFormatter.money(
+                                            selectedGoal
+                                                .contributionPerPay
+                                        ),
+                            style =
+                                MaterialTheme
+                                    .typography
+                                    .bodyLarge
+                        )
+
+                        Text(
+                            text =
+                                "Pay every " +
+                                        selectedGoal
+                                            .payFrequencyDays +
+                                        " days",
+                            style =
+                                MaterialTheme
+                                    .typography
+                                    .bodyLarge
+                        )
+                    }
+                }
+
+                Spacer(
+                    modifier =
+                        Modifier.height(12.dp)
+                )
+
+                Row(
+                    modifier =
+                        Modifier.fillMaxWidth(),
+                    horizontalArrangement =
+                        Arrangement.spacedBy(
+                            8.dp
+                        )
+                ) {
+                    OutlinedButton(
+                        modifier =
+                            Modifier.weight(1f),
+                        onClick = {
+                            loadGoalFields(
+                                selectedGoal
+                            )
+                            isEditing =
+                                true
+                        }
+                    ) {
+                        Text("Edit goal")
+                    }
+
+                    if (
+                        selectedGoal.id !=
+                        "primary"
+                    ) {
+                        OutlinedButton(
+                            modifier =
+                                Modifier.weight(
+                                    1f
+                                ),
+                            onClick = {
+                                showDeleteGoalDialog =
+                                    true
+                            }
+                        ) {
+                            Text("Delete goal")
+                        }
+                    }
+                }
+
+                goalResult?.let { result ->
+                    Spacer(
+                        modifier =
+                            Modifier.height(
+                                20.dp
+                            )
+                    )
+
+                    FinancialGoalCalculation(
+                        result = result
+                    )
+                }
             }
 
             validationError?.let { error ->
                 Spacer(
-                    modifier = Modifier.height(12.dp)
+                    modifier =
+                        Modifier.height(12.dp)
                 )
 
                 Text(error)
             }
 
-            goalResult?.let { result ->
-                Spacer(
-                    modifier = Modifier.height(24.dp)
+            Spacer(
+                modifier =
+                    Modifier.height(20.dp)
+            )
+        }
+    }
+}
+
+@Composable
+private fun FinancialGoalCalculation(
+    result: FinancialGoalResult
+) {
+    val weeksRequired =
+        result.daysRequired / 7.0
+
+    val monthsRequired =
+        result.daysRequired / 30.44
+
+    val estimatedDate =
+        LocalDate.now()
+            .plusDays(
+                result.daysRequired
+                    .toLong()
+            )
+
+    Surface(
+        modifier =
+            Modifier.fillMaxWidth(),
+        shape =
+            MaterialTheme
+                .shapes
+                .medium,
+        color =
+            MaterialTheme
+                .colorScheme
+                .surfaceVariant
+    ) {
+        Column(
+            modifier =
+                Modifier.padding(
+                    16.dp
                 )
+        ) {
+            Text(
+                text =
+                    "Calculation",
+                style =
+                    MaterialTheme
+                        .typography
+                        .titleMedium,
+                fontWeight =
+                    FontWeight.Bold
+            )
 
-                val weeksRequired =
-                    result.daysRequired / 7.0
+            Spacer(
+                modifier =
+                    Modifier.height(8.dp)
+            )
 
-                val monthsRequired =
-                    result.daysRequired / 30.44
+            Text(
+                text =
+                    "Amount remaining: " +
+                            FinanceFormatter.money(
+                                result.amountRemaining
+                            ),
+                style =
+                    MaterialTheme
+                        .typography
+                        .titleMedium,
+                fontWeight =
+                    FontWeight.Bold
+            )
 
-                val estimatedDate =
-                    LocalDate.now()
-                        .plusDays(
-                            result.daysRequired.toLong()
-                        )
-
-                Text(
-                    text =
-                        "Amount remaining: " +
-                                FinanceFormatter.money(
-                                    result.amountRemaining
-                                ),
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
-                )
-
-                Text(
+            Text(
+                text =
                     "Contributions required: " +
-                            result.contributionsRequired
-                )
+                            result
+                                .contributionsRequired,
+                style =
+                    MaterialTheme
+                        .typography
+                        .bodyLarge
+            )
 
-                Text(
+            Text(
+                text =
                     "Time required: " +
                             "%.1f".format(
                                 weeksRequired
                             ) +
-                            " weeks"
-                )
+                            " weeks",
+                style =
+                    MaterialTheme
+                        .typography
+                        .bodyLarge
+            )
 
-                Text(
+            Text(
+                text =
                     "Approx. months: " +
                             "%.1f".format(
                                 monthsRequired
-                            )
-                )
+                            ),
+                style =
+                    MaterialTheme
+                        .typography
+                        .bodyLarge
+            )
 
-                Text(
-                    text =
-                        "Estimated goal date: " +
-                                estimatedDate,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
-                )
-            }
-
-            Spacer(
-                modifier = Modifier.height(20.dp)
+            Text(
+                text =
+                    "Estimated goal date: " +
+                            estimatedDate,
+                style =
+                    MaterialTheme
+                        .typography
+                        .titleMedium,
+                fontWeight =
+                    FontWeight.Bold
             )
         }
     }
