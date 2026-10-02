@@ -194,6 +194,7 @@ class RosterCloudSyncManager(
             customWorkDays = customWorkDays,
             customOffDays = customOffDays,
             startDate = startDate,
+            shutdownsJson = shutdownsJson,
             selectedStates =
                 selectedStates.sorted(),
             isActive = isActive && !isDeleted,
@@ -202,7 +203,7 @@ class RosterCloudSyncManager(
             createdAt = createdAt,
             updatedAt = updatedAt,
             deviceId = deviceId,
-            schemaVersion = 1,
+            schemaVersion = 2,
             ownerId = FirebaseAuth.getInstance().currentUser?.uid.orEmpty(),
         )
     }
@@ -217,6 +218,7 @@ class RosterCloudSyncManager(
             isCustomRoster = isCustomRoster,
             customWorkDays = customWorkDays,
             customOffDays = customOffDays,
+            shutdownsJson = shutdownsJson,
             createdAt = createdAt,
             updatedAt = updatedAt,
             isDeleted = isDeleted,
