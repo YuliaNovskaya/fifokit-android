@@ -388,15 +388,10 @@ object RosterExportManager {
                 )
 
                 canvas.drawText(
-                    when {
-                        day.isShutdown ->
-                            "SHUT"
-
-                        day.isWorkDay ->
-                            "WORK"
-
-                        else ->
-                            "OFF"
+                    if (day.isWorkDay) {
+                        "WORK"
+                    } else {
+                        "OFF"
                     },
                     centerX,
                     top + rowHeight * 0.76f,
