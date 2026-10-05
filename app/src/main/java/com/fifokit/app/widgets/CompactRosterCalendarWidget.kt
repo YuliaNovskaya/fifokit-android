@@ -266,7 +266,7 @@ private fun CompactRosterCalendarContent(
 
                 Text(
                     text =
-                        "Orange WORK · [ ] Today · P Public holiday · S Shutdown",
+                        "Orange WORK · [ ] Today · P Public holiday",
                     style = TextStyle(
                         color =
                             compactSecondary,
@@ -360,15 +360,12 @@ private fun CompactCalendarRows(
                                         }
                                     ) +
                                             (
-                                                when {
-                                                    day.isShutdown ->
-                                                        "S"
-
-                                                    day.isPublicHoliday ->
-                                                        "P"
-
-                                                    else ->
-                                                        ""
+                                                if (
+                                                    day.isPublicHoliday
+                                                ) {
+                                                    "P"
+                                                } else {
+                                                    ""
                                                 }
                                             ),
                                 modifier =
@@ -381,8 +378,7 @@ private fun CompactCalendarRows(
                                         )
                                         .background(
                                             if (
-                                                day.isWorkDay &&
-                                                !day.isShutdown
+                                                day.isWorkDay
                                             ) {
                                                 compactOrange
                                             } else {
