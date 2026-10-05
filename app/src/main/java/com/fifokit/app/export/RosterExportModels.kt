@@ -3,8 +3,6 @@ package com.fifokit.app.export
 import com.fifokit.app.domain.roster.AustralianState
 import com.fifokit.app.domain.roster.PublicHolidayProvider
 import com.fifokit.app.domain.roster.RosterCalculator
-import com.fifokit.app.domain.roster.ShutdownPeriod
-import com.fifokit.app.domain.roster.shutdownOn
 import java.time.LocalDate
 import java.time.YearMonth
 
@@ -14,14 +12,14 @@ data class RosterExportData(
     val workDays: Int,
     val offDays: Int,
     val selectedStates: Set<AustralianState>,
-    val shutdowns: List<ShutdownPeriod> = emptyList()
+    val isShutdownRoster: Boolean = false,
+    val endDate: LocalDate? = null
 )
 
 data class RosterExportDay(
     val date: LocalDate,
     val isWorkDay: Boolean,
-    val isPublicHoliday: Boolean,
-    val isShutdown: Boolean = false
+    val isPublicHoliday: Boolean
 )
 
 object RosterExportCalendar {
@@ -46,7 +44,11 @@ object RosterExportCalendar {
             cells += RosterExportDay(
                 date = date,
                 isWorkDay =
-                    data.shutdowns.shutdownOn(date) == null &&
+                    (
+                        !data.isShutdownRoster ||
+                        data.endDate == null ||
+                        !date.isAfter(data.endDate)
+                    ) &&
                             RosterCalculator.isWorkDay(
                                 date = date,
                                 startDate = data.startDate,
@@ -57,11 +59,7 @@ object RosterExportCalendar {
                     PublicHolidayProvider.isPublicHoliday(
                         date = date,
                         states = data.selectedStates
-                    ),
-                isShutdown =
-                    data.shutdowns.shutdownOn(
-                        date
-                    ) != null
+                    )
             )
         }
 
