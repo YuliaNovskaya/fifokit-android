@@ -233,7 +233,7 @@ object FinanceCalculator {
         offDays: Int,
         year: Int,
         selectedStates: Set<AustralianState> = emptySet(),
-        shutdowns: List<ShutdownPeriod> = emptyList()
+        rosterEndDate: LocalDate? = null
     ): EarningsResult {
 
         val firstDay = LocalDate.of(year, 1, 1)
