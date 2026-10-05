@@ -249,80 +249,64 @@ fun RosterCalendarScreen(
                                         ),
                             style = MaterialTheme.typography.bodyMedium
                         )
+                    } else if (
+                        viewModel.isShutdownRoster &&
+                        viewModel.endDate != null &&
+                        selectedDate.isAfter(
+                            viewModel.endDate
+                        )
+                    ) {
+                        Text(
+                            text =
+                                "Shutdown roster ended " +
+                                        viewModel.endDate,
+                            style = MaterialTheme.typography.bodyLarge
+                        )
                     } else {
-                        val shutdown =
-                            viewModel.shutdownOn(
+                        val daysFromStart =
+                            ChronoUnit.DAYS.between(
+                                viewModel.startDate,
                                 selectedDate
                             )
 
-                        if (shutdown != null) {
-                            Text(
-                                text =
-                                    "SHUTDOWN · OFF override",
-                                style =
-                                    MaterialTheme.typography
-                                        .titleMedium,
-                                fontWeight =
-                                    FontWeight.Bold
-                            )
+                        val cycleLength =
+                            workDays + offDays
 
+                        val cycleDay =
+                            Math.floorMod(
+                                daysFromStart,
+                                cycleLength.toLong()
+                            ).toInt()
+
+                        val statusText =
+                            if (cycleDay < workDays) {
+                                "WORK day " +
+                                        (cycleDay + 1) +
+                                        " of " +
+                                        workDays
+                            } else {
+                                "OFF day " +
+                                        (cycleDay - workDays + 1) +
+                                        " of " +
+                                        offDays
+                            }
+
+                        Text(
+                            text = statusText,
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+
+                        if (viewModel.isShutdownRoster) {
                             Spacer(
-                                modifier =
-                                    Modifier.height(
-                                        6.dp
-                                    )
+                                modifier = Modifier.height(6.dp)
                             )
 
                             Text(
                                 text =
-                                    shutdown.name,
-                                style =
-                                    MaterialTheme.typography
-                                        .bodyLarge
-                            )
-                        } else {
-                            val daysFromStart =
-                                ChronoUnit.DAYS.between(
-                                    viewModel.startDate,
-                                    selectedDate
-                                )
-
-                            val cycleLength =
-                                workDays + offDays
-
-                            val cycleDay =
-                                Math.floorMod(
-                                    daysFromStart,
-                                    cycleLength.toLong()
-                                ).toInt()
-
-                            val statusText =
-                                if (
-                                    cycleDay <
-                                    workDays
-                                ) {
-                                    "WORK day " +
-                                            (cycleDay + 1) +
-                                            " of " +
-                                            workDays
-                                } else {
-                                    "OFF day " +
-                                            (
-                                                cycleDay -
-                                                        workDays +
-                                                        1
-                                                ) +
-                                            " of " +
-                                            offDays
-                                }
-
-                            Text(
-                                text = statusText,
-                                style =
-                                    MaterialTheme.typography
-                                        .titleMedium,
-                                fontWeight =
-                                    FontWeight.Bold
+                                    "Shutdown roster · ends " +
+                                            viewModel.endDate,
+                                style = MaterialTheme.typography.bodyMedium
                             )
                         }
                     }
@@ -603,10 +587,15 @@ fun RosterCalendarScreen(
 
             Text(
                 text =
-                    if (viewModel.isCustomRoster) {
-                        "${viewModel.customWorkDays}/${viewModel.customOffDays} custom roster"
-                    } else {
-                        "${viewModel.selectedPattern.label} roster"
+                    when {
+                        viewModel.isShutdownRoster ->
+                            "${viewModel.customWorkDays}/${viewModel.customOffDays} shutdown roster · ends ${viewModel.endDate}"
+
+                        viewModel.isCustomRoster ->
+                            "${viewModel.customWorkDays}/${viewModel.customOffDays} custom roster"
+
+                        else ->
+                            "${viewModel.selectedPattern.label} roster"
                     },
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -920,16 +909,96 @@ private fun CalendarLegend() {
 private fun RosterTodaySummary(
     viewModel: RosterSetupViewModel
 ) {
-    val todayIsWork = viewModel.isTodayWorkDay()
-    val nextChangeDate = viewModel.nextRosterChangeDate()
-    val daysRemaining = viewModel.daysUntilRosterChange()
+    val today = LocalDate.now()
 
-    val nextStatus = if (todayIsWork) "OFF" else "WORK"
+    if (
+        viewModel.isShutdownRoster &&
+        today.isBefore(viewModel.startDate)
+    ) {
+        Surface(
+            modifier = Modifier.fillMaxWidth(),
+            shape = MaterialTheme.shapes.medium,
+            color = MaterialTheme.colorScheme.surfaceVariant
+        ) {
+            Text(
+                text =
+                    "Shutdown starts " +
+                            viewModel.startDate,
+                modifier = Modifier.padding(16.dp),
+                style = MaterialTheme.typography.titleMedium
+            )
+        }
+        return
+    }
 
-    val formatter = DateTimeFormatter.ofPattern(
-        "EEE, d MMM",
-        Locale.getDefault()
-    )
+    if (
+        viewModel.isShutdownRoster &&
+        viewModel.endDate != null &&
+        today.isAfter(viewModel.endDate)
+    ) {
+        Surface(
+            modifier = Modifier.fillMaxWidth(),
+            shape = MaterialTheme.shapes.medium,
+            color = MaterialTheme.colorScheme.surfaceVariant
+        ) {
+            Text(
+                text =
+                    "Shutdown ended " +
+                            viewModel.endDate,
+                modifier = Modifier.padding(16.dp),
+                style = MaterialTheme.typography.titleMedium
+            )
+        }
+        return
+    }
+
+    val todayIsWork =
+        viewModel.isTodayWorkDay()
+
+    val nextChangeDate =
+        viewModel.nextRosterChangeDate()
+
+    val daysRemaining =
+        viewModel.daysUntilRosterChange()
+
+    val formatter =
+        DateTimeFormatter.ofPattern(
+            "EEE, d MMM",
+            Locale.getDefault()
+        )
+
+    val nextLine =
+        if (
+            viewModel.isShutdownRoster &&
+            viewModel.endDate != null &&
+            nextChangeDate.isAfter(
+                viewModel.endDate
+            )
+        ) {
+            "Shutdown ends " +
+                    viewModel.endDate
+                        .format(formatter)
+        } else {
+            val nextStatus =
+                if (todayIsWork) {
+                    "OFF"
+                } else {
+                    "WORK"
+                }
+
+            nextStatus +
+                    " starts " +
+                    nextChangeDate
+                        .format(formatter) +
+                    " · " +
+                    daysRemaining +
+                    " " +
+                    if (daysRemaining == 1L) {
+                        "day"
+                    } else {
+                        "days"
+                    }
+        }
 
     Surface(
         modifier = Modifier.fillMaxWidth(),
@@ -940,18 +1009,22 @@ private fun RosterTodaySummary(
             modifier = Modifier.padding(16.dp)
         ) {
             Text(
-                text = "Today: ${if (todayIsWork) "WORK" else "OFF"}",
+                text =
+                    "Today: " +
+                            if (todayIsWork) {
+                                "WORK"
+                            } else {
+                                "OFF"
+                            },
                 style = MaterialTheme.typography.titleMedium
             )
 
-            Spacer(modifier = Modifier.height(4.dp))
+            Spacer(
+                modifier = Modifier.height(4.dp)
+            )
 
             Text(
-                text = "$nextStatus starts ${
-                    nextChangeDate.format(formatter)
-                } · $daysRemaining ${
-                    if (daysRemaining == 1L) "day" else "days"
-                }",
+                text = nextLine,
                 style = MaterialTheme.typography.bodyMedium
             )
         }
