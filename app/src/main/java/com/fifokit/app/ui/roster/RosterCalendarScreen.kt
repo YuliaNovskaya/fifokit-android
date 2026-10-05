@@ -638,9 +638,7 @@ fun RosterCalendarScreen(
                             viewModel.selectedStates
                         )
                     },
-                    isShutdown = {
-                        viewModel.shutdownOn(it) != null
-                    },
+                    isRosterActive = viewModel::isRosterActive,
                     onDateSelected = {
                         selectedCalendarDate = it
                     }
@@ -659,6 +657,7 @@ fun RosterCalendarScreen(
                 YearCalendarGrid(
                     year = month.year,
                     startDate = viewModel.startDate,
+                    isRosterActive = viewModel::isRosterActive,
                     isWorkDay = viewModel::isWorkDay,
                     isPublicHoliday = { date ->
                         PublicHolidayProvider.isPublicHoliday(
@@ -703,7 +702,7 @@ private fun CalendarGrid(
     startDate: LocalDate,
     isWorkDay: (LocalDate) -> Boolean,
     isPublicHoliday: (LocalDate) -> Boolean,
-    isShutdown: (LocalDate) -> Boolean,
+    isRosterActive: (LocalDate) -> Boolean,
     onDateSelected: (LocalDate) -> Unit,
     modifier: Modifier = Modifier
 )
@@ -743,11 +742,10 @@ private fun CalendarGrid(
                 } else {
                     CalendarDay(
                         date = date,
-                        isRosterActive = !date.isBefore(startDate),
+                        isRosterActive = isRosterActive(date),
                         isWorkDay = isWorkDay(date),
                         isStartDate = date == startDate,
                         isPublicHoliday = isPublicHoliday(date),
-                        isShutdown = isShutdown(date),
                         onClick = {
                             onDateSelected(date)
                         }
@@ -765,7 +763,6 @@ private fun CalendarDay(
     isWorkDay: Boolean,
     isStartDate: Boolean,
     isPublicHoliday: Boolean,
-    isShutdown: Boolean,
     onClick: () -> Unit
 ) {
     val isToday = date == LocalDate.now()
@@ -847,7 +844,6 @@ private fun CalendarDay(
                     Text(
                         text = when {
                             !isRosterActive -> ""
-                            isShutdown -> "SHUT"
                             isWorkDay -> "WORK"
                             else -> "OFF"
                         },
@@ -909,19 +905,7 @@ private fun CalendarLegend() {
                     style = MaterialTheme.typography.labelMedium
                 )
             }
-            Surface(
-                shape = MaterialTheme.shapes.small,
-                color = MaterialTheme.colorScheme.secondaryContainer
-            ) {
-                Text(
-                    text = "SHUT",
-                    modifier = Modifier.padding(
-                        horizontal = 10.dp,
-                        vertical = 5.dp
-                    ),
-                    style = MaterialTheme.typography.labelMedium
-                )
-            }
+
         }
 
         Text(
@@ -1012,6 +996,7 @@ private fun TodayPhrase(
 private fun YearCalendarGrid(
     year: Int,
     startDate: LocalDate,
+    isRosterActive: (LocalDate) -> Boolean,
     isWorkDay: (LocalDate) -> Boolean,
     isPublicHoliday: (LocalDate) -> Boolean,
     modifier: Modifier = Modifier
@@ -1030,6 +1015,7 @@ private fun YearCalendarGrid(
             MiniMonthCalendar(
                 month = yearMonth,
                 startDate = startDate,
+                isRosterActive = isRosterActive,
                 isWorkDay = isWorkDay,
                 isPublicHoliday = isPublicHoliday
             )
@@ -1041,6 +1027,7 @@ private fun YearCalendarGrid(
 private fun MiniMonthCalendar(
     month: YearMonth,
     startDate: LocalDate,
+    isRosterActive: (LocalDate) -> Boolean,
     isWorkDay: (LocalDate) -> Boolean,
     isPublicHoliday: (LocalDate) -> Boolean
 ) {
@@ -1110,7 +1097,7 @@ private fun MiniMonthCalendar(
                             MiniCalendarDay(
                                 modifier = Modifier.weight(1f),
                                 date = date,
-                                isRosterActive = !date.isBefore(startDate),
+                                isRosterActive = isRosterActive(date),
                                 isWorkDay = isWorkDay(date),
                                 isStartDate = date == startDate,
                                 isPublicHoliday = isPublicHoliday(date)
