@@ -948,6 +948,7 @@ private fun RosterTodaySummary(
     viewModel: RosterSetupViewModel
 ) {
     val today = LocalDate.now()
+    val shutdownEndDate = viewModel.endDate
 
     if (
         viewModel.isShutdownRoster &&
@@ -971,8 +972,8 @@ private fun RosterTodaySummary(
 
     if (
         viewModel.isShutdownRoster &&
-        viewModel.endDate != null &&
-        today.isAfter(viewModel.endDate)
+        shutdownEndDate != null &&
+        today.isAfter(shutdownEndDate)
     ) {
         Surface(
             modifier = Modifier.fillMaxWidth(),
@@ -982,7 +983,7 @@ private fun RosterTodaySummary(
             Text(
                 text =
                     "Shutdown ended " +
-                            viewModel.endDate,
+                            shutdownEndDate,
                 modifier = Modifier.padding(16.dp),
                 style = MaterialTheme.typography.titleMedium
             )
@@ -1008,13 +1009,13 @@ private fun RosterTodaySummary(
     val nextLine =
         if (
             viewModel.isShutdownRoster &&
-            viewModel.endDate != null &&
+            shutdownEndDate != null &&
             nextChangeDate.isAfter(
-                viewModel.endDate
+                shutdownEndDate
             )
         ) {
             "Shutdown ends " +
-                    viewModel.endDate
+                    shutdownEndDate
                         .format(formatter)
         } else {
             val nextStatus =
