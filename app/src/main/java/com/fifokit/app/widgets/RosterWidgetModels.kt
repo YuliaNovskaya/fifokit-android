@@ -10,9 +10,6 @@ import com.fifokit.app.domain.model.RosterPattern
 import com.fifokit.app.domain.roster.AustralianState
 import com.fifokit.app.domain.roster.PublicHolidayProvider
 import com.fifokit.app.domain.roster.RosterCalculator
-import com.fifokit.app.domain.roster.ShutdownPeriod
-import com.fifokit.app.domain.roster.ShutdownPeriodCodec
-import com.fifokit.app.domain.roster.shutdownOn
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -26,7 +23,8 @@ data class WidgetRoster(
     val startDate: LocalDate,
     val workDays: Int,
     val offDays: Int,
-    val shutdowns: List<ShutdownPeriod> = emptyList(),
+    val isShutdownRoster: Boolean = false,
+    val endDate: LocalDate? = null,
     val selectedStates: Set<AustralianState> =
         setOf(AustralianState.WA)
 )
@@ -43,8 +41,7 @@ data class WidgetCalendarDay(
     val date: LocalDate,
     val isWorkDay: Boolean,
     val isToday: Boolean,
-    val isPublicHoliday: Boolean,
-    val isShutdown: Boolean = false
+    val isPublicHoliday: Boolean
 )
 
 class RosterWidgetDataSource(
@@ -159,10 +156,13 @@ class RosterWidgetDataSource(
             startDate = parsedStartDate,
             workDays = resolvedWorkDays,
             offDays = resolvedOffDays,
-            shutdowns =
-                ShutdownPeriodCodec.decode(
-                    shutdownsJson
-                ),
+            isShutdownRoster = isShutdownRoster,
+            endDate =
+                endDate?.let {
+                    runCatching {
+                        LocalDate.parse(it)
+                    }.getOrNull()
+                },
             selectedStates = states
         )
     }
@@ -266,7 +266,11 @@ object CompactRosterCalendarCalculator {
                 WidgetCalendarDay(
                     date = date,
                     isWorkDay =
-                        roster.shutdowns.shutdownOn(date) == null &&
+                        (
+                            !roster.isShutdownRoster ||
+                            roster.endDate == null ||
+                            !date.isAfter(roster.endDate)
+                        ) &&
                                 RosterCalculator
                                     .isWorkDay(
                                         date = date,
@@ -286,12 +290,7 @@ object CompactRosterCalendarCalculator {
                                 states =
                                     roster
                                         .selectedStates
-                            ),
-                    isShutdown =
-                        roster.shutdowns
-                            .shutdownOn(
-                                date
-                            ) != null
+                            )
                 )
         }
 
