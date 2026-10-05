@@ -510,7 +510,12 @@ fun FIFOKITApp(
                     customOffDays = rosterSetupViewModel.customOffDays,
                     rosterStartDate = rosterSetupViewModel.startDate,
                     selectedStates = rosterSetupViewModel.selectedStates,
-                    shutdowns = rosterSetupViewModel.shutdowns,
+                    rosterEndDate =
+                        if (rosterSetupViewModel.isShutdownRoster) {
+                            rosterSetupViewModel.endDate
+                        } else {
+                            null
+                        },
                     onBack = {
                         showAnnualEarnings = false
                     }
@@ -523,7 +528,12 @@ fun FIFOKITApp(
                     customOffDays = rosterSetupViewModel.customOffDays,
                     rosterStartDate = rosterSetupViewModel.startDate,
                     selectedStates = rosterSetupViewModel.selectedStates,
-                    shutdowns = rosterSetupViewModel.shutdowns,
+                    rosterEndDate =
+                        if (rosterSetupViewModel.isShutdownRoster) {
+                            rosterSetupViewModel.endDate
+                        } else {
+                            null
+                        },
                     onBack = {
                         showPayCalculator = false
                     }
