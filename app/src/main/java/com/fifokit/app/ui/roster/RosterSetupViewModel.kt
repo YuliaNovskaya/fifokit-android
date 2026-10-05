@@ -16,9 +16,6 @@ import java.time.LocalDate
 import java.time.temporal.ChronoUnit
 import com.fifokit.app.notifications.RosterReminderScheduler
 import com.fifokit.app.domain.roster.AustralianState
-import com.fifokit.app.domain.roster.ShutdownPeriod
-import com.fifokit.app.domain.roster.ShutdownPeriodCodec
-import com.fifokit.app.domain.roster.shutdownOn
 import android.os.Bundle
 import com.google.firebase.analytics.FirebaseAnalytics
 import com.fifokit.app.data.ReminderSettings
@@ -52,7 +49,8 @@ fun RosterSetupRoute(
         customWorkDays = viewModel.customWorkDays,
         customOffDays = viewModel.customOffDays,
         startDate = viewModel.startDate,
-        shutdowns = viewModel.shutdowns,
+        isShutdownRoster = viewModel.isShutdownRoster,
+        endDate = viewModel.endDate,
         onRosterSelected = viewModel::selectPattern,
         onBack = onBack,
         onCustomRosterSelected = {
@@ -66,11 +64,21 @@ fun RosterSetupRoute(
                 onProRequested("custom_roster")
             }
         },
+        onShutdownRosterSelected = {
+            if (
+                ProAccess.canUse(
+                    ProFeature.CUSTOM_ROSTER
+                )
+            ) {
+                viewModel.selectShutdownRoster()
+            } else {
+                onProRequested("shutdown_roster")
+            }
+        },
         onCustomWorkDaysChanged = viewModel::updateCustomWorkDays,
         onCustomOffDaysChanged = viewModel::updateCustomOffDays,
         onStartDateSelected = viewModel::selectStartDate,
-        onAddShutdown = viewModel::addShutdown,
-        onRemoveShutdown = viewModel::removeShutdown,
+        onEndDateSelected = viewModel::selectEndDate,
         showCancelNewRoster = viewModel.isCreatingNewRoster,
         onCancelNewRoster = {
             viewModel.cancelNewRoster()
@@ -184,7 +192,10 @@ class RosterSetupViewModel(
     var startDate by mutableStateOf(LocalDate.now())
         private set
 
-    var shutdowns by mutableStateOf<List<ShutdownPeriod>>(emptyList())
+    var isShutdownRoster by mutableStateOf(false)
+        private set
+
+    var endDate by mutableStateOf<LocalDate?>(null)
         private set
 
     var rosterName by mutableStateOf("My Roster")
@@ -265,7 +276,8 @@ class RosterSetupViewModel(
                 customWorkDays = 14
                 customOffDays = 7
                 startDate = LocalDate.now()
-                shutdowns = emptyList()
+                isShutdownRoster = false
+                endDate = null
                 hasSavedRoster = false
             }
 
@@ -305,10 +317,23 @@ class RosterSetupViewModel(
     fun selectPattern(pattern: RosterPattern) {
         selectedPattern = pattern
         isCustomRoster = false
+        isShutdownRoster = false
+        endDate = null
     }
 
     fun selectCustomRoster() {
         isCustomRoster = true
+        isShutdownRoster = false
+        endDate = null
+    }
+
+    fun selectShutdownRoster() {
+        isCustomRoster = true
+        isShutdownRoster = true
+
+        if (endDate == null || endDate!!.isBefore(startDate)) {
+            endDate = startDate.plusDays(13)
+        }
     }
 
     fun updateCustomWorkDays(days: Int) {
@@ -321,57 +346,42 @@ class RosterSetupViewModel(
 
     fun selectStartDate(date: LocalDate) {
         startDate = date
-    }
 
-    fun addShutdown(
-        name: String,
-        startDate: LocalDate,
-        endDate: LocalDate
-    ) {
-        if (endDate.isBefore(startDate)) {
-            return
+        if (
+            isShutdownRoster &&
+            (
+                endDate == null ||
+                endDate!!.isBefore(date)
+            )
+        ) {
+            endDate = date
         }
-
-        shutdowns =
-            (shutdowns +
-                    ShutdownPeriod(
-                        name =
-                            name.trim().ifBlank {
-                                "Shutdown"
-                            },
-                        startDate = startDate,
-                        endDate = endDate
-                    ))
-                .sortedBy {
-                    it.startDate
-                }
     }
 
-    fun removeShutdown(
-        id: String
-    ) {
-        shutdowns =
-            shutdowns.filterNot {
-                it.id == id
-            }
-    }
-
-    fun shutdownOn(
-        date: LocalDate
-    ): ShutdownPeriod? {
-        return shutdowns.shutdownOn(date)
+    fun selectEndDate(date: LocalDate) {
+        if (!date.isBefore(startDate)) {
+            endDate = date
+        }
     }
 
     fun isRosterActive(date: LocalDate): Boolean {
-        return !date.isBefore(startDate)
+        if (date.isBefore(startDate)) {
+            return false
+        }
+
+        if (
+            isShutdownRoster &&
+            endDate != null &&
+            date.isAfter(endDate)
+        ) {
+            return false
+        }
+
+        return true
     }
 
     fun isWorkDay(date: LocalDate): Boolean {
         if (!isRosterActive(date)) {
-            return false
-        }
-
-        if (shutdownOn(date) != null) {
             return false
         }
 
@@ -398,11 +408,26 @@ class RosterSetupViewModel(
     fun nextRosterChangeDate(
         fromDate: LocalDate = LocalDate.now()
     ): LocalDate {
-        val currentStatus = isWorkDay(fromDate)
+        if (
+            isShutdownRoster &&
+            endDate != null &&
+            !fromDate.isBefore(endDate)
+        ) {
+            return endDate!!.plusDays(1)
+        }
 
+        val currentStatus = isWorkDay(fromDate)
         var date = fromDate.plusDays(1)
 
         while (isWorkDay(date) == currentStatus) {
+            if (
+                isShutdownRoster &&
+                endDate != null &&
+                date.isAfter(endDate)
+            ) {
+                return endDate!!.plusDays(1)
+            }
+
             date = date.plusDays(1)
         }
 
@@ -443,10 +468,9 @@ class RosterSetupViewModel(
                         isCustomRoster = isCustomRoster,
                         customWorkDays = customWorkDays,
                         customOffDays = customOffDays,
-                        shutdownsJson =
-                            ShutdownPeriodCodec.encode(
-                                shutdowns
-                            )
+                        isShutdownRoster = isShutdownRoster,
+                        endDate =
+                            endDate?.toString()
                     )
 
                 activeRosterId = newRosterId
@@ -463,10 +487,10 @@ class RosterSetupViewModel(
                         isCustomRoster = isCustomRoster,
                         customWorkDays = customWorkDays,
                         customOffDays = customOffDays,
-                        shutdownsJson =
-                            ShutdownPeriodCodec.encode(
-                                shutdowns
-                            )
+                        isShutdownRoster = isShutdownRoster,
+                        endDate =
+                            endDate?.toString(),
+                        shutdownsJson = "[]"
                     )
                 )
             }
@@ -688,10 +712,13 @@ class RosterSetupViewModel(
         isCustomRoster = roster.isCustomRoster
         customWorkDays = roster.customWorkDays
         customOffDays = roster.customOffDays
-        shutdowns =
-            ShutdownPeriodCodec.decode(
-                roster.shutdownsJson
-            )
+        isShutdownRoster = roster.isShutdownRoster
+        endDate =
+            roster.endDate?.let {
+                runCatching {
+                    LocalDate.parse(it)
+                }.getOrNull()
+            }
 
         runCatching {
             LocalDate.parse(roster.startDate)
@@ -712,7 +739,8 @@ class RosterSetupViewModel(
         customWorkDays = 14
         customOffDays = 7
         startDate = LocalDate.now()
-        shutdowns = emptyList()
+        isShutdownRoster = false
+        endDate = null
 
         hasSavedRoster = false
     }
@@ -819,7 +847,8 @@ class RosterSetupViewModel(
                 customWorkDays = 14
                 customOffDays = 7
                 startDate = LocalDate.now()
-                shutdowns = emptyList()
+                isShutdownRoster = false
+                endDate = null
                 hasSavedRoster = false
             }
 
@@ -850,7 +879,8 @@ class RosterSetupViewModel(
             workDays = workDays,
             offDays = offDays,
             selectedStates = selectedStates,
-            shutdowns = shutdowns
+            isShutdownRoster = isShutdownRoster,
+            endDate = endDate
         )
     }
 
