@@ -202,8 +202,8 @@ fun RosterCalendarScreen(
             }
 
         val isRosterActive =
-            !selectedDate.isBefore(
-                viewModel.startDate
+            viewModel.isRosterActive(
+                selectedDate
             )
 
         val holidays =
@@ -229,39 +229,65 @@ fun RosterCalendarScreen(
             text = {
                 Column {
                     if (!isRosterActive) {
-                        Text(
-                            text = "Roster has not started yet.",
-                            style = MaterialTheme.typography.bodyLarge
-                        )
+                        if (
+                            viewModel.isShutdownRoster &&
+                            viewModel.endDate != null &&
+                            selectedDate.isAfter(
+                                viewModel.endDate
+                            )
+                        ) {
+                            Text(
+                                text =
+                                    "Shutdown roster has ended.",
+                                style =
+                                    MaterialTheme.typography
+                                        .bodyLarge
+                            )
 
-                        Spacer(
-                            modifier = Modifier.height(8.dp)
-                        )
+                            Spacer(
+                                modifier =
+                                    Modifier.height(8.dp)
+                            )
 
-                        Text(
-                            text =
-                                "Roster starts " +
-                                        viewModel.startDate.format(
-                                            DateTimeFormatter.ofPattern(
-                                                "d MMM yyyy",
-                                                Locale.getDefault()
-                                            )
-                                        ),
-                            style = MaterialTheme.typography.bodyMedium
-                        )
-                    } else if (
-                        viewModel.isShutdownRoster &&
-                        viewModel.endDate != null &&
-                        selectedDate.isAfter(
-                            viewModel.endDate
-                        )
-                    ) {
-                        Text(
-                            text =
-                                "Shutdown roster ended " +
-                                        viewModel.endDate,
-                            style = MaterialTheme.typography.bodyLarge
-                        )
+                            Text(
+                                text =
+                                    "Ended " +
+                                            viewModel.endDate,
+                                style =
+                                    MaterialTheme.typography
+                                        .bodyMedium
+                            )
+                        } else {
+                            Text(
+                                text =
+                                    "Roster has not started yet.",
+                                style =
+                                    MaterialTheme.typography
+                                        .bodyLarge
+                            )
+
+                            Spacer(
+                                modifier =
+                                    Modifier.height(8.dp)
+                            )
+
+                            Text(
+                                text =
+                                    "Roster starts " +
+                                            viewModel.startDate
+                                                .format(
+                                                    DateTimeFormatter
+                                                        .ofPattern(
+                                                            "d MMM yyyy",
+                                                            Locale
+                                                                .getDefault()
+                                                        )
+                                                ),
+                                style =
+                                    MaterialTheme.typography
+                                        .bodyMedium
+                            )
+                        }
                     } else {
                         val daysFromStart =
                             ChronoUnit.DAYS.between(
@@ -286,27 +312,39 @@ fun RosterCalendarScreen(
                                         workDays
                             } else {
                                 "OFF day " +
-                                        (cycleDay - workDays + 1) +
+                                        (
+                                            cycleDay -
+                                                    workDays +
+                                                    1
+                                            ) +
                                         " of " +
                                         offDays
                             }
 
                         Text(
                             text = statusText,
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold
+                            style =
+                                MaterialTheme.typography
+                                    .titleMedium,
+                            fontWeight =
+                                FontWeight.Bold
                         )
 
-                        if (viewModel.isShutdownRoster) {
+                        if (
+                            viewModel.isShutdownRoster
+                        ) {
                             Spacer(
-                                modifier = Modifier.height(6.dp)
+                                modifier =
+                                    Modifier.height(6.dp)
                             )
 
                             Text(
                                 text =
                                     "Shutdown roster · ends " +
                                             viewModel.endDate,
-                                style = MaterialTheme.typography.bodyMedium
+                                style =
+                                    MaterialTheme.typography
+                                        .bodyMedium
                             )
                         }
                     }
