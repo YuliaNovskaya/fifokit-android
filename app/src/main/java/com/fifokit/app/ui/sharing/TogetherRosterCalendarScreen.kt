@@ -44,8 +44,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.platform.LocalContext
 import com.fifokit.app.domain.roster.PublicHolidayProvider
 import com.fifokit.app.domain.roster.AustralianState
-import com.fifokit.app.domain.roster.ShutdownPeriodCodec
-import com.fifokit.app.domain.roster.shutdownOn
 import com.google.firebase.analytics.FirebaseAnalytics
 import com.google.firebase.analytics.logEvent
 import com.fifokit.app.analytics.AnalyticsEvents
@@ -113,20 +111,18 @@ fun TogetherRosterCalendarScreen(
         mutableStateOf(YearMonth.now())
     }
 
-    val partnerShutdowns =
-        remember(
-            partnerRoster.shutdownsJson
-        ) {
-            ShutdownPeriodCodec.decode(
-                partnerRoster.shutdownsJson
-            )
+    val partnerEndDate =
+        partnerRoster.endDate?.let {
+            runCatching {
+                LocalDate.parse(it)
+            }.getOrNull()
         }
 
     fun partnerIsWorkDay(date: LocalDate): Boolean {
         if (
-            partnerShutdowns.shutdownOn(
-                date
-            ) != null
+            partnerRoster.isShutdownRoster &&
+            partnerEndDate != null &&
+            date.isAfter(partnerEndDate)
         ) {
             return false
         }
