@@ -16,8 +16,6 @@ import com.fifokit.app.data.RosterRepository
 import com.fifokit.app.data.local.RosterDatabase
 import com.fifokit.app.domain.model.RosterPattern
 import com.fifokit.app.domain.roster.RosterCalculator
-import com.fifokit.app.domain.roster.ShutdownPeriodCodec
-import com.fifokit.app.domain.roster.shutdownOn
 import kotlinx.coroutines.flow.first
 import java.time.LocalDate
 
@@ -72,14 +70,23 @@ class RosterReminderWorker(
         val today = LocalDate.now()
         val tomorrow = today.plusDays(1)
 
-        val shutdowns =
-            ShutdownPeriodCodec.decode(
-                roster.shutdownsJson
-            )
+        val rosterEndDate =
+            roster.endDate?.let {
+                runCatching {
+                    LocalDate.parse(it)
+                }.getOrNull()
+            }
+
+        fun withinRosterBounds(
+            date: LocalDate
+        ): Boolean {
+            return !roster.isShutdownRoster ||
+                    rosterEndDate == null ||
+                    !date.isAfter(rosterEndDate)
+        }
 
         val todayIsWork =
-            shutdowns.shutdownOn(today) == null &&
-
+            withinRosterBounds(today) &&
             if (roster.isCustomRoster) {
                 RosterCalculator.isWorkDay(
                     date = today,
@@ -96,7 +103,7 @@ class RosterReminderWorker(
             }
 
         val tomorrowIsWork =
-            shutdowns.shutdownOn(tomorrow) == null &&
+            withinRosterBounds(tomorrow) &&
             if (roster.isCustomRoster) {
                 RosterCalculator.isWorkDay(
                     date = tomorrow,
