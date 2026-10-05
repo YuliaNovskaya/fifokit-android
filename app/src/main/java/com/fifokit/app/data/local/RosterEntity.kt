@@ -28,6 +28,11 @@ data class RosterEntity(
 
     val customOffDays: Int,
 
+    val isShutdownRoster: Boolean = false,
+
+    val endDate: String? = null,
+
+    // Retained only for Room v4 compatibility. No longer used.
     val shutdownsJson: String = "[]",
 
     val createdAt: Long = System.currentTimeMillis(),
