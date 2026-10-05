@@ -50,6 +50,8 @@ class CloudRepository(
             "customWorkDays" to roster.customWorkDays,
             "customOffDays" to roster.customOffDays,
             "startDate" to roster.startDate,
+            "isShutdownRoster" to roster.isShutdownRoster,
+            "endDate" to roster.endDate,
             "shutdownsJson" to roster.shutdownsJson,
             "selectedStates" to roster.selectedStates,
             "isActive" to roster.isActive,
@@ -110,6 +112,13 @@ class CloudRepository(
 
                 startDate =
                     document.getString("startDate").orEmpty(),
+
+                isShutdownRoster =
+                    document.getBoolean("isShutdownRoster")
+                        ?: false,
+
+                endDate =
+                    document.getString("endDate"),
 
                 shutdownsJson =
                     document.getString("shutdownsJson")
