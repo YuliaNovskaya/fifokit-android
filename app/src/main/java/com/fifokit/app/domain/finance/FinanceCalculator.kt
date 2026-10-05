@@ -5,8 +5,6 @@ import com.fifokit.app.domain.model.RosterPattern
 import com.fifokit.app.domain.roster.RosterCalculator
 import com.fifokit.app.domain.roster.AustralianState
 import com.fifokit.app.domain.roster.PublicHolidayProvider
-import com.fifokit.app.domain.roster.ShutdownPeriod
-import com.fifokit.app.domain.roster.shutdownOn
 import java.time.LocalDate
 
 object FinanceCalculator {
@@ -171,7 +169,7 @@ object FinanceCalculator {
         rosterStartDate: LocalDate,
         year: Int,
         selectedStates: Set<AustralianState> = emptySet(),
-        shutdowns: List<ShutdownPeriod> = emptyList()
+        rosterEndDate: LocalDate? = null
     ): EarningsResult {
 
         val firstDay = LocalDate.of(year, 1, 1)
@@ -184,7 +182,10 @@ object FinanceCalculator {
 
         while (!date.isAfter(lastDay)) {
             if (
-                shutdowns.shutdownOn(date) == null &&
+                (
+                    rosterEndDate == null ||
+                    !date.isAfter(rosterEndDate)
+                ) &&
                 RosterCalculator.isWorkDay(
                     date = date,
                     startDate = rosterStartDate,
@@ -210,9 +211,12 @@ object FinanceCalculator {
                     year = year,
                     states = selectedStates
                 ) { holidayDate ->
-                    shutdowns.shutdownOn(
-                        holidayDate
-                    ) == null &&
+                    (
+                        rosterEndDate == null ||
+                        !holidayDate.isAfter(
+                            rosterEndDate
+                        )
+                    ) &&
                             RosterCalculator.isWorkDay(
                                 date = holidayDate,
                                 startDate = rosterStartDate,
@@ -242,7 +246,10 @@ object FinanceCalculator {
         while (!date.isAfter(lastDay)) {
 
             if (
-                shutdowns.shutdownOn(date) == null &&
+                (
+                    rosterEndDate == null ||
+                    !date.isAfter(rosterEndDate)
+                ) &&
                 RosterCalculator.isWorkDay(
                     date = date,
                     startDate = rosterStartDate,
@@ -267,9 +274,12 @@ object FinanceCalculator {
                     year = year,
                     states = selectedStates
                 ) { holidayDate ->
-                    shutdowns.shutdownOn(
-                        holidayDate
-                    ) == null &&
+                    (
+                        rosterEndDate == null ||
+                        !holidayDate.isAfter(
+                            rosterEndDate
+                        )
+                    ) &&
                             RosterCalculator.isWorkDay(
                                 date = holidayDate,
                                 startDate = rosterStartDate,
