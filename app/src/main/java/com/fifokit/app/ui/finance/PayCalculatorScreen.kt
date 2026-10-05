@@ -38,7 +38,6 @@ import com.fifokit.app.domain.finance.FinanceCalculator
 import com.fifokit.app.domain.finance.PayInput
 import com.fifokit.app.domain.model.RosterPattern
 import com.fifokit.app.domain.roster.AustralianState
-import com.fifokit.app.domain.roster.ShutdownPeriod
 import java.time.LocalDate
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -63,7 +62,7 @@ fun PayCalculatorScreen(
     customOffDays: Int,
     rosterStartDate: LocalDate,
     selectedStates: Set<AustralianState>,
-    shutdowns: List<ShutdownPeriod>,
+    rosterEndDate: LocalDate?,
     onBack: () -> Unit
 ) {
     val context = LocalContext.current
@@ -495,7 +494,7 @@ fun PayCalculatorScreen(
                                     offDays = customOffDays,
                                     year = currentYear,
                                     selectedStates = selectedStates,
-                                    shutdowns = shutdowns
+                                    rosterEndDate = rosterEndDate
                                 )
                             } else {
                                 FinanceCalculator.calculateAnnualEarnings(
@@ -504,7 +503,7 @@ fun PayCalculatorScreen(
                                     rosterStartDate = rosterStartDate,
                                     year = currentYear,
                                     selectedStates = selectedStates,
-                                    shutdowns = shutdowns
+                                    rosterEndDate = rosterEndDate
                                 )
                             }
                         analytics.logEvent(
