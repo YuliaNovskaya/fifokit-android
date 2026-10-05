@@ -26,7 +26,6 @@ import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
 import androidx.glance.unit.ColorProvider
 import com.fifokit.app.MainActivity
-import com.fifokit.app.domain.roster.shutdownOn
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.time.LocalDate
@@ -172,9 +171,17 @@ private fun SwingStatusContent(
                 )
             )
         } else {
-            val shutdown =
-                roster.shutdowns
-                    .shutdownOn(today)
+            val isBeforeStart =
+                today.isBefore(
+                    roster.startDate
+                )
+
+            val isAfterEnd =
+                roster.isShutdownRoster &&
+                        roster.endDate != null &&
+                        today.isAfter(
+                            roster.endDate
+                        )
 
             val status =
                 SwingStatusCalculator
@@ -190,8 +197,15 @@ private fun SwingStatusContent(
 
             val statusLabel =
                 when {
-                    shutdown != null ->
-                        "SHUTDOWN"
+                    isBeforeStart ->
+                        if (roster.isShutdownRoster) {
+                            "SHUTDOWN SOON"
+                        } else {
+                            "NOT STARTED"
+                        }
+
+                    isAfterEnd ->
+                        "SHUTDOWN ENDED"
 
                     status.isWorkDay ->
                         "ON SWING"
@@ -202,14 +216,30 @@ private fun SwingStatusContent(
 
             val nextLabel =
                 when {
-                    shutdown != null ->
-                        "Ends"
+                    isBeforeStart ->
+                        "Starts"
+
+                    isAfterEnd ->
+                        "Ended"
 
                     status.isWorkDay ->
                         "R&R starts"
 
                     else ->
                         "Work starts"
+                }
+
+            val transitionDate =
+                when {
+                    isBeforeStart ->
+                        roster.startDate
+
+                    isAfterEnd ->
+                        roster.endDate
+                            ?: today
+
+                    else ->
+                        status.nextTransitionDate
                 }
 
             Text(
@@ -238,10 +268,21 @@ private fun SwingStatusContent(
 
             Text(
                 text =
-                    "Day " +
-                            status.dayInPeriod +
-                            " of " +
-                            status.periodLength,
+                    if (
+                        isBeforeStart ||
+                        isAfterEnd
+                    ) {
+                        if (roster.isShutdownRoster) {
+                            "Shutdown roster"
+                        } else {
+                            roster.name
+                        }
+                    } else {
+                        "Day " +
+                                status.dayInPeriod +
+                                " of " +
+                                status.periodLength
+                    },
                 style = TextStyle(
                     color = widgetSecondary,
                     fontSize = 16.sp
@@ -250,10 +291,21 @@ private fun SwingStatusContent(
 
             Text(
                 text =
-                    status
-                        .daysUntilTransition
-                        .toString() +
-                            " days until change",
+                    if (
+                        isBeforeStart ||
+                        isAfterEnd
+                    ) {
+                        if (isAfterEnd) {
+                            "Roster inactive"
+                        } else {
+                            "Waiting to start"
+                        }
+                    } else {
+                        status
+                            .daysUntilTransition
+                            .toString() +
+                                " days until change"
+                    },
                 style = TextStyle(
                     color = widgetSecondary,
                     fontSize = 15.sp
@@ -264,12 +316,7 @@ private fun SwingStatusContent(
                 text =
                     nextLabel +
                             " " +
-                            (
-                                shutdown
-                                    ?.endDate
-                                    ?: status
-                                        .nextTransitionDate
-                            )
+                            transitionDate
                                 .format(
                                     widgetDateFormatter
                                 ),
