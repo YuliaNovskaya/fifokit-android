@@ -500,7 +500,7 @@ fun RosterCalendarScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(6.dp))
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -572,7 +572,7 @@ fun RosterCalendarScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(6.dp))
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -643,17 +643,17 @@ fun RosterCalendarScreen(
                 textAlign = TextAlign.Center
             )
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(8.dp))
 
             RosterTodaySummary(viewModel)
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(6.dp))
 
             if (calendarViewMode == CalendarViewMode.MONTH) {
 
                 WeekdayHeader()
 
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(4.dp))
 
                 CalendarGrid(
                     month = month,
@@ -671,11 +671,11 @@ fun RosterCalendarScreen(
                     }
                 )
 
-                Spacer(modifier = Modifier.weight(1f))
+                Spacer(modifier = Modifier.height(6.dp))
 
                 TodayPhrase(viewModel)
 
-                Spacer(modifier = Modifier.weight(1f))
+                Spacer(modifier = Modifier.height(6.dp))
 
                 CalendarLegend()
 
@@ -886,7 +886,7 @@ private fun CalendarDay(
 private fun CalendarLegend() {
     Column(
         modifier = Modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
+        verticalArrangement = Arrangement.spacedBy(4.dp)
     ) {
         Row(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -900,7 +900,7 @@ private fun CalendarLegend() {
                     text = "WORK",
                     modifier = Modifier.padding(
                         horizontal = 10.dp,
-                        vertical = 5.dp
+                        vertical = 3.dp
                     ),
                     style = MaterialTheme.typography.labelMedium
                 )
@@ -914,7 +914,7 @@ private fun CalendarLegend() {
                     text = "OFF",
                     modifier = Modifier.padding(
                         horizontal = 10.dp,
-                        vertical = 5.dp
+                        vertical = 3.dp
                     ),
                     style = MaterialTheme.typography.labelMedium
                 )
@@ -927,7 +927,7 @@ private fun CalendarLegend() {
                     text = "PH",
                     modifier = Modifier.padding(
                         horizontal = 10.dp,
-                        vertical = 5.dp
+                        vertical = 3.dp
                     ),
                     style = MaterialTheme.typography.labelMedium
                 )
@@ -963,7 +963,10 @@ private fun RosterTodaySummary(
                 text =
                     "Shutdown starts " +
                             viewModel.startDate,
-                modifier = Modifier.padding(16.dp),
+                modifier = Modifier.padding(
+                horizontal = 16.dp,
+                vertical = 10.dp
+            ),
                 style = MaterialTheme.typography.titleMedium
             )
         }
@@ -1093,8 +1096,8 @@ private fun TodayPhrase(
         Text(
             text = phrase,
             modifier = Modifier.padding(
-                horizontal = 18.dp,
-                vertical = 14.dp
+                horizontal = 16.dp,
+                vertical = 8.dp
             ),
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.SemiBold,
