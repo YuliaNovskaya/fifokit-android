@@ -24,7 +24,7 @@ import androidx.compose.material.icons.filled.FolderShared
 import androidx.compose.material.icons.filled.Flag
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.People
-import androidx.compose.material.icons.filled.Paid
+import androidx.compose.material.icons.filled.AttachMoney
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.TrendingUp
 import androidx.compose.material3.Button
@@ -113,7 +113,7 @@ fun FifokitBottomNavigation(
 
             FifokitNavItem(
                 modifier = Modifier.weight(1f),
-                icon = Icons.Default.Paid,
+                icon = Icons.Default.AttachMoney,
                 label = "Pay",
                 onClick = onPay
             )
