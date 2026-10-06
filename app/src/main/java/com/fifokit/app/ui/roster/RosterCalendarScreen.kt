@@ -31,6 +31,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Arrangement
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
@@ -96,6 +98,21 @@ fun RosterCalendarScreen(
         mutableStateOf(
             CalendarViewMode.MONTH
         )
+    }
+
+    val monthScrollState =
+        rememberScrollState()
+
+    LaunchedEffect(
+        month,
+        calendarViewMode
+    ) {
+        if (
+            calendarViewMode ==
+            CalendarViewMode.MONTH
+        ) {
+            monthScrollState.scrollTo(0)
+        }
     }
 
     val growthTracker =
@@ -414,6 +431,18 @@ fun RosterCalendarScreen(
                             } else {
                                 month.plusYears(1)
                             }
+                    }
+                )
+                .then(
+                    if (
+                        calendarViewMode ==
+                        CalendarViewMode.MONTH
+                    ) {
+                        Modifier.verticalScroll(
+                            monthScrollState
+                        )
+                    } else {
+                        Modifier
                     }
                 )
                 .padding(horizontal = 16.dp)
