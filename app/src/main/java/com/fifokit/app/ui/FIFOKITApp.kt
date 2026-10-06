@@ -9,12 +9,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Scaffold
-import androidx.compose.ui.unit.dp
-import androidx.compose.foundation.layout.size
-import androidx.compose.material3.OutlinedIconButton
-import androidx.compose.material3.Icon
-import androidx.compose.material.icons.filled.EventNote
-import androidx.compose.material.icons.Icons
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -334,28 +328,6 @@ fun FIFOKITApp(
         rosterSetupViewModel.rosters.isNotEmpty() &&
                 !showAcceptInvite
 
-    val hasOpenScreen =
-        showTogetherRoster ||
-                selectedSharedRoster != null ||
-                showSharedRosters ||
-                showAcceptInvite ||
-                showShareRoster ||
-                showRosterExport ||
-                showPro ||
-                showAccount ||
-                showFinancialGoal ||
-                showAnnualEarnings ||
-                showPayCalculator ||
-                showSettings
-
-    val isMainCalendarVisible =
-        !hasOpenScreen &&
-                showCalendar
-
-    val showCalendarShortcut =
-        showPersistentNavigation &&
-                !isMainCalendarVisible
-
     fun goToCalendar() {
         clearOpenScreens()
         showAcceptInvite = false
@@ -372,6 +344,9 @@ fun FIFOKITApp(
                     },
                     onRoster = {
                         showRosterActionsSheet = true
+                    },
+                    onCalendar = {
+                        goToCalendar()
                     },
                     onTools = {
                         analytics.logEvent(
@@ -672,27 +647,6 @@ fun FIFOKITApp(
                 )
             }
 
-            if (showCalendarShortcut) {
-                OutlinedIconButton(
-                    onClick = {
-                        goToCalendar()
-                    },
-                    modifier = Modifier
-                        .align(Alignment.TopStart)
-                        .padding(
-                            start = 8.dp,
-                            top = 8.dp
-                        )
-                        .size(44.dp)
-                ) {
-                    Icon(
-                        imageVector =
-                            Icons.Default.EventNote,
-                        contentDescription =
-                            "Roster calendar"
-                    )
-                }
-            }
             }
         }
     }
