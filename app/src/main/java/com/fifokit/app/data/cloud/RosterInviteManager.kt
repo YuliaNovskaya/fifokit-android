@@ -93,31 +93,10 @@ class RosterInviteManager(
             error("You cannot accept your own invite")
         }
 
-        val activeRecipientIds =
-            sharingRepository
-                .getSharesForOwner(invite.ownerId)
-                .filter { it.isActive }
-                .map { it.userId }
-                .filter { it.isNotBlank() }
-                .distinct()
-
-        if (
-            !SharingPolicy.canAcceptRecipient(
-                activeRecipientCount =
-                    activeRecipientIds.size,
-                recipientAlreadyActive =
-                    userId in activeRecipientIds,
-                recipientLimit =
-                    invite.recipientLimit
-            )
-        ) {
-            throw SharingLimitReachedException(
-                limit = invite.recipientLimit,
-                isPro =
-                    invite.recipientLimit >
-                            SharingPolicy.FREE_RECIPIENT_LIMIT
-            )
-        }
+        // Do not query all of the owner's share records here.
+        // Firestore rules intentionally allow a viewer to read only
+        // their own access records. Owner-side create/reconcile logic
+        // enforces the current sharing entitlement.
 
         sharingRepository.grantViewerAccess(
             rosterId = invite.rosterId,
