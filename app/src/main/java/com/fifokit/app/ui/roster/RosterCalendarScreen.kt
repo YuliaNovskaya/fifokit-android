@@ -500,7 +500,7 @@ fun RosterCalendarScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(6.dp))
+            Spacer(modifier = Modifier.height(4.dp))
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -572,7 +572,7 @@ fun RosterCalendarScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(6.dp))
+            Spacer(modifier = Modifier.height(4.dp))
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -647,7 +647,7 @@ fun RosterCalendarScreen(
 
             RosterTodaySummary(viewModel)
 
-            Spacer(modifier = Modifier.height(6.dp))
+            Spacer(modifier = Modifier.height(4.dp))
 
             if (calendarViewMode == CalendarViewMode.MONTH) {
 
@@ -671,11 +671,11 @@ fun RosterCalendarScreen(
                     }
                 )
 
-                Spacer(modifier = Modifier.height(6.dp))
+                Spacer(modifier = Modifier.height(4.dp))
 
                 TodayPhrase(viewModel)
 
-                Spacer(modifier = Modifier.height(6.dp))
+                Spacer(modifier = Modifier.height(4.dp))
 
                 CalendarLegend()
 
@@ -700,7 +700,7 @@ fun RosterCalendarScreen(
                 CalendarLegend()
             }
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(6.dp))
 
         }
     }
@@ -987,7 +987,10 @@ private fun RosterTodaySummary(
                 text =
                     "Shutdown ended " +
                             shutdownEndDate,
-                modifier = Modifier.padding(16.dp),
+                modifier = Modifier.padding(
+                    horizontal = 16.dp,
+                    vertical = 8.dp
+                ),
                 style = MaterialTheme.typography.titleMedium
             )
         }
@@ -1048,7 +1051,10 @@ private fun RosterTodaySummary(
         color = MaterialTheme.colorScheme.surfaceVariant
     ) {
         Column(
-            modifier = Modifier.padding(16.dp)
+            modifier = Modifier.padding(
+                horizontal = 14.dp,
+                vertical = 6.dp
+            )
         ) {
             Text(
                 text =
