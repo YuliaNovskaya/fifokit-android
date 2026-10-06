@@ -4,6 +4,9 @@ package com.fifokit.app.ui.components
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -42,6 +45,7 @@ import androidx.compose.ui.unit.dp
 fun FifokitBottomNavigation(
     onEdit: () -> Unit,
     onRoster: () -> Unit,
+    onCalendar: () -> Unit,
     onTools: () -> Unit,
     onSettings: () -> Unit
 ) {
@@ -71,6 +75,40 @@ fun FifokitBottomNavigation(
                 label = "Roster",
                 onClick = onRoster
             )
+
+            Box(
+                modifier = Modifier.weight(1f),
+                contentAlignment = Alignment.Center
+            ) {
+                Surface(
+                    modifier = Modifier
+                        .size(56.dp)
+                        .clickable(
+                            onClick = onCalendar
+                        ),
+                    shape = CircleShape,
+                    color =
+                        MaterialTheme.colorScheme.primary,
+                    contentColor =
+                        MaterialTheme.colorScheme.onPrimary,
+                    tonalElevation = 6.dp
+                ) {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment =
+                            Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector =
+                                Icons.Default.EventNote,
+                            contentDescription =
+                                "Roster calendar",
+                            modifier =
+                                Modifier.size(28.dp)
+                        )
+                    }
+                }
+            }
 
             FifokitNavItem(
                 modifier = Modifier.weight(1f),
