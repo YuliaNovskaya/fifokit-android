@@ -16,14 +16,15 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.Calculate
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.EventNote
 import androidx.compose.material.icons.filled.FileDownload
+import androidx.compose.material.icons.filled.FolderShared
 import androidx.compose.material.icons.filled.Flag
+import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.People
-import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Paid
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.TrendingUp
 import androidx.compose.material3.Button
@@ -46,8 +47,8 @@ fun FifokitBottomNavigation(
     onEdit: () -> Unit,
     onRoster: () -> Unit,
     onCalendar: () -> Unit,
-    onTools: () -> Unit,
-    onSettings: () -> Unit
+    onPay: () -> Unit,
+    onMore: () -> Unit
 ) {
     Surface(
         modifier = Modifier.navigationBarsPadding(),
@@ -71,7 +72,7 @@ fun FifokitBottomNavigation(
 
             FifokitNavItem(
                 modifier = Modifier.weight(1f),
-                icon = Icons.Default.EventNote,
+                icon = Icons.Default.FolderShared,
                 label = "Roster",
                 onClick = onRoster
             )
@@ -112,16 +113,16 @@ fun FifokitBottomNavigation(
 
             FifokitNavItem(
                 modifier = Modifier.weight(1f),
-                icon = Icons.Default.Build,
-                label = "Tools",
-                onClick = onTools
+                icon = Icons.Default.Paid,
+                label = "Pay",
+                onClick = onPay
             )
 
             FifokitNavItem(
                 modifier = Modifier.weight(1f),
-                icon = Icons.Default.Settings,
-                label = "Settings",
-                onClick = onSettings
+                icon = Icons.Default.Menu,
+                label = "More",
+                onClick = onMore
             )
         }
     }
@@ -219,7 +220,7 @@ fun ToolsActionsSheet(
         onDismissRequest = onDismiss
     ) {
         ActionSheetHeader(
-            title = "Tools",
+            title = "Pay",
             onClose = onDismiss
         )
 
