@@ -348,7 +348,7 @@ fun FIFOKITApp(
                     onCalendar = {
                         goToCalendar()
                     },
-                    onTools = {
+                    onPay = {
                         analytics.logEvent(
                             AnalyticsEvents.FEATURE_OPENED
                         ) {
@@ -359,7 +359,7 @@ fun FIFOKITApp(
                         }
                         showToolsActionsSheet = true
                     },
-                    onSettings = {
+                    onMore = {
                         clearOpenScreens()
                         showSettings = true
                         screenOverride = true
