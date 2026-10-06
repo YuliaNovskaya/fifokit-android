@@ -4,7 +4,6 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.CircularProgressIndicator
@@ -377,7 +376,6 @@ fun FIFOKITApp(
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .safeDrawingPadding()
             ) {
             val activeCloudRosterId =
                 rosterSetupViewModel.rosters
