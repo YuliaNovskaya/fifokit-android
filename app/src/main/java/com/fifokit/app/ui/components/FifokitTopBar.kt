@@ -20,7 +20,7 @@ fun FifokitTopBar(
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(64.dp)
+            .height(50.dp)
             .padding(horizontal = 8.dp)
     ) {
         Text(
