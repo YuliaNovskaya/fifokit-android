@@ -10,6 +10,7 @@ import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.fifokit.app.domain.finance.FinancialGoal
+import com.fifokit.app.domain.finance.GoalContributionTiming
 import com.fifokit.app.domain.finance.PayInput
 import com.fifokit.app.domain.finance.PayRateType
 import com.fifokit.app.domain.finance.PipType
@@ -608,6 +609,21 @@ class FinancePreferences(
                                             "payFrequencyDays",
                                             14
                                         ),
+                                    contributionTiming =
+                                        runCatching {
+                                            GoalContributionTiming
+                                                .valueOf(
+                                                    item.optString(
+                                                        "contributionTiming",
+                                                        GoalContributionTiming
+                                                            .FIXED_DAYS
+                                                            .name
+                                                    )
+                                                )
+                                        }.getOrDefault(
+                                            GoalContributionTiming
+                                                .FIXED_DAYS
+                                        ),
                                     createdAt =
                                         item.optLong(
                                             "createdAt",
@@ -702,6 +718,10 @@ class FinancePreferences(
                     .put(
                         "payFrequencyDays",
                         goal.payFrequencyDays
+                    )
+                    .put(
+                        "contributionTiming",
+                        goal.contributionTiming.name
                     )
                     .put(
                         "createdAt",
