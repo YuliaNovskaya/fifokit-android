@@ -32,6 +32,8 @@ data class RosterEntity(
 
     val endDate: String? = null,
 
+    val scheduleSegmentsJson: String = "[]",
+
     // Retained only for Room v4 compatibility. No longer used.
     val shutdownsJson: String = "[]",
 
