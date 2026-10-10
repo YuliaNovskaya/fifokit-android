@@ -128,7 +128,13 @@ class PayInputCloudSyncManager(
                     localWeekdayHourlyRate =
                         cloudInput.localWeekdayHourlyRate,
                     localWeekdayBaseHours =
-                        cloudInput.localWeekdayBaseHours,
+                        if (
+                            cloudInput.schemaVersion >= 4
+                        ) {
+                            cloudInput.localWeekdayBaseHours
+                        } else {
+                            cloudInput.localHoursPerDay
+                        },
                     localWeekdayOvertimeHourlyRate =
                         cloudInput.localWeekdayOvertimeHourlyRate,
                     localWeekdayOvertimeHours =
@@ -136,7 +142,13 @@ class PayInputCloudSyncManager(
                     localSaturdayHourlyRate =
                         cloudInput.localSaturdayHourlyRate,
                     localSaturdayHours =
-                        cloudInput.localSaturdayHours,
+                        if (
+                            cloudInput.schemaVersion >= 4
+                        ) {
+                            cloudInput.localSaturdayHours
+                        } else {
+                            cloudInput.localHoursPerDay
+                        },
                     localSundayHourlyRate =
                         cloudInput.localSundayHourlyRate,
                     localSundayHours =
