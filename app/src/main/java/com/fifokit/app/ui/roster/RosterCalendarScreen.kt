@@ -323,14 +323,9 @@ fun RosterCalendarScreen(
 
                                 if (status != null) {
                                     val label =
-                                        if (
-                                            status.segment
-                                                .isWork
-                                        ) {
-                                            "WORK"
-                                        } else {
-                                            "OFF"
-                                        }
+                                        status.segment
+                                            .type
+                                            .name
 
                                     label +
                                             " day " +
@@ -779,6 +774,20 @@ fun RosterCalendarScreen(
                         hasOwnRoster &&
                                 viewModel.isRosterActive(date)
                     },
+                    rosterStatusLabel = { date ->
+                        if (
+                            hasOwnRoster &&
+                            viewModel.isCustomRoster
+                        ) {
+                            viewModel
+                                .scheduleStatusOn(date)
+                                ?.segment
+                                ?.type
+                                ?.name
+                        } else {
+                            null
+                        }
+                    },
                     onDateSelected = {
                         if (hasOwnRoster) {
                             selectedCalendarDate = it
@@ -869,6 +878,8 @@ private fun CalendarGrid(
     isWorkDay: (LocalDate) -> Boolean,
     isPublicHoliday: (LocalDate) -> Boolean,
     isRosterActive: (LocalDate) -> Boolean,
+    rosterStatusLabel:
+        (LocalDate) -> String? = { null },
     onDateSelected: (LocalDate) -> Unit,
     modifier: Modifier = Modifier
 )
@@ -918,6 +929,8 @@ private fun CalendarGrid(
                                     isPublicHoliday(date),
                         showRosterStatus =
                             showRosterStatus,
+                        rosterStatusLabel =
+                            rosterStatusLabel(date),
                         onClick = {
                             onDateSelected(date)
                         }
@@ -936,6 +949,7 @@ private fun CalendarDay(
     isStartDate: Boolean,
     isPublicHoliday: Boolean,
     showRosterStatus: Boolean,
+    rosterStatusLabel: String? = null,
     onClick: () -> Unit
 ) {
     val isToday = date == LocalDate.now()
@@ -1055,6 +1069,9 @@ private fun CalendarDay(
                                 when {
                                     !isRosterActive ->
                                         ""
+
+                                    rosterStatusLabel != null ->
+                                        rosterStatusLabel
 
                                     isWorkDay ->
                                         "WORK"
