@@ -7,6 +7,7 @@ package com.fifokit.app.ui.roster
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.Row
@@ -86,6 +87,7 @@ fun RosterSetupScreen(
     }
 
     Scaffold(
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
         topBar = {
             FifokitTopBar(
                 title =
