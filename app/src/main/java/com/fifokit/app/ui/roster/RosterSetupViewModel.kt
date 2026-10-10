@@ -1157,7 +1157,13 @@ class RosterSetupViewModel(
             offDays = offDays,
             selectedStates = selectedStates,
             isShutdownRoster = isShutdownRoster,
-            endDate = endDate
+            endDate = endDate,
+            scheduleSegments =
+                if (isCustomRoster) {
+                    scheduleSegments
+                } else {
+                    emptyList()
+                }
         )
     }
 
