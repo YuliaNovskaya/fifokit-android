@@ -670,6 +670,11 @@ fun FIFOKITApp(
                         rosterSetupViewModel.createNewRoster()
                         screenOverride = false
                     },
+                    onSharedRosters = {
+                        clearOpenScreens()
+                        showSharedRosters = true
+                        screenOverride = true
+                    },
                     onSignedIn = {
                         rosterSetupViewModel.refreshFromLocalStorage()
                     }
