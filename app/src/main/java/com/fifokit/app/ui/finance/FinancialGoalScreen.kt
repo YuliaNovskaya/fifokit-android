@@ -46,6 +46,7 @@ import com.fifokit.app.domain.finance.FinanceCalculator
 import com.fifokit.app.domain.finance.FinanceFormatter
 import com.fifokit.app.domain.finance.FinancialGoal
 import com.fifokit.app.domain.finance.FinancialGoalResult
+import com.fifokit.app.domain.finance.GoalContributionTiming
 import com.fifokit.app.domain.pro.ProAccess
 import com.fifokit.app.domain.pro.ProFeature
 import com.fifokit.app.ui.components.FifokitTopBar
@@ -64,7 +65,10 @@ private enum class FinancialGoalMode {
 @Composable
 fun FinancialGoalScreen(
     onBack: () -> Unit,
-    onProRequested: (String) -> Unit = {}
+    onProRequested: (String) -> Unit = {},
+    rosterName: String? = null,
+    isRosterWorkDay:
+        ((LocalDate) -> Boolean)? = null
 ) {
     val context = LocalContext.current
     val keyboardController =
@@ -169,6 +173,12 @@ fun FinancialGoalScreen(
         mutableStateOf("14")
     }
 
+    var contributionTiming by remember {
+        mutableStateOf(
+            GoalContributionTiming.FIXED_DAYS
+        )
+    }
+
     var validationError by remember {
         mutableStateOf<String?>(null)
     }
@@ -191,23 +201,45 @@ fun FinancialGoalScreen(
     fun calculationFor(
         goal: FinancialGoal
     ): FinancialGoalResult? {
-        return if (
+        val validAmounts =
             goal.targetAmount > 0.0 &&
-            goal.currentAmount >= 0.0 &&
-            goal.contributionPerPay >= 0.0 &&
-            goal.payFrequencyDays > 0 &&
-            (
-                goal.currentAmount >=
-                    goal.targetAmount ||
-                goal.contributionPerPay > 0.0
-            )
+                    goal.currentAmount >= 0.0 &&
+                    goal.contributionPerPay >= 0.0 &&
+                    (
+                        goal.currentAmount >=
+                            goal.targetAmount ||
+                        goal.contributionPerPay > 0.0
+                    )
+
+        if (!validAmounts) {
+            return null
+        }
+
+        return when (
+            goal.contributionTiming
         ) {
-            FinanceCalculator
-                .calculateFinancialGoal(
-                    goal
-                )
-        } else {
-            null
+            GoalContributionTiming.FIXED_DAYS ->
+                if (goal.payFrequencyDays > 0) {
+                    FinanceCalculator
+                        .calculateFinancialGoal(
+                            goal
+                        )
+                } else {
+                    null
+                }
+
+            GoalContributionTiming.COMPLETED_SWING ->
+                isRosterWorkDay?.let {
+                        workDayCalculator ->
+                    FinanceCalculator
+                        .calculateFinancialGoal(
+                            goal = goal,
+                            fromDate =
+                                LocalDate.now(),
+                            isWorkDay =
+                                workDayCalculator
+                        )
+                }
         }
     }
 
@@ -253,6 +285,9 @@ fun FinancialGoalScreen(
         payFrequencyDays =
             goal.payFrequencyDays
                 .toString()
+
+        contributionTiming =
+            goal.contributionTiming
 
         validationError =
             null
@@ -595,6 +630,8 @@ fun FinancialGoalScreen(
                         isProGoal =
                             goal.id !=
                                     "primary",
+                        rosterName =
+                            rosterName,
                         onEdit = {
                             if (
                                 goal.id ==
@@ -682,7 +719,17 @@ fun FinancialGoalScreen(
                                 it
                             validationError =
                                 null
-                        }
+                        },
+                        contributionTiming =
+                            contributionTiming,
+                        onContributionTimingChange = {
+                            contributionTiming = it
+                            validationError =
+                                null
+                        },
+                        rosterName = rosterName,
+                        rosterAvailable =
+                            isRosterWorkDay != null
                     )
 
                     Spacer(
@@ -747,11 +794,23 @@ fun FinancialGoalScreen(
                                             0.0 ->
                                         "Enter a contribution greater than zero"
 
-                                    frequencyValue ==
-                                            null ||
-                                            frequencyValue <=
-                                            0 ->
+                                    contributionTiming ==
+                                            GoalContributionTiming
+                                                .FIXED_DAYS &&
+                                            (
+                                                frequencyValue ==
+                                                    null ||
+                                                frequencyValue <=
+                                                    0
+                                            ) ->
                                         "Enter a valid pay frequency"
+
+                                    contributionTiming ==
+                                            GoalContributionTiming
+                                                .COMPLETED_SWING &&
+                                            isRosterWorkDay ==
+                                                null ->
+                                        "Create a roster to use completed swings"
 
                                     else ->
                                         null
@@ -773,7 +832,10 @@ fun FinancialGoalScreen(
                                         contributionPerPay =
                                             contributionValue!!,
                                         payFrequencyDays =
-                                            frequencyValue!!
+                                            frequencyValue
+                                                ?: 14,
+                                        contributionTiming =
+                                            contributionTiming
                                     )
 
                                 scope.launch {
@@ -798,8 +860,10 @@ fun FinancialGoalScreen(
                                         putLong(
                                             AnalyticsParams
                                                 .PAY_FREQUENCY_DAYS,
-                                            frequencyValue
-                                                .toLong()
+                                            (
+                                                frequencyValue
+                                                    ?: 0
+                                            ).toLong()
                                         )
                                     }
                                 )
@@ -884,6 +948,7 @@ private fun FinancialGoalCard(
     goal: FinancialGoal,
     calculation: FinancialGoalResult?,
     isProGoal: Boolean,
+    rosterName: String?,
     onEdit: () -> Unit,
     onDelete: () -> Unit
 ) {
@@ -901,102 +966,137 @@ private fun FinancialGoalCard(
     ) {
         Column(
             modifier =
-                Modifier.padding(16.dp)
+                Modifier.padding(14.dp)
         ) {
             Text(
                 text =
                     if (isProGoal) {
-                        goal.name +
-                                " · PRO"
+                        goal.name + " · PRO"
                     } else {
                         goal.name
                     },
                 style =
                     MaterialTheme
                         .typography
-                        .titleLarge,
+                        .titleMedium,
                 fontWeight =
                     FontWeight.Bold
             )
 
-            Spacer(
-                modifier =
-                    Modifier.height(10.dp)
-            )
-
-            if (
-                goal.targetAmount >
-                0.0
-            ) {
-                Text(
-                    text =
-                        "Target: " +
-                                FinanceFormatter
-                                    .money(
-                                        goal.targetAmount
-                                    ),
-                    style =
-                        MaterialTheme
-                            .typography
-                            .bodyLarge
+            if (goal.targetAmount > 0.0) {
+                Spacer(
+                    modifier =
+                        Modifier.height(6.dp)
                 )
 
                 Text(
                     text =
-                        "Current savings: " +
-                                FinanceFormatter
-                                    .money(
-                                        goal.currentAmount
-                                    ),
+                        FinanceFormatter.money(
+                            goal.currentAmount
+                        ) +
+                                " of " +
+                                FinanceFormatter.money(
+                                    goal.targetAmount
+                                ),
                     style =
                         MaterialTheme
                             .typography
-                            .bodyLarge
+                            .bodyLarge,
+                    fontWeight =
+                        FontWeight.Medium
                 )
 
                 Text(
                     text =
-                        "Contribution per pay: " +
-                                FinanceFormatter
-                                    .money(
-                                        goal.contributionPerPay
-                                    ),
+                        FinanceFormatter.money(
+                            goal.contributionPerPay
+                        ) +
+                                when (
+                                    goal.contributionTiming
+                                ) {
+                                    GoalContributionTiming
+                                        .FIXED_DAYS ->
+                                        " every " +
+                                                goal.payFrequencyDays +
+                                                " days"
+
+                                    GoalContributionTiming
+                                        .COMPLETED_SWING ->
+                                        " per completed swing"
+                                },
                     style =
                         MaterialTheme
                             .typography
-                            .bodyLarge
-                )
-
-                Text(
-                    text =
-                        "Pay every " +
-                                goal
-                                    .payFrequencyDays +
-                                " days",
-                    style =
+                            .bodyMedium,
+                    color =
                         MaterialTheme
-                            .typography
-                            .bodyLarge
+                            .colorScheme
+                            .onSurfaceVariant
                 )
 
-                calculation
-                    ?.let { result ->
+                if (
+                    goal.contributionTiming ==
+                    GoalContributionTiming
+                        .COMPLETED_SWING &&
+                    rosterName != null
+                ) {
+                    Text(
+                        text =
+                            "Roster: " +
+                                    rosterName,
+                        style =
+                            MaterialTheme
+                                .typography
+                                .bodySmall,
+                        color =
+                            MaterialTheme
+                                .colorScheme
+                                .onSurfaceVariant
+                    )
+                }
 
-                        Spacer(
-                            modifier =
-                                Modifier.height(
-                                    14.dp
-                                )
-                        )
+                calculation?.let { result ->
+                    val estimatedDate =
+                        LocalDate.now()
+                            .plusDays(
+                                result.daysRequired
+                                    .toLong()
+                            )
 
-                        FinancialGoalCalculation(
-                            result = result
-                        )
-                    }
+                    Spacer(
+                        modifier =
+                            Modifier.height(6.dp)
+                    )
+
+                    Text(
+                        text =
+                            "Est. " +
+                                    estimatedDate
+                                        .format(
+                                            DateTimeFormatter
+                                                .ofPattern(
+                                                    "d MMM yyyy"
+                                                )
+                                        ) +
+                                    " · " +
+                                    result.contributionsRequired +
+                                    " contributions",
+                        style =
+                            MaterialTheme
+                                .typography
+                                .bodyMedium,
+                        fontWeight =
+                            FontWeight.SemiBold
+                    )
+                }
             } else {
+                Spacer(
+                    modifier =
+                        Modifier.height(4.dp)
+                )
+
                 Text(
-                    text =
-                        "Not configured yet",
+                    text = "Not configured yet",
                     style =
                         MaterialTheme
                             .typography
@@ -1010,34 +1110,30 @@ private fun FinancialGoalCard(
 
             Spacer(
                 modifier =
-                    Modifier.height(14.dp)
-            )
-
-            OutlinedButton(
-                modifier =
-                    Modifier.fillMaxWidth(),
-                onClick =
-                    onEdit
-            ) {
-                Text(
-                    "Edit goal"
-                )
-            }
-
-            Spacer(
-                modifier =
                     Modifier.height(8.dp)
             )
 
-            OutlinedButton(
+            Row(
                 modifier =
                     Modifier.fillMaxWidth(),
-                onClick =
-                    onDelete
+                horizontalArrangement =
+                    Arrangement.spacedBy(8.dp)
             ) {
-                Text(
-                    "Delete goal"
-                )
+                OutlinedButton(
+                    modifier =
+                        Modifier.weight(1f),
+                    onClick = onEdit
+                ) {
+                    Text("Edit")
+                }
+
+                TextButton(
+                    modifier =
+                        Modifier.weight(1f),
+                    onClick = onDelete
+                ) {
+                    Text("Delete")
+                }
             }
         }
     }
@@ -1054,7 +1150,13 @@ private fun FinancialGoalEditFields(
     contributionPerPay: String,
     onContributionPerPayChange: (String) -> Unit,
     payFrequencyDays: String,
-    onPayFrequencyDaysChange: (String) -> Unit
+    onPayFrequencyDaysChange: (String) -> Unit,
+    contributionTiming:
+        GoalContributionTiming,
+    onContributionTimingChange:
+        (GoalContributionTiming) -> Unit,
+    rosterName: String?,
+    rosterAvailable: Boolean
 ) {
     OutlinedTextField(
         value = goalName,
@@ -1189,34 +1291,146 @@ private fun FinancialGoalEditFields(
             Modifier.height(12.dp)
     )
 
-    OutlinedTextField(
-        value =
-            payFrequencyDays,
-        onValueChange =
-            onPayFrequencyDaysChange,
-        label = {
-            Text(
-                text =
-                    "Pay frequency in days",
-                style =
-                    MaterialTheme
-                        .typography
-                        .bodyLarge,
-                fontWeight =
-                    FontWeight.Medium
-            )
-        },
-        keyboardOptions =
-            KeyboardOptions(
-                keyboardType =
-                    KeyboardType.Number
-            ),
-        textStyle =
-            MaterialTheme
-                .typography
-                .titleMedium,
+    Text(
+        text = "Contribution timing",
+        style =
+            MaterialTheme.typography
+                .bodyLarge,
+        fontWeight =
+            FontWeight.Medium
+    )
+
+    Spacer(
         modifier =
-            Modifier.fillMaxWidth()
+            Modifier.height(8.dp)
+    )
+
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement =
+            Arrangement.spacedBy(8.dp)
+    ) {
+        if (
+            contributionTiming ==
+            GoalContributionTiming.FIXED_DAYS
+        ) {
+            Button(
+                modifier =
+                    Modifier.weight(1f),
+                onClick = {
+                    onContributionTimingChange(
+                        GoalContributionTiming
+                            .FIXED_DAYS
+                    )
+                }
+            ) {
+                Text("Fixed pay")
+            }
+        } else {
+            OutlinedButton(
+                modifier =
+                    Modifier.weight(1f),
+                onClick = {
+                    onContributionTimingChange(
+                        GoalContributionTiming
+                            .FIXED_DAYS
+                    )
+                }
+            ) {
+                Text("Fixed pay")
+            }
+        }
+
+        if (
+            contributionTiming ==
+            GoalContributionTiming.COMPLETED_SWING
+        ) {
+            Button(
+                modifier =
+                    Modifier.weight(1f),
+                enabled = rosterAvailable,
+                onClick = {
+                    onContributionTimingChange(
+                        GoalContributionTiming
+                            .COMPLETED_SWING
+                    )
+                }
+            ) {
+                Text("Per swing")
+            }
+        } else {
+            OutlinedButton(
+                modifier =
+                    Modifier.weight(1f),
+                enabled = rosterAvailable,
+                onClick = {
+                    onContributionTimingChange(
+                        GoalContributionTiming
+                            .COMPLETED_SWING
+                    )
+                }
+            ) {
+                Text("Per swing")
+            }
+        }
+    }
+
+    Spacer(
+        modifier =
+            Modifier.height(10.dp)
+    )
+
+    if (
+        contributionTiming ==
+        GoalContributionTiming.FIXED_DAYS
+    ) {
+        OutlinedTextField(
+            value =
+                payFrequencyDays,
+            onValueChange =
+                onPayFrequencyDaysChange,
+            label = {
+                Text(
+                    text =
+                        "Pay frequency in days",
+                    style =
+                        MaterialTheme
+                            .typography
+                            .bodyLarge,
+                    fontWeight =
+                        FontWeight.Medium
+                )
+            },
+            keyboardOptions =
+                KeyboardOptions(
+                    keyboardType =
+                        KeyboardType.Number
+                ),
+            textStyle =
+                MaterialTheme
+                    .typography
+                    .titleMedium,
+            modifier =
+                Modifier.fillMaxWidth()
+        )
+    } else {
+        Text(
+            text =
+                if (rosterName != null) {
+                    "Uses " +
+                            rosterName +
+                            ". A contribution is counted at the end of each WORK block; R&R days do not create a contribution."
+                } else {
+                    "Create a roster first to use completed swings."
+                },
+            style =
+                MaterialTheme.typography
+                    .bodyMedium,
+            color =
+                MaterialTheme.colorScheme
+                    .onSurfaceVariant
+        )
+    }
     )
 }
 
