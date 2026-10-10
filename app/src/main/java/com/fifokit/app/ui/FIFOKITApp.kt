@@ -9,6 +9,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -59,6 +60,7 @@ fun FIFOKITApp(
 
     val rosterSetupViewModel: RosterSetupViewModel = viewModel()
     val authViewModel: AuthViewModel = viewModel()
+    val currentUser by authViewModel.currentUser.collectAsState()
 
     var screenOverride by remember {
         mutableStateOf<Boolean?>(null)
@@ -253,8 +255,15 @@ fun FIFOKITApp(
 
     if (showRosterActionsSheet) {
         RosterActionsSheet(
+            hasOwnRoster =
+                rosterSetupViewModel.rosters.isNotEmpty(),
             onDismiss = {
                 showRosterActionsSheet = false
+            },
+            onCreateRoster = {
+                clearOpenScreens()
+                rosterSetupViewModel.createNewRoster()
+                screenOverride = false
             },
             onShareRoster = {
                 clearOpenScreens()
@@ -324,13 +333,24 @@ fun FIFOKITApp(
     }
 
     val showPersistentNavigation =
-        rosterSetupViewModel.rosters.isNotEmpty() &&
+        (
+            rosterSetupViewModel.rosters.isNotEmpty() ||
+            currentUser != null
+        ) &&
                 !showAcceptInvite
 
     fun goToCalendar() {
         clearOpenScreens()
         showAcceptInvite = false
-        screenOverride = true
+
+        if (
+            rosterSetupViewModel.rosters.isEmpty()
+        ) {
+            showSharedRosters = true
+            screenOverride = true
+        } else {
+            screenOverride = true
+        }
     }
 
     Scaffold(
@@ -339,6 +359,16 @@ fun FIFOKITApp(
                 FifokitBottomNavigation(
                     onEdit = {
                         clearOpenScreens()
+
+                        if (
+                            rosterSetupViewModel
+                                .rosters
+                                .isEmpty()
+                        ) {
+                            rosterSetupViewModel
+                                .createNewRoster()
+                        }
+
                         screenOverride = false
                     },
                     onRoster = {
@@ -433,6 +463,7 @@ fun FIFOKITApp(
                     inviteId = inviteId,
                     onAccepted = {
                         showAcceptInvite = false
+                        showSharedRosters = true
                         screenOverride = true
                     }
                 )
