@@ -29,8 +29,6 @@ import com.fifokit.app.data.RosterRepository
 import com.fifokit.app.data.local.RosterDatabase
 import com.fifokit.app.data.local.RosterEntity
 import kotlinx.coroutines.flow.collectLatest
-import com.fifokit.app.domain.pro.ProAccess
-import com.fifokit.app.domain.pro.ProFeature
 import com.fifokit.app.notifications.SharedTimeReminderScheduler
 import com.fifokit.app.widgets.RosterWidgetUpdater
 import com.fifokit.app.export.RosterExportData
@@ -58,26 +56,10 @@ fun RosterSetupRoute(
         onRosterSelected = viewModel::selectPattern,
         onBack = onBack,
         onCustomRosterSelected = {
-            if (
-                ProAccess.canUse(
-                    ProFeature.CUSTOM_ROSTER
-                )
-            ) {
-                viewModel.selectCustomRoster()
-            } else {
-                onProRequested("custom_roster")
-            }
+            viewModel.selectCustomRoster()
         },
         onShutdownRosterSelected = {
-            if (
-                ProAccess.canUse(
-                    ProFeature.CUSTOM_ROSTER
-                )
-            ) {
-                viewModel.selectShutdownRoster()
-            } else {
-                onProRequested("shutdown_roster")
-            }
+            viewModel.selectShutdownRoster()
         },
         onAddScheduleSegment =
             viewModel::addScheduleSegment,
@@ -110,15 +92,8 @@ fun RosterSetupRoute(
             }
         },
         onGenerateRoster = {
-            if (
-                viewModel.isCustomRoster &&
-                !ProAccess.canUse(ProFeature.CUSTOM_ROSTER)
-            ) {
-                onProRequested("custom_roster")
-            } else {
-                viewModel.saveCurrentRoster()
-                onGenerateRoster()
-            }
+            viewModel.saveCurrentRoster()
+            onGenerateRoster()
         }
     )
 }
