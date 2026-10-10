@@ -52,6 +52,8 @@ class CloudRepository(
             "startDate" to roster.startDate,
             "isShutdownRoster" to roster.isShutdownRoster,
             "endDate" to roster.endDate,
+            "scheduleSegmentsJson" to
+                roster.scheduleSegmentsJson,
             "shutdownsJson" to roster.shutdownsJson,
             "selectedStates" to roster.selectedStates,
             "isActive" to roster.isActive,
@@ -119,6 +121,11 @@ class CloudRepository(
 
                 endDate =
                     document.getString("endDate"),
+
+                scheduleSegmentsJson =
+                    document.getString(
+                        "scheduleSegmentsJson"
+                    ) ?: "[]",
 
                 shutdownsJson =
                     document.getString("shutdownsJson")
