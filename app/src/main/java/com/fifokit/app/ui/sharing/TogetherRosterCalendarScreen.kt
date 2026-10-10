@@ -41,6 +41,7 @@ import com.fifokit.app.domain.sharing.RosterOverlapCalculator
 import java.time.format.DateTimeFormatter
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.platform.LocalContext
@@ -51,6 +52,8 @@ import com.google.firebase.analytics.logEvent
 import com.fifokit.app.analytics.AnalyticsEvents
 import com.fifokit.app.domain.sharing.FamilyPlanningCalculator
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.TopAppBar
@@ -167,15 +170,14 @@ fun TogetherRosterCalendarScreen(
     }
 
     val planningSummary =
-        remember(
-            partnerRoster.id,
-            viewModel.activeRosterId
-        ) {
-            FamilyPlanningCalculator.calculate(
-                myIsWorkDay = viewModel::isWorkDay,
-                partnerIsWorkDay = ::partnerIsWorkDay
-            )
-        }
+        FamilyPlanningCalculator.calculate(
+            fromDate =
+                month.atDay(1),
+            myIsWorkDay =
+                viewModel::isWorkDay,
+            partnerIsWorkDay =
+                ::partnerIsWorkDay
+        )
 
     val dateFormatter =
         DateTimeFormatter.ofPattern(
@@ -186,6 +188,11 @@ fun TogetherRosterCalendarScreen(
     val nextSharedOff =
         planningSummary.nextSharedOffPeriod
 
+    val displayedMonthName =
+        month.month.getDisplayName(
+            TextStyle.FULL,
+            Locale.getDefault()
+        )
 
     val firstDayOffset =
         month.atDay(1).dayOfWeek.value - 1
@@ -221,6 +228,9 @@ fun TogetherRosterCalendarScreen(
                     onNext = {
                         month = month.plusMonths(1)
                     }
+                )
+                .verticalScroll(
+                    rememberScrollState()
                 )
                 .padding(horizontal = 16.dp)
         ) {
@@ -282,7 +292,7 @@ fun TogetherRosterCalendarScreen(
 
                     Text(
                         text =
-                            "${planningSummary.sharedOffDaysThisMonth} shared days off this month",
+                            "${planningSummary.sharedOffDaysThisMonth} shared days off in $displayedMonthName",
                         style = MaterialTheme.typography.bodyMedium,
                         fontWeight = FontWeight.Medium
                     )
@@ -470,14 +480,29 @@ fun TogetherRosterCalendarScreen(
                 modifier = Modifier.height(8.dp)
             )
 
-            LazyVerticalGrid(
-                columns = GridCells.Fixed(7),
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxWidth()
-            ) {
+            val calendarRowCount =
+                (cells.size + 6) / 7
 
-                items(cells) { date ->
+            BoxWithConstraints(
+                modifier =
+                    Modifier.fillMaxWidth()
+            ) {
+                val cellSize =
+                    maxWidth / 7
+
+                LazyVerticalGrid(
+                    columns =
+                        GridCells.Fixed(7),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(
+                            cellSize *
+                                    calendarRowCount
+                        ),
+                    userScrollEnabled = false
+                ) {
+
+                    items(cells) { date ->
 
                     if (date == null) {
 
@@ -644,6 +669,7 @@ fun TogetherRosterCalendarScreen(
                                     }
                             }
                         }
+                    }
                     }
                 }
             }
