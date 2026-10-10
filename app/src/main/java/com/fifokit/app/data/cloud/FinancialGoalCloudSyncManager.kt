@@ -4,6 +4,7 @@ import android.content.Context
 import com.fifokit.app.data.FinancePreferences
 import com.fifokit.app.data.cloud.model.CloudFinancialGoal
 import com.fifokit.app.domain.finance.FinancialGoal
+import com.fifokit.app.domain.finance.GoalContributionTiming
 import kotlinx.coroutines.flow.first
 
 data class FinancialGoalSyncResult(
@@ -151,12 +152,14 @@ class FinancialGoalCloudSyncManager(
                 contributionPerPay,
             payFrequencyDays =
                 payFrequencyDays,
+            contributionTiming =
+                contributionTiming.name,
             isDeleted = isDeleted,
             deletedAt = deletedAt,
             createdAt = createdAt,
             updatedAt = updatedAt,
             deviceId = deviceId,
-            schemaVersion = 2
+            schemaVersion = 3
         )
     }
 
@@ -172,6 +175,14 @@ class FinancialGoalCloudSyncManager(
                 contributionPerPay,
             payFrequencyDays =
                 payFrequencyDays,
+            contributionTiming =
+                runCatching {
+                    GoalContributionTiming.valueOf(
+                        contributionTiming
+                    )
+                }.getOrDefault(
+                    GoalContributionTiming.FIXED_DAYS
+                ),
             isDeleted = isDeleted,
             deletedAt = deletedAt,
             createdAt = createdAt,
