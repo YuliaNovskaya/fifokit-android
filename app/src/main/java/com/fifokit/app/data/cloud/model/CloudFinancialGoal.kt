@@ -8,11 +8,12 @@ data class CloudFinancialGoal(
     val currentAmount: Double = 0.0,
     val contributionPerPay: Double = 0.0,
     val payFrequencyDays: Int = 14,
+    val contributionTiming: String = "FIXED_DAYS",
 
     val isDeleted: Boolean = false,
     val deletedAt: Long = 0L,
     val createdAt: Long = 0L,
     val updatedAt: Long = 0L,
     val deviceId: String = "",
-    val schemaVersion: Int = 2
+    val schemaVersion: Int = 3
 )
