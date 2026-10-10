@@ -28,8 +28,12 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.fifokit.app.domain.model.RosterPattern
+import com.fifokit.app.domain.roster.RosterScheduleSegment
+import com.fifokit.app.domain.roster.RosterSegmentType
 import com.fifokit.app.ui.components.FifokitTopBar
 import java.time.Instant
 import java.time.LocalDate
@@ -43,18 +47,22 @@ fun RosterSetupScreen(
     onRosterNameChanged: (String) -> Unit = {},
     selectedRoster: RosterPattern = RosterPattern.TWO_ONE,
     isCustomRoster: Boolean = false,
-    customWorkDays: Int = 14,
-    customOffDays: Int = 7,
+    scheduleSegments: List<RosterScheduleSegment> = emptyList(),
     startDate: LocalDate = LocalDate.now(),
     isShutdownRoster: Boolean = false,
     endDate: LocalDate? = null,
     onRosterSelected: (RosterPattern) -> Unit = {},
     onCustomRosterSelected: () -> Unit = {},
     onShutdownRosterSelected: () -> Unit = {},
-    onCustomWorkDaysChanged: (Int) -> Unit = {},
-    onCustomOffDaysChanged: (Int) -> Unit = {},
+    onAddScheduleSegment: (RosterSegmentType) -> Unit = {},
+    onUpdateScheduleSegmentType:
+        (String, RosterSegmentType) -> Unit =
+        { _, _ -> },
+    onUpdateScheduleSegmentDays:
+        (String, Int) -> Unit =
+        { _, _ -> },
+    onRemoveScheduleSegment: (String) -> Unit = {},
     onStartDateSelected: (LocalDate) -> Unit = {},
-    onEndDateSelected: (LocalDate) -> Unit = {},
     showCancelNewRoster: Boolean = false,
     onCancelNewRoster: () -> Unit = {},
     showCancelExistingRoster: Boolean = false,
@@ -65,10 +73,6 @@ fun RosterSetupScreen(
     onGenerateRoster: () -> Unit = {}
 ) {
     var showStartDatePicker by remember {
-        mutableStateOf(false)
-    }
-
-    var showEndDatePicker by remember {
         mutableStateOf(false)
     }
 
@@ -214,9 +218,21 @@ fun RosterSetupScreen(
 
                 Text(
                     if (isShutdownRoster) {
-                        "Shutdown work pattern"
+                        "Shutdown periods"
                     } else {
-                        "Custom work pattern"
+                        "Roster sequence"
+                    }
+                )
+
+                Spacer(
+                    modifier = Modifier.height(6.dp)
+                )
+
+                Text(
+                    if (isShutdownRoster) {
+                        "These periods run once. Add more periods later as the shutdown plan becomes known."
+                    } else {
+                        "The full sequence repeats continuously."
                     }
                 )
 
@@ -224,11 +240,184 @@ fun RosterSetupScreen(
                     modifier = Modifier.height(12.dp)
                 )
 
-                Text("Work days")
+                scheduleSegments
+                    .forEachIndexed {
+                            index,
+                            segment ->
 
-                Spacer(
-                    modifier = Modifier.height(8.dp)
-                )
+                        Text(
+                            text =
+                                "Period " +
+                                        (index + 1)
+                        )
+
+                        Spacer(
+                            modifier =
+                                Modifier.height(6.dp)
+                        )
+
+                        Row(
+                            modifier =
+                                Modifier.fillMaxWidth(),
+                            horizontalArrangement =
+                                Arrangement.spacedBy(
+                                    8.dp
+                                )
+                        ) {
+                            if (segment.isWork) {
+                                Button(
+                                    modifier =
+                                        Modifier.weight(
+                                            1f
+                                        ),
+                                    onClick = {
+                                        onUpdateScheduleSegmentType(
+                                            segment.id,
+                                            RosterSegmentType
+                                                .WORK
+                                        )
+                                    }
+                                ) {
+                                    Text("WORK")
+                                }
+                            } else {
+                                OutlinedButton(
+                                    modifier =
+                                        Modifier.weight(
+                                            1f
+                                        ),
+                                    onClick = {
+                                        onUpdateScheduleSegmentType(
+                                            segment.id,
+                                            RosterSegmentType
+                                                .WORK
+                                        )
+                                    }
+                                ) {
+                                    Text("WORK")
+                                }
+                            }
+
+                            if (
+                                segment.type ==
+                                RosterSegmentType.OFF
+                            ) {
+                                Button(
+                                    modifier =
+                                        Modifier.weight(
+                                            1f
+                                        ),
+                                    onClick = {
+                                        onUpdateScheduleSegmentType(
+                                            segment.id,
+                                            RosterSegmentType
+                                                .OFF
+                                        )
+                                    }
+                                ) {
+                                    Text("OFF")
+                                }
+                            } else {
+                                OutlinedButton(
+                                    modifier =
+                                        Modifier.weight(
+                                            1f
+                                        ),
+                                    onClick = {
+                                        onUpdateScheduleSegmentType(
+                                            segment.id,
+                                            RosterSegmentType
+                                                .OFF
+                                        )
+                                    }
+                                ) {
+                                    Text("OFF")
+                                }
+                            }
+                        }
+
+                        Spacer(
+                            modifier =
+                                Modifier.height(6.dp)
+                        )
+
+                        Row(
+                            modifier =
+                                Modifier.fillMaxWidth(),
+                            verticalAlignment =
+                                Alignment.CenterVertically,
+                            horizontalArrangement =
+                                Arrangement.spacedBy(
+                                    8.dp
+                                )
+                        ) {
+                            OutlinedButton(
+                                modifier =
+                                    Modifier.weight(1f),
+                                onClick = {
+                                    onUpdateScheduleSegmentDays(
+                                        segment.id,
+                                        segment.days - 1
+                                    )
+                                }
+                            ) {
+                                Text("-")
+                            }
+
+                            Text(
+                                text =
+                                    segment.days
+                                        .toString() +
+                                            if (
+                                                segment.days ==
+                                                1
+                                            ) {
+                                                " day"
+                                            } else {
+                                                " days"
+                                            },
+                                modifier =
+                                    Modifier.weight(2f),
+                                textAlign =
+                                    TextAlign.Center
+                            )
+
+                            OutlinedButton(
+                                modifier =
+                                    Modifier.weight(1f),
+                                onClick = {
+                                    onUpdateScheduleSegmentDays(
+                                        segment.id,
+                                        segment.days + 1
+                                    )
+                                }
+                            ) {
+                                Text("+")
+                            }
+                        }
+
+                        if (
+                            scheduleSegments.size >
+                            1
+                        ) {
+                            TextButton(
+                                modifier =
+                                    Modifier.fillMaxWidth(),
+                                onClick = {
+                                    onRemoveScheduleSegment(
+                                        segment.id
+                                    )
+                                }
+                            ) {
+                                Text("Remove period")
+                            }
+                        }
+
+                        Spacer(
+                            modifier =
+                                Modifier.height(10.dp)
+                        )
+                    }
 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -238,80 +427,52 @@ fun RosterSetupScreen(
                     OutlinedButton(
                         modifier = Modifier.weight(1f),
                         onClick = {
-                            onCustomWorkDaysChanged(
-                                customWorkDays - 1
+                            onAddScheduleSegment(
+                                RosterSegmentType.WORK
                             )
                         }
                     ) {
-                        Text("-")
-                    }
-
-                    Button(
-                        modifier = Modifier.weight(2f),
-                        onClick = {}
-                    ) {
-                        Text(
-                            customWorkDays.toString()
-                        )
+                        Text("+ WORK")
                     }
 
                     OutlinedButton(
                         modifier = Modifier.weight(1f),
                         onClick = {
-                            onCustomWorkDaysChanged(
-                                customWorkDays + 1
+                            onAddScheduleSegment(
+                                RosterSegmentType.OFF
                             )
                         }
                     ) {
-                        Text("+")
+                        Text("+ OFF")
                     }
                 }
 
-                Spacer(
-                    modifier = Modifier.height(16.dp)
-                )
-
-                Text("Off days")
-
-                Spacer(
-                    modifier = Modifier.height(8.dp)
-                )
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement =
-                        Arrangement.spacedBy(8.dp)
+                if (
+                    isShutdownRoster &&
+                    endDate != null
                 ) {
-                    OutlinedButton(
-                        modifier = Modifier.weight(1f),
-                        onClick = {
-                            onCustomOffDaysChanged(
-                                customOffDays - 1
-                            )
-                        }
-                    ) {
-                        Text("-")
-                    }
+                    Spacer(
+                        modifier =
+                            Modifier.height(10.dp)
+                    )
 
-                    Button(
-                        modifier = Modifier.weight(2f),
-                        onClick = {}
-                    ) {
-                        Text(
-                            customOffDays.toString()
-                        )
-                    }
-
-                    OutlinedButton(
-                        modifier = Modifier.weight(1f),
-                        onClick = {
-                            onCustomOffDaysChanged(
-                                customOffDays + 1
-                            )
-                        }
-                    ) {
-                        Text("+")
-                    }
+                    Text(
+                        text =
+                            "Current plan: " +
+                                    startDate.format(
+                                        DateTimeFormatter
+                                            .ofPattern(
+                                                "dd MMM"
+                                            )
+                                    ) +
+                                    " – " +
+                                    endDate.format(
+                                        DateTimeFormatter
+                                            .ofPattern(
+                                                "dd MMM yyyy"
+                                            )
+                                    )
+                    )
                 }
             }
 
@@ -320,10 +481,15 @@ fun RosterSetupScreen(
             )
 
             Text(
-                if (isShutdownRoster) {
-                    "Shutdown start date"
-                } else {
-                    "First work day"
+                when {
+                    isShutdownRoster ->
+                        "Shutdown plan start date"
+
+                    isCustomRoster ->
+                        "Sequence start date"
+
+                    else ->
+                        "First work day"
                 }
             )
 
@@ -343,41 +509,6 @@ fun RosterSetupScreen(
                             "dd MMM yyyy"
                         )
                     )
-                )
-            }
-
-            if (isShutdownRoster) {
-                Spacer(
-                    modifier = Modifier.height(20.dp)
-                )
-
-                Text("Shutdown end date")
-
-                Spacer(
-                    modifier = Modifier.height(12.dp)
-                )
-
-                OutlinedButton(
-                    modifier = Modifier.fillMaxWidth(),
-                    onClick = {
-                        showEndDatePicker = true
-                    }
-                ) {
-                    Text(
-                        endDate?.format(
-                            DateTimeFormatter.ofPattern(
-                                "dd MMM yyyy"
-                            )
-                        ) ?: "Choose end date"
-                    )
-                }
-
-                Spacer(
-                    modifier = Modifier.height(8.dp)
-                )
-
-                Text(
-                    "The roster is active only between these dates. The work/off cycle does not continue after the shutdown ends."
                 )
             }
 
@@ -410,11 +541,9 @@ fun RosterSetupScreen(
             Button(
                 modifier = Modifier.fillMaxWidth(),
                 enabled =
-                    !isShutdownRoster ||
-                            (
-                                endDate != null &&
-                                !endDate.isBefore(startDate)
-                            ),
+                    !isCustomRoster ||
+                            scheduleSegments
+                                .isNotEmpty(),
                 onClick = onGenerateRoster
             ) {
                 Text(
@@ -543,76 +672,5 @@ fun RosterSetupScreen(
         }
     }
 
-    if (
-        showEndDatePicker &&
-        isShutdownRoster
-    ) {
-        val initialEnd =
-            endDate ?: startDate
 
-        val state =
-            rememberDatePickerState(
-                initialSelectedDateMillis =
-                    initialEnd
-                        .atStartOfDay(
-                            ZoneOffset.UTC
-                        )
-                        .toInstant()
-                        .toEpochMilli()
-            )
-
-        DatePickerDialog(
-            onDismissRequest = {
-                showEndDatePicker = false
-            },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        state.selectedDateMillis
-                            ?.let { millis ->
-                                val selected =
-                                    Instant
-                                        .ofEpochMilli(
-                                            millis
-                                        )
-                                        .atZone(
-                                            ZoneOffset.UTC
-                                        )
-                                        .toLocalDate()
-
-                                if (
-                                    !selected
-                                        .isBefore(
-                                            startDate
-                                        )
-                                ) {
-                                    onEndDateSelected(
-                                        selected
-                                    )
-                                }
-                            }
-
-                        showEndDatePicker =
-                            false
-                    }
-                ) {
-                    Text("OK")
-                }
-            },
-            dismissButton = {
-                TextButton(
-                    onClick = {
-                        showEndDatePicker =
-                            false
-                    }
-                ) {
-                    Text("Cancel")
-                }
-            }
-        ) {
-            DatePicker(
-                state = state
-            )
-        }
-    }
 }
