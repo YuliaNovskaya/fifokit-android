@@ -162,7 +162,9 @@ private fun FifokitNavItem(
 
 @Composable
 fun RosterActionsSheet(
+    hasOwnRoster: Boolean,
     onDismiss: () -> Unit,
+    onCreateRoster: () -> Unit,
     onShareRoster: () -> Unit,
     onSharedRosters: () -> Unit,
     onExportRoster: () -> Unit
@@ -175,15 +177,27 @@ fun RosterActionsSheet(
             onClose = onDismiss
         )
 
-        ActionSheetItem(
-            icon = Icons.Default.Share,
-            title = "Share roster",
-            description =
-                "Invite a partner or family member to view the selected roster.",
-            onClick = onShareRoster
-        )
+        if (hasOwnRoster) {
+            ActionSheetItem(
+                icon = Icons.Default.Share,
+                title = "Share roster",
+                description =
+                    "Invite a partner or family member to view the selected roster.",
+                onClick = onShareRoster
+            )
 
-        HorizontalDivider()
+            HorizontalDivider()
+        } else {
+            ActionSheetItem(
+                icon = Icons.Default.Edit,
+                title = "Create roster",
+                description =
+                    "Create your own FIFO or shutdown roster.",
+                onClick = onCreateRoster
+            )
+
+            HorizontalDivider()
+        }
 
         ActionSheetItem(
             icon = Icons.Default.People,
@@ -193,15 +207,17 @@ fun RosterActionsSheet(
             onClick = onSharedRosters
         )
 
-        HorizontalDivider()
+        if (hasOwnRoster) {
+            HorizontalDivider()
 
-        ActionSheetItem(
-            icon = Icons.Default.FileDownload,
-            title = "Export roster",
-            description =
-                "Save or share the selected roster as an image or PDF.",
-            onClick = onExportRoster
-        )
+            ActionSheetItem(
+                icon = Icons.Default.FileDownload,
+                title = "Export roster",
+                description =
+                    "Save or share the selected roster as an image or PDF.",
+                onClick = onExportRoster
+            )
+        }
 
         Spacer(
             modifier = Modifier.height(24.dp)
