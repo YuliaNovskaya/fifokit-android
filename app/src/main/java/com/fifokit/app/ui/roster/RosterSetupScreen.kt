@@ -185,14 +185,14 @@ fun RosterSetupScreen(
                     modifier = Modifier.fillMaxWidth(),
                     onClick = onCustomRosterSelected
                 ) {
-                    Text("Custom · PRO")
+                    Text("Custom")
                 }
             } else {
                 OutlinedButton(
                     modifier = Modifier.fillMaxWidth(),
                     onClick = onCustomRosterSelected
                 ) {
-                    Text("Custom · PRO")
+                    Text("Custom")
                 }
             }
 
@@ -205,14 +205,14 @@ fun RosterSetupScreen(
                     modifier = Modifier.fillMaxWidth(),
                     onClick = onShutdownRosterSelected
                 ) {
-                    Text("Shutdown · PRO")
+                    Text("Shutdown")
                 }
             } else {
                 OutlinedButton(
                     modifier = Modifier.fillMaxWidth(),
                     onClick = onShutdownRosterSelected
                 ) {
-                    Text("Shutdown · PRO")
+                    Text("Shutdown")
                 }
             }
 
