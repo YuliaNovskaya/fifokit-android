@@ -184,16 +184,33 @@ private fun SwingStatusContent(
                         )
 
             val status =
-                SwingStatusCalculator
-                    .calculate(
-                        date = today,
-                        startDate =
-                            roster.startDate,
-                        workDays =
-                            roster.workDays,
-                        offDays =
-                            roster.offDays
-                    )
+                if (
+                    roster.isCustomRoster &&
+                    roster.scheduleSegments
+                        .isNotEmpty()
+                ) {
+                    SwingStatusCalculator
+                        .calculate(
+                            date = today,
+                            startDate =
+                                roster.startDate,
+                            segments =
+                                roster.scheduleSegments,
+                            repeat =
+                                !roster.isShutdownRoster
+                        )
+                } else {
+                    SwingStatusCalculator
+                        .calculate(
+                            date = today,
+                            startDate =
+                                roster.startDate,
+                            workDays =
+                                roster.workDays,
+                            offDays =
+                                roster.offDays
+                        )
+                }
 
             val statusLabel =
                 when {
@@ -207,7 +224,7 @@ private fun SwingStatusContent(
                     isAfterEnd ->
                         "SHUTDOWN ENDED"
 
-                    status.isWorkDay ->
+                    status?.isWorkDay == true ->
                         "ON SWING"
 
                     else ->
@@ -222,7 +239,7 @@ private fun SwingStatusContent(
                     isAfterEnd ->
                         "Ended"
 
-                    status.isWorkDay ->
+                    status?.isWorkDay == true ->
                         "R&R starts"
 
                     else ->
@@ -239,7 +256,7 @@ private fun SwingStatusContent(
                             ?: today
 
                     else ->
-                        status.nextTransitionDate
+                        status?.nextTransitionDate ?: (roster.endDate ?: today)
                 }
 
             Text(
@@ -279,9 +296,9 @@ private fun SwingStatusContent(
                         }
                     } else {
                         "Day " +
-                                status.dayInPeriod +
+                                status?.dayInPeriod ?: 0 +
                                 " of " +
-                                status.periodLength
+                                status?.periodLength ?: 0
                     },
                 style = TextStyle(
                     color = widgetSecondary,
