@@ -14,6 +14,11 @@ enum class PipType {
     FIXED_AMOUNT
 }
 
+enum class GoalContributionTiming {
+    FIXED_DAYS,
+    COMPLETED_SWING
+}
+
 data class PayInput(
     val rateType: PayRateType = PayRateType.HOURLY,
     val rate: Double = 0.0,
@@ -64,6 +69,9 @@ data class FinancialGoal(
     val currentAmount: Double = 0.0,
     val contributionPerPay: Double = 0.0,
     val payFrequencyDays: Int = 14,
+    val contributionTiming:
+        GoalContributionTiming =
+        GoalContributionTiming.FIXED_DAYS,
     val createdAt: Long = 0L,
     val updatedAt: Long = 0L,
     val isDeleted: Boolean = false,
