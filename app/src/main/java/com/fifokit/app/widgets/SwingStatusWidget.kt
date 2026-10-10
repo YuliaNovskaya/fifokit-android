@@ -135,47 +135,6 @@ private fun SwingStatusContent(
             .padding(12.dp)
     ) {
         if (roster == null) {
-            val periodText =
-                when {
-                    isBeforeStart ->
-                        if (
-                            roster.isShutdownRoster
-                        ) {
-                            "Shutdown roster"
-                        } else {
-                            roster.name
-                        }
-
-                    isAfterEnd ->
-                        "Shutdown roster"
-
-                    status != null ->
-                        "Day " +
-                                status.dayInPeriod +
-                                " of " +
-                                status.periodLength
-
-                    else ->
-                        "Roster inactive"
-                }
-
-            val changeText =
-                when {
-                    isBeforeStart ->
-                        "Waiting to start"
-
-                    isAfterEnd ->
-                        "Roster inactive"
-
-                    status != null ->
-                        status.daysUntilTransition
-                            .toString() +
-                                " days until change"
-
-                    else ->
-                        "Roster inactive"
-                }
-
             Text(
                 text = "FIFOKIT",
                 style = TextStyle(
@@ -297,7 +256,52 @@ private fun SwingStatusContent(
                             ?: today
 
                     else ->
-                        status?.nextTransitionDate ?: (roster.endDate ?: today)
+                        status?.nextTransitionDate
+                            ?: (
+                                roster.endDate
+                                    ?: today
+                            )
+                }
+
+            val periodText =
+                when {
+                    isBeforeStart ->
+                        if (
+                            roster.isShutdownRoster
+                        ) {
+                            "Shutdown roster"
+                        } else {
+                            roster.name
+                        }
+
+                    isAfterEnd ->
+                        "Shutdown roster"
+
+                    status != null ->
+                        "Day " +
+                                status.dayInPeriod +
+                                " of " +
+                                status.periodLength
+
+                    else ->
+                        "Roster inactive"
+                }
+
+            val changeText =
+                when {
+                    isBeforeStart ->
+                        "Waiting to start"
+
+                    isAfterEnd ->
+                        "Roster inactive"
+
+                    status != null ->
+                        status.daysUntilTransition
+                            .toString() +
+                                " days until change"
+
+                    else ->
+                        "Roster inactive"
                 }
 
             Text(
