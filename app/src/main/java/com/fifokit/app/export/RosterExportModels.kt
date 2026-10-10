@@ -3,6 +3,8 @@ package com.fifokit.app.export
 import com.fifokit.app.domain.roster.AustralianState
 import com.fifokit.app.domain.roster.PublicHolidayProvider
 import com.fifokit.app.domain.roster.RosterCalculator
+import com.fifokit.app.domain.roster.RosterScheduleCalculator
+import com.fifokit.app.domain.roster.RosterScheduleSegment
 import java.time.LocalDate
 import java.time.YearMonth
 
@@ -13,7 +15,10 @@ data class RosterExportData(
     val offDays: Int,
     val selectedStates: Set<AustralianState>,
     val isShutdownRoster: Boolean = false,
-    val endDate: LocalDate? = null
+    val endDate: LocalDate? = null,
+    val scheduleSegments:
+        List<RosterScheduleSegment> =
+        emptyList()
 )
 
 data class RosterExportDay(
@@ -44,17 +49,32 @@ object RosterExportCalendar {
             cells += RosterExportDay(
                 date = date,
                 isWorkDay =
-                    (
-                        !data.isShutdownRoster ||
-                        data.endDate == null ||
-                        !date.isAfter(data.endDate)
-                    ) &&
-                            RosterCalculator.isWorkDay(
+                    if (
+                        data.scheduleSegments
+                            .isNotEmpty()
+                    ) {
+                        RosterScheduleCalculator
+                            .isWorkDay(
                                 date = date,
-                                startDate = data.startDate,
-                                workDays = data.workDays,
-                                offDays = data.offDays
-                            ),
+                                startDate =
+                                    data.startDate,
+                                segments =
+                                    data.scheduleSegments,
+                                repeat =
+                                    !data.isShutdownRoster
+                            )
+                    } else {
+                        RosterCalculator
+                            .isWorkDay(
+                                date = date,
+                                startDate =
+                                    data.startDate,
+                                workDays =
+                                    data.workDays,
+                                offDays =
+                                    data.offDays
+                            )
+                    },
                 isPublicHoliday =
                     PublicHolidayProvider.isPublicHoliday(
                         date = date,
