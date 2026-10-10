@@ -10,6 +10,11 @@ import androidx.lifecycle.viewModelScope
 import com.fifokit.app.data.RosterPreferences
 import com.fifokit.app.domain.model.RosterPattern
 import com.fifokit.app.domain.roster.RosterCalculator
+import com.fifokit.app.domain.roster.RosterSegmentType
+import com.fifokit.app.domain.roster.RosterScheduleStatus
+import com.fifokit.app.domain.roster.RosterScheduleSegment
+import com.fifokit.app.domain.roster.RosterScheduleCodec
+import com.fifokit.app.domain.roster.RosterScheduleCalculator
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import java.time.LocalDate
@@ -48,6 +53,7 @@ fun RosterSetupRoute(
         isCustomRoster = viewModel.isCustomRoster,
         customWorkDays = viewModel.customWorkDays,
         customOffDays = viewModel.customOffDays,
+        scheduleSegments = viewModel.scheduleSegments,
         startDate = viewModel.startDate,
         isShutdownRoster = viewModel.isShutdownRoster,
         endDate = viewModel.endDate,
@@ -77,6 +83,14 @@ fun RosterSetupRoute(
         },
         onCustomWorkDaysChanged = viewModel::updateCustomWorkDays,
         onCustomOffDaysChanged = viewModel::updateCustomOffDays,
+        onAddScheduleSegment =
+            viewModel::addScheduleSegment,
+        onUpdateScheduleSegmentType =
+            viewModel::updateScheduleSegmentType,
+        onUpdateScheduleSegmentDays =
+            viewModel::updateScheduleSegmentDays,
+        onRemoveScheduleSegment =
+            viewModel::removeScheduleSegment,
         onStartDateSelected = viewModel::selectStartDate,
         onEndDateSelected = viewModel::selectEndDate,
         showCancelNewRoster = viewModel.isCreatingNewRoster,
@@ -189,6 +203,16 @@ class RosterSetupViewModel(
     var customOffDays by mutableStateOf(7)
         private set
 
+    var scheduleSegments by
+        mutableStateOf(
+            RosterScheduleCalculator
+                .legacyRepeatingSequence(
+                    workDays = 14,
+                    offDays = 7
+                )
+        )
+        private set
+
     var startDate by mutableStateOf(LocalDate.now())
         private set
 
@@ -275,6 +299,12 @@ class RosterSetupViewModel(
                 isCustomRoster = false
                 customWorkDays = 14
                 customOffDays = 7
+                scheduleSegments =
+                    RosterScheduleCalculator
+                        .legacyRepeatingSequence(
+                            workDays = 14,
+                            offDays = 7
+                        )
                 startDate = LocalDate.now()
                 isShutdownRoster = false
                 endDate = null
@@ -322,46 +352,168 @@ class RosterSetupViewModel(
     }
 
     fun selectCustomRoster() {
+        if (
+            !isCustomRoster ||
+            scheduleSegments.isEmpty()
+        ) {
+            scheduleSegments =
+                RosterScheduleCalculator
+                    .legacyRepeatingSequence(
+                        workDays =
+                            customWorkDays,
+                        offDays =
+                            customOffDays
+                    )
+        }
+
         isCustomRoster = true
         isShutdownRoster = false
         endDate = null
+        syncLegacyCustomFields()
     }
 
     fun selectShutdownRoster() {
+        val wasCustom =
+            isCustomRoster
+
         isCustomRoster = true
         isShutdownRoster = true
 
-        if (endDate == null || endDate!!.isBefore(startDate)) {
-            endDate = startDate.plusDays(13)
+        if (
+            !wasCustom ||
+            scheduleSegments.isEmpty()
+        ) {
+            scheduleSegments =
+                listOf(
+                    RosterScheduleSegment(
+                        type =
+                            RosterSegmentType.WORK,
+                        days = 7
+                    )
+                )
         }
+
+        syncLegacyCustomFields()
+        refreshShutdownEndDate()
+    }
+
+    fun addScheduleSegment(
+        type: RosterSegmentType
+    ) {
+        scheduleSegments =
+            scheduleSegments +
+                    RosterScheduleSegment(
+                        type = type,
+                        days = 1
+                    )
+
+        syncLegacyCustomFields()
+        refreshShutdownEndDate()
+    }
+
+    fun updateScheduleSegmentType(
+        id: String,
+        type: RosterSegmentType
+    ) {
+        scheduleSegments =
+            scheduleSegments.map {
+                if (it.id == id) {
+                    it.copy(type = type)
+                } else {
+                    it
+                }
+            }
+
+        syncLegacyCustomFields()
+        refreshShutdownEndDate()
+    }
+
+    fun updateScheduleSegmentDays(
+        id: String,
+        days: Int
+    ) {
+        scheduleSegments =
+            scheduleSegments.map {
+                if (it.id == id) {
+                    it.copy(
+                        days =
+                            days.coerceIn(
+                                1,
+                                99
+                            )
+                    )
+                } else {
+                    it
+                }
+            }
+
+        syncLegacyCustomFields()
+        refreshShutdownEndDate()
+    }
+
+    fun removeScheduleSegment(
+        id: String
+    ) {
+        scheduleSegments =
+            scheduleSegments.filterNot {
+                it.id == id
+            }
+
+        syncLegacyCustomFields()
+        refreshShutdownEndDate()
     }
 
     fun updateCustomWorkDays(days: Int) {
-        customWorkDays = days.coerceIn(1, 99)
+        customWorkDays =
+            days.coerceIn(1, 99)
     }
 
     fun updateCustomOffDays(days: Int) {
-        customOffDays = days.coerceIn(1, 99)
+        customOffDays =
+            days.coerceIn(1, 99)
     }
 
     fun selectStartDate(date: LocalDate) {
         startDate = date
-
-        if (
-            isShutdownRoster &&
-            (
-                endDate == null ||
-                endDate!!.isBefore(date)
-            )
-        ) {
-            endDate = date
-        }
+        refreshShutdownEndDate()
     }
 
     fun selectEndDate(date: LocalDate) {
-        if (!date.isBefore(startDate)) {
-            endDate = date
-        }
+        endDate = date
+    }
+
+    private fun syncLegacyCustomFields() {
+        customWorkDays =
+            scheduleSegments
+                .firstOrNull {
+                    it.isWork
+                }
+                ?.days
+                ?: 1
+
+        customOffDays =
+            scheduleSegments
+                .firstOrNull {
+                    it.type ==
+                            RosterSegmentType.OFF
+                }
+                ?.days
+                ?: 1
+    }
+
+    private fun refreshShutdownEndDate() {
+        endDate =
+            if (isShutdownRoster) {
+                RosterScheduleCalculator
+                    .endDate(
+                        startDate =
+                            startDate,
+                        segments =
+                            scheduleSegments
+                    )
+            } else {
+                null
+            }
     }
 
     fun isRosterActive(date: LocalDate): Boolean {
@@ -369,15 +521,41 @@ class RosterSetupViewModel(
             return false
         }
 
-        if (
-            isShutdownRoster &&
-            endDate != null &&
-            date.isAfter(endDate)
-        ) {
-            return false
+        return if (isCustomRoster) {
+            if (isShutdownRoster) {
+                RosterScheduleCalculator
+                    .statusOn(
+                        date = date,
+                        startDate = startDate,
+                        segments =
+                            scheduleSegments,
+                        repeat = false
+                    ) != null
+            } else {
+                scheduleSegments
+                    .isNotEmpty()
+            }
+        } else {
+            true
+        }
+    }
+
+    fun scheduleStatusOn(
+        date: LocalDate
+    ): RosterScheduleStatus? {
+        if (!isCustomRoster) {
+            return null
         }
 
-        return true
+        return RosterScheduleCalculator
+            .statusOn(
+                date = date,
+                startDate = startDate,
+                segments =
+                    scheduleSegments,
+                repeat =
+                    !isShutdownRoster
+            )
     }
 
     fun isWorkDay(date: LocalDate): Boolean {
@@ -386,12 +564,15 @@ class RosterSetupViewModel(
         }
 
         return if (isCustomRoster) {
-            RosterCalculator.isWorkDay(
-                date = date,
-                startDate = startDate,
-                workDays = customWorkDays,
-                offDays = customOffDays
-            )
+            RosterScheduleCalculator
+                .isWorkDay(
+                    date = date,
+                    startDate = startDate,
+                    segments =
+                        scheduleSegments,
+                    repeat =
+                        !isShutdownRoster
+                )
         } else {
             RosterCalculator.isWorkDay(
                 date = date,
@@ -458,6 +639,20 @@ class RosterSetupViewModel(
                     "My Roster"
                 }
 
+            if (isCustomRoster) {
+                syncLegacyCustomFields()
+                refreshShutdownEndDate()
+            }
+
+            val scheduleJson =
+                if (isCustomRoster) {
+                    RosterScheduleCodec.encode(
+                        scheduleSegments
+                    )
+                } else {
+                    "[]"
+                }
+
             if (existingRoster == null) {
 
                 val newRosterId =
@@ -470,7 +665,9 @@ class RosterSetupViewModel(
                         customOffDays = customOffDays,
                         isShutdownRoster = isShutdownRoster,
                         endDate =
-                            endDate?.toString()
+                            endDate?.toString(),
+                        scheduleSegmentsJson =
+                            scheduleJson
                     )
 
                 activeRosterId = newRosterId
@@ -490,6 +687,8 @@ class RosterSetupViewModel(
                         isShutdownRoster = isShutdownRoster,
                         endDate =
                             endDate?.toString(),
+                        scheduleSegmentsJson =
+                            scheduleJson,
                         shutdownsJson = "[]"
                     )
                 )
@@ -710,21 +909,92 @@ class RosterSetupViewModel(
         }
         rosterName = roster.name
         isCustomRoster = roster.isCustomRoster
-        customWorkDays = roster.customWorkDays
-        customOffDays = roster.customOffDays
         isShutdownRoster = roster.isShutdownRoster
-        endDate =
+
+        val parsedStartDate =
+            runCatching {
+                LocalDate.parse(
+                    roster.startDate
+                )
+            }.getOrNull()
+                ?: LocalDate.now()
+
+        startDate =
+            parsedStartDate
+
+        val parsedEndDate =
             roster.endDate?.let {
                 runCatching {
                     LocalDate.parse(it)
                 }.getOrNull()
             }
 
-        runCatching {
-            LocalDate.parse(roster.startDate)
-        }.getOrNull()?.let {
-            startDate = it
+        val decodedSegments =
+            RosterScheduleCodec.decode(
+                roster.scheduleSegmentsJson
+            )
+
+        scheduleSegments =
+            when {
+                decodedSegments.isNotEmpty() ->
+                    decodedSegments
+
+                roster.isCustomRoster &&
+                        roster.isShutdownRoster &&
+                        parsedEndDate != null ->
+                    RosterScheduleCalculator
+                        .legacyFiniteSequence(
+                            startDate =
+                                parsedStartDate,
+                            endDate =
+                                parsedEndDate,
+                            workDays =
+                                roster.customWorkDays,
+                            offDays =
+                                roster.customOffDays
+                        )
+
+                roster.isCustomRoster ->
+                    RosterScheduleCalculator
+                        .legacyRepeatingSequence(
+                            workDays =
+                                roster.customWorkDays,
+                            offDays =
+                                roster.customOffDays
+                        )
+
+                else ->
+                    RosterScheduleCalculator
+                        .legacyRepeatingSequence(
+                            workDays = 14,
+                            offDays = 7
+                        )
+            }
+
+        customWorkDays =
+            roster.customWorkDays
+                .coerceAtLeast(1)
+
+        customOffDays =
+            roster.customOffDays
+                .coerceAtLeast(1)
+
+        if (roster.isCustomRoster) {
+            syncLegacyCustomFields()
         }
+
+        endDate =
+            if (roster.isShutdownRoster) {
+                RosterScheduleCalculator
+                    .endDate(
+                        startDate =
+                            parsedStartDate,
+                        segments =
+                            scheduleSegments
+                    )
+            } else {
+                null
+            }
 
         hasSavedRoster = true
     }
@@ -738,6 +1008,12 @@ class RosterSetupViewModel(
         isCustomRoster = false
         customWorkDays = 14
         customOffDays = 7
+        scheduleSegments =
+            RosterScheduleCalculator
+                .legacyRepeatingSequence(
+                    workDays = 14,
+                    offDays = 7
+                )
         startDate = LocalDate.now()
         isShutdownRoster = false
         endDate = null
@@ -846,6 +1122,12 @@ class RosterSetupViewModel(
                 isCustomRoster = false
                 customWorkDays = 14
                 customOffDays = 7
+                scheduleSegments =
+                    RosterScheduleCalculator
+                        .legacyRepeatingSequence(
+                            workDays = 14,
+                            offDays = 7
+                        )
                 startDate = LocalDate.now()
                 isShutdownRoster = false
                 endDate = null
