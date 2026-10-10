@@ -1,9 +1,14 @@
-@file:OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
+@file:OptIn(
+    androidx.compose.material3.ExperimentalMaterial3Api::class,
+    androidx.compose.foundation.layout.ExperimentalLayoutApi::class
+)
 
 package com.fifokit.app.ui.roster
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -256,82 +261,55 @@ fun RosterSetupScreen(
                                 Modifier.height(6.dp)
                         )
 
-                        Row(
+                        FlowRow(
                             modifier =
                                 Modifier.fillMaxWidth(),
                             horizontalArrangement =
                                 Arrangement.spacedBy(
                                     8.dp
+                                ),
+                            verticalArrangement =
+                                Arrangement.spacedBy(
+                                    8.dp
                                 )
                         ) {
-                            if (segment.isWork) {
-                                Button(
-                                    modifier =
-                                        Modifier.weight(
-                                            1f
-                                        ),
-                                    onClick = {
-                                        onUpdateScheduleSegmentType(
-                                            segment.id,
-                                            RosterSegmentType
-                                                .WORK
-                                        )
-                                    }
-                                ) {
-                                    Text("WORK")
-                                }
-                            } else {
-                                OutlinedButton(
-                                    modifier =
-                                        Modifier.weight(
-                                            1f
-                                        ),
-                                    onClick = {
-                                        onUpdateScheduleSegmentType(
-                                            segment.id,
-                                            RosterSegmentType
-                                                .WORK
-                                        )
-                                    }
-                                ) {
-                                    Text("WORK")
-                                }
-                            }
-
-                            if (
-                                segment.type ==
+                            listOf(
+                                RosterSegmentType.WORK,
+                                RosterSegmentType.DAY,
+                                RosterSegmentType.NIGHT,
                                 RosterSegmentType.OFF
-                            ) {
-                                Button(
-                                    modifier =
-                                        Modifier.weight(
-                                            1f
-                                        ),
-                                    onClick = {
-                                        onUpdateScheduleSegmentType(
-                                            segment.id,
-                                            RosterSegmentType
-                                                .OFF
-                                        )
+                            ).forEach { type ->
+
+                                if (segment.type == type) {
+                                    Button(
+                                        modifier =
+                                            Modifier.widthIn(
+                                                min = 72.dp
+                                            ),
+                                        onClick = {
+                                            onUpdateScheduleSegmentType(
+                                                segment.id,
+                                                type
+                                            )
+                                        }
+                                    ) {
+                                        Text(type.name)
                                     }
-                                ) {
-                                    Text("OFF")
-                                }
-                            } else {
-                                OutlinedButton(
-                                    modifier =
-                                        Modifier.weight(
-                                            1f
-                                        ),
-                                    onClick = {
-                                        onUpdateScheduleSegmentType(
-                                            segment.id,
-                                            RosterSegmentType
-                                                .OFF
-                                        )
+                                } else {
+                                    OutlinedButton(
+                                        modifier =
+                                            Modifier.widthIn(
+                                                min = 72.dp
+                                            ),
+                                        onClick = {
+                                            onUpdateScheduleSegmentType(
+                                                segment.id,
+                                                type
+                                            )
+                                        }
+                                    ) {
+                                        Text(type.name)
                                     }
-                                ) {
-                                    Text("OFF")
                                 }
                             }
                         }
@@ -419,31 +397,32 @@ fun RosterSetupScreen(
                         )
                     }
 
-                Row(
+                FlowRow(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement =
+                        Arrangement.spacedBy(8.dp),
+                    verticalArrangement =
                         Arrangement.spacedBy(8.dp)
                 ) {
-                    OutlinedButton(
-                        modifier = Modifier.weight(1f),
-                        onClick = {
-                            onAddScheduleSegment(
-                                RosterSegmentType.WORK
-                            )
+                    listOf(
+                        RosterSegmentType.WORK,
+                        RosterSegmentType.DAY,
+                        RosterSegmentType.NIGHT,
+                        RosterSegmentType.OFF
+                    ).forEach { type ->
+                        OutlinedButton(
+                            modifier =
+                                Modifier.widthIn(
+                                    min = 92.dp
+                                ),
+                            onClick = {
+                                onAddScheduleSegment(
+                                    type
+                                )
+                            }
+                        ) {
+                            Text("+ ${type.name}")
                         }
-                    ) {
-                        Text("+ WORK")
-                    }
-
-                    OutlinedButton(
-                        modifier = Modifier.weight(1f),
-                        onClick = {
-                            onAddScheduleSegment(
-                                RosterSegmentType.OFF
-                            )
-                        }
-                    ) {
-                        Text("+ OFF")
                     }
                 }
 
