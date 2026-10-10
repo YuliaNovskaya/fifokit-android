@@ -969,8 +969,6 @@ private fun CalendarDay(
 
             isWorkDay && rosterStatusLabel == "DAY" -> Color(0xFFFFB74D)
             isWorkDay && rosterStatusLabel == "NIGHT" -> Color(0xFF3949AB)
-            isWorkDay && shiftType == "DAY" -> Color(0xFFFFB74D)
-            isWorkDay && shiftType == "NIGHT" -> Color(0xFF3949AB)
             isWorkDay ->
                 MaterialTheme.colorScheme.primaryContainer
 
