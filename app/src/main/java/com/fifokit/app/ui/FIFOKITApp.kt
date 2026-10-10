@@ -419,10 +419,8 @@ fun FIFOKITApp(
                 TogetherRosterCalendarScreen(
                     viewModel = rosterSetupViewModel,
                     sharedRoster = selectedSharedRoster!!,
-                    onMyRoster = {
+                    onSharedRoster = {
                         showTogetherRoster = false
-                        showSharedRosters = false
-                        selectedSharedRoster = null
                     },
                     onBack = {
                         showTogetherRoster = false
