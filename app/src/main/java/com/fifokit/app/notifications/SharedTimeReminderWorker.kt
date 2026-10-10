@@ -16,6 +16,8 @@ import com.fifokit.app.data.cloud.SharedRosterManager
 import com.fifokit.app.data.local.RosterDatabase
 import com.fifokit.app.domain.model.RosterPattern
 import com.fifokit.app.domain.roster.RosterCalculator
+import com.fifokit.app.domain.roster.RosterScheduleCalculator
+import com.fifokit.app.domain.roster.RosterScheduleCodec
 import kotlinx.coroutines.flow.first
 import java.time.LocalDate
 
@@ -74,24 +76,30 @@ class SharedTimeReminderWorker(
         val today = LocalDate.now()
         val tomorrow = today.plusDays(1)
 
-        val myEndDate =
-            myRoster.endDate?.let {
-                runCatching {
-                    LocalDate.parse(it)
-                }.getOrNull()
+        val myDecodedSegments =
+            RosterScheduleCodec.decode(
+                myRoster.scheduleSegmentsJson
+            )
+
+        val myScheduleSegments =
+            if (
+                myRoster.isCustomRoster &&
+                myDecodedSegments.isEmpty()
+            ) {
+                RosterScheduleCalculator
+                    .legacyRepeatingSequence(
+                        workDays =
+                            myRoster.customWorkDays,
+                        offDays =
+                            myRoster.customOffDays
+                    )
+            } else {
+                myDecodedSegments
             }
 
         fun myIsWorkDay(
             date: LocalDate
         ): Boolean {
-
-            if (
-                myRoster.isShutdownRoster &&
-                myEndDate != null &&
-                date.isAfter(myEndDate)
-            ) {
-                return false
-            }
 
             val startDate =
                 runCatching {
@@ -103,14 +111,16 @@ class SharedTimeReminderWorker(
 
             return if (myRoster.isCustomRoster) {
 
-                RosterCalculator.isWorkDay(
-                    date = date,
-                    startDate = startDate,
-                    workDays =
-                        myRoster.customWorkDays,
-                    offDays =
-                        myRoster.customOffDays
-                )
+                RosterScheduleCalculator
+                    .isWorkDay(
+                        date = date,
+                        startDate = startDate,
+                        segments =
+                            myScheduleSegments,
+                        repeat =
+                            !myRoster
+                                .isShutdownRoster
+                    )
 
             } else {
 
@@ -145,40 +155,47 @@ class SharedTimeReminderWorker(
                     }.getOrNull()
                         ?: return@firstOrNull false
 
-                val partnerEndDate =
-                    roster.endDate?.let {
-                        runCatching {
-                            LocalDate.parse(it)
-                        }.getOrNull()
+                val decodedPartnerSegments =
+                    RosterScheduleCodec.decode(
+                        roster.scheduleSegmentsJson
+                    )
+
+                val partnerScheduleSegments =
+                    if (
+                        roster.isCustomRoster &&
+                        decodedPartnerSegments
+                            .isEmpty()
+                    ) {
+                        RosterScheduleCalculator
+                            .legacyRepeatingSequence(
+                                workDays =
+                                    roster.customWorkDays,
+                                offDays =
+                                    roster.customOffDays
+                            )
+                    } else {
+                        decodedPartnerSegments
                     }
 
                 fun partnerIsWorkDay(
                     date: LocalDate
                 ): Boolean {
 
-                    if (
-                        roster.isShutdownRoster &&
-                        partnerEndDate != null &&
-                        date.isAfter(
-                            partnerEndDate
-                        )
-                    ) {
-                        return false
-                    }
-
                     return if (
                         roster.isCustomRoster
                     ) {
 
-                        RosterCalculator.isWorkDay(
-                            date = date,
-                            startDate =
-                                partnerStartDate,
-                            workDays =
-                                roster.customWorkDays,
-                            offDays =
-                                roster.customOffDays
-                        )
+                        RosterScheduleCalculator
+                            .isWorkDay(
+                                date = date,
+                                startDate =
+                                    partnerStartDate,
+                                segments =
+                                    partnerScheduleSegments,
+                                repeat =
+                                    !roster
+                                        .isShutdownRoster
+                            )
 
                     } else {
 
