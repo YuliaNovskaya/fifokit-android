@@ -23,7 +23,13 @@ data class PayInput(
     val pipValue: Double = 0.0,
     val localRatesEnabled: Boolean = false,
     val localWeekdayHourlyRate: Double = 0.0,
+    val localWeekdayBaseHours: Double = 8.0,
+    val localWeekdayOvertimeHourlyRate: Double = 0.0,
+    val localWeekdayOvertimeHours: Double = 0.0,
     val localSaturdayHourlyRate: Double = 0.0,
+    val localSaturdayHours: Double = 8.0,
+    val localSundayHourlyRate: Double = 0.0,
+    val localSundayHours: Double = 0.0,
     val localHoursPerDay: Double = 8.0
 )
 
@@ -42,6 +48,9 @@ data class EarningsResult(
 data class LocalPayResult(
     val weekdayGrossPerWeek: Double,
     val saturdayGrossPerWeek: Double,
+    val sundayGrossPerWeek: Double = 0.0,
+    val weekdayBaseGrossPerWeek: Double = 0.0,
+    val weekdayOvertimeGrossPerWeek: Double = 0.0,
     val weeklyGross: Double,
     val annualisedGross: Double,
     val annualHours: Double,
