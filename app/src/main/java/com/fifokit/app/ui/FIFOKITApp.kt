@@ -522,6 +522,27 @@ fun FIFOKITApp(
                     onBack = {
                         showFinancialGoal = false
                     },
+                    rosterName =
+                        if (
+                            rosterSetupViewModel
+                                .rosters
+                                .isNotEmpty()
+                        ) {
+                            rosterSetupViewModel
+                                .rosterName
+                        } else {
+                            null
+                        },
+                    isRosterWorkDay =
+                        if (
+                            rosterSetupViewModel
+                                .rosters
+                                .isNotEmpty()
+                        ) {
+                            rosterSetupViewModel::isWorkDay
+                        } else {
+                            null
+                        },
                     onProRequested = { feature ->
                         analytics.logEvent(
                             AnalyticsEvents.PRO_FEATURE_LOCKED
