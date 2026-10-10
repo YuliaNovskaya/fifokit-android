@@ -68,7 +68,7 @@ import androidx.compose.ui.unit.sp
 fun TogetherRosterCalendarScreen(
     viewModel: RosterSetupViewModel,
     sharedRoster: SharedRoster,
-    onMyRoster: () -> Unit,
+    onSharedRoster: () -> Unit,
     onBack: () -> Unit
 ) {
 
@@ -254,9 +254,9 @@ fun TogetherRosterCalendarScreen(
 
                 OutlinedButton(
                     modifier = Modifier.weight(1f),
-                    onClick = onMyRoster
+                    onClick = onSharedRoster
                 ) {
-                    Text("My roster")
+                    Text("Shared roster")
                 }
 
                 androidx.compose.material3.Button(
