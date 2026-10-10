@@ -78,6 +78,11 @@ class FinancePreferences(
         val LOCAL_SUNDAY_HOURS =
             doublePreferencesKey("local_sunday_hours")
 
+        val LOCAL_SATURDAY_EXTRA_RATE = doublePreferencesKey("local_saturday_extra_rate")
+        val LOCAL_SATURDAY_EXTRA_HOURS = doublePreferencesKey("local_saturday_extra_hours")
+        val LOCAL_SUNDAY_EXTRA_RATE = doublePreferencesKey("local_sunday_extra_rate")
+        val LOCAL_SUNDAY_EXTRA_HOURS = doublePreferencesKey("local_sunday_extra_hours")
+
         val LOCAL_HOURS_PER_DAY =
             doublePreferencesKey("local_hours_per_day")
 
@@ -166,6 +171,10 @@ class FinancePreferences(
                     preferences[Keys.LOCAL_SUNDAY_HOURLY_RATE] ?: 0.0,
                 localSundayHours =
                     preferences[Keys.LOCAL_SUNDAY_HOURS] ?: 0.0,
+                localSaturdayExtraRate = preferences[Keys.LOCAL_SATURDAY_EXTRA_RATE] ?: 0.0,
+                localSaturdayExtraHours = preferences[Keys.LOCAL_SATURDAY_EXTRA_HOURS] ?: 0.0,
+                localSundayExtraRate = preferences[Keys.LOCAL_SUNDAY_EXTRA_RATE] ?: 0.0,
+                localSundayExtraHours = preferences[Keys.LOCAL_SUNDAY_EXTRA_HOURS] ?: 0.0,
                 localHoursPerDay =
                     preferences[Keys.LOCAL_HOURS_PER_DAY] ?: 8.0
             )
@@ -260,6 +269,10 @@ class FinancePreferences(
             preferences[Keys.LOCAL_SUNDAY_HOURS] =
                 input.localSundayHours
 
+            preferences[Keys.LOCAL_SATURDAY_EXTRA_RATE] = input.localSaturdayExtraRate
+            preferences[Keys.LOCAL_SATURDAY_EXTRA_HOURS] = input.localSaturdayExtraHours
+            preferences[Keys.LOCAL_SUNDAY_EXTRA_RATE] = input.localSundayExtraRate
+            preferences[Keys.LOCAL_SUNDAY_EXTRA_HOURS] = input.localSundayExtraHours
             preferences[Keys.LOCAL_HOURS_PER_DAY] =
                 input.localHoursPerDay
 
@@ -549,6 +562,10 @@ class FinancePreferences(
             preferences[Keys.LOCAL_SUNDAY_HOURS] =
                 input.localSundayHours
 
+            preferences[Keys.LOCAL_SATURDAY_EXTRA_RATE] = input.localSaturdayExtraRate
+            preferences[Keys.LOCAL_SATURDAY_EXTRA_HOURS] = input.localSaturdayExtraHours
+            preferences[Keys.LOCAL_SUNDAY_EXTRA_RATE] = input.localSundayExtraRate
+            preferences[Keys.LOCAL_SUNDAY_EXTRA_HOURS] = input.localSundayExtraHours
             preferences[Keys.LOCAL_HOURS_PER_DAY] =
                 input.localHoursPerDay
 
