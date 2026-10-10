@@ -29,6 +29,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.fifokit.app.domain.model.RosterPattern
 import com.fifokit.app.domain.roster.RosterCalculator
+import com.fifokit.app.domain.roster.RosterScheduleCalculator
+import com.fifokit.app.domain.roster.RosterScheduleCodec
 import com.fifokit.app.domain.sharing.SharedRoster
 import com.fifokit.app.ui.roster.RosterSetupViewModel
 import java.time.LocalDate
@@ -111,30 +113,41 @@ fun TogetherRosterCalendarScreen(
         mutableStateOf(YearMonth.now())
     }
 
-    val partnerEndDate =
-        partnerRoster.endDate?.let {
-            runCatching {
-                LocalDate.parse(it)
-            }.getOrNull()
+    val decodedPartnerSegments =
+        RosterScheduleCodec.decode(
+            partnerRoster.scheduleSegmentsJson
+        )
+
+    val partnerScheduleSegments =
+        if (
+            partnerRoster.isCustomRoster &&
+            decodedPartnerSegments.isEmpty()
+        ) {
+            RosterScheduleCalculator
+                .legacyRepeatingSequence(
+                    workDays =
+                        partnerRoster.customWorkDays,
+                    offDays =
+                        partnerRoster.customOffDays
+                )
+        } else {
+            decodedPartnerSegments
         }
 
     fun partnerIsWorkDay(date: LocalDate): Boolean {
-        if (
-            partnerRoster.isShutdownRoster &&
-            partnerEndDate != null &&
-            date.isAfter(partnerEndDate)
-        ) {
-            return false
-        }
-
         return if (partnerRoster.isCustomRoster) {
 
-            RosterCalculator.isWorkDay(
-                date = date,
-                startDate = partnerStartDate,
-                workDays = partnerRoster.customWorkDays,
-                offDays = partnerRoster.customOffDays
-            )
+            RosterScheduleCalculator
+                .isWorkDay(
+                    date = date,
+                    startDate =
+                        partnerStartDate,
+                    segments =
+                        partnerScheduleSegments,
+                    repeat =
+                        !partnerRoster
+                            .isShutdownRoster
+                )
 
         } else {
 
