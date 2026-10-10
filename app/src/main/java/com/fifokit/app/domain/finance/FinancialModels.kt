@@ -35,6 +35,10 @@ data class PayInput(
     val localSaturdayHours: Double = 8.0,
     val localSundayHourlyRate: Double = 0.0,
     val localSundayHours: Double = 0.0,
+    val localSaturdayExtraRate: Double = 0.0,
+    val localSaturdayExtraHours: Double = 0.0,
+    val localSundayExtraRate: Double = 0.0,
+    val localSundayExtraHours: Double = 0.0,
     val localHoursPerDay: Double = 8.0
 )
 
