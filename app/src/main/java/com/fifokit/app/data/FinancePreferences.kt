@@ -52,8 +52,30 @@ class FinancePreferences(
         val LOCAL_WEEKDAY_HOURLY_RATE =
             doublePreferencesKey("local_weekday_hourly_rate")
 
+        val LOCAL_WEEKDAY_BASE_HOURS =
+            doublePreferencesKey("local_weekday_base_hours")
+
+        val LOCAL_WEEKDAY_OVERTIME_HOURLY_RATE =
+            doublePreferencesKey(
+                "local_weekday_overtime_hourly_rate"
+            )
+
+        val LOCAL_WEEKDAY_OVERTIME_HOURS =
+            doublePreferencesKey(
+                "local_weekday_overtime_hours"
+            )
+
         val LOCAL_SATURDAY_HOURLY_RATE =
             doublePreferencesKey("local_saturday_hourly_rate")
+
+        val LOCAL_SATURDAY_HOURS =
+            doublePreferencesKey("local_saturday_hours")
+
+        val LOCAL_SUNDAY_HOURLY_RATE =
+            doublePreferencesKey("local_sunday_hourly_rate")
+
+        val LOCAL_SUNDAY_HOURS =
+            doublePreferencesKey("local_sunday_hours")
 
         val LOCAL_HOURS_PER_DAY =
             doublePreferencesKey("local_hours_per_day")
@@ -121,8 +143,28 @@ class FinancePreferences(
                     preferences[Keys.LOCAL_RATES_ENABLED] ?: false,
                 localWeekdayHourlyRate =
                     preferences[Keys.LOCAL_WEEKDAY_HOURLY_RATE] ?: 0.0,
+                localWeekdayBaseHours =
+                    preferences[Keys.LOCAL_WEEKDAY_BASE_HOURS]
+                        ?: preferences[Keys.LOCAL_HOURS_PER_DAY]
+                        ?: 8.0,
+                localWeekdayOvertimeHourlyRate =
+                    preferences[
+                        Keys.LOCAL_WEEKDAY_OVERTIME_HOURLY_RATE
+                    ] ?: 0.0,
+                localWeekdayOvertimeHours =
+                    preferences[
+                        Keys.LOCAL_WEEKDAY_OVERTIME_HOURS
+                    ] ?: 0.0,
                 localSaturdayHourlyRate =
                     preferences[Keys.LOCAL_SATURDAY_HOURLY_RATE] ?: 0.0,
+                localSaturdayHours =
+                    preferences[Keys.LOCAL_SATURDAY_HOURS]
+                        ?: preferences[Keys.LOCAL_HOURS_PER_DAY]
+                        ?: 8.0,
+                localSundayHourlyRate =
+                    preferences[Keys.LOCAL_SUNDAY_HOURLY_RATE] ?: 0.0,
+                localSundayHours =
+                    preferences[Keys.LOCAL_SUNDAY_HOURS] ?: 0.0,
                 localHoursPerDay =
                     preferences[Keys.LOCAL_HOURS_PER_DAY] ?: 8.0
             )
@@ -194,8 +236,28 @@ class FinancePreferences(
             preferences[Keys.LOCAL_WEEKDAY_HOURLY_RATE] =
                 input.localWeekdayHourlyRate
 
+            preferences[Keys.LOCAL_WEEKDAY_BASE_HOURS] =
+                input.localWeekdayBaseHours
+
+            preferences[
+                Keys.LOCAL_WEEKDAY_OVERTIME_HOURLY_RATE
+            ] =
+                input.localWeekdayOvertimeHourlyRate
+
+            preferences[Keys.LOCAL_WEEKDAY_OVERTIME_HOURS] =
+                input.localWeekdayOvertimeHours
+
             preferences[Keys.LOCAL_SATURDAY_HOURLY_RATE] =
                 input.localSaturdayHourlyRate
+
+            preferences[Keys.LOCAL_SATURDAY_HOURS] =
+                input.localSaturdayHours
+
+            preferences[Keys.LOCAL_SUNDAY_HOURLY_RATE] =
+                input.localSundayHourlyRate
+
+            preferences[Keys.LOCAL_SUNDAY_HOURS] =
+                input.localSundayHours
 
             preferences[Keys.LOCAL_HOURS_PER_DAY] =
                 input.localHoursPerDay
@@ -463,8 +525,28 @@ class FinancePreferences(
             preferences[Keys.LOCAL_WEEKDAY_HOURLY_RATE] =
                 input.localWeekdayHourlyRate
 
+            preferences[Keys.LOCAL_WEEKDAY_BASE_HOURS] =
+                input.localWeekdayBaseHours
+
+            preferences[
+                Keys.LOCAL_WEEKDAY_OVERTIME_HOURLY_RATE
+            ] =
+                input.localWeekdayOvertimeHourlyRate
+
+            preferences[Keys.LOCAL_WEEKDAY_OVERTIME_HOURS] =
+                input.localWeekdayOvertimeHours
+
             preferences[Keys.LOCAL_SATURDAY_HOURLY_RATE] =
                 input.localSaturdayHourlyRate
+
+            preferences[Keys.LOCAL_SATURDAY_HOURS] =
+                input.localSaturdayHours
+
+            preferences[Keys.LOCAL_SUNDAY_HOURLY_RATE] =
+                input.localSundayHourlyRate
+
+            preferences[Keys.LOCAL_SUNDAY_HOURS] =
+                input.localSundayHours
 
             preferences[Keys.LOCAL_HOURS_PER_DAY] =
                 input.localHoursPerDay
