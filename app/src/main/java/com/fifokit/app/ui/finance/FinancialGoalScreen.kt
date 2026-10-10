@@ -41,6 +41,7 @@ import androidx.compose.ui.unit.dp
 import com.fifokit.app.analytics.AnalyticsEvents
 import com.fifokit.app.analytics.AnalyticsParams
 import com.fifokit.app.data.FinancePreferences
+import com.fifokit.app.data.cloud.FinancialGoalCloudSyncManager
 import com.fifokit.app.domain.finance.FinanceCalculator
 import com.fifokit.app.domain.finance.FinanceFormatter
 import com.fifokit.app.domain.finance.FinancialGoal
@@ -49,6 +50,7 @@ import com.fifokit.app.domain.pro.ProAccess
 import com.fifokit.app.domain.pro.ProFeature
 import com.fifokit.app.ui.components.FifokitTopBar
 import com.google.firebase.analytics.FirebaseAnalytics
+import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.util.UUID
@@ -79,6 +81,34 @@ fun FinancialGoalScreen(
         remember(context) {
             FinancePreferences(context)
         }
+
+    val financialGoalCloudSyncManager =
+        remember(
+            context,
+            financePreferences
+        ) {
+            FinancialGoalCloudSyncManager(
+                context = context,
+                financePreferences =
+                    financePreferences
+            )
+        }
+
+    val auth =
+        remember {
+            FirebaseAuth.getInstance()
+        }
+
+    suspend fun syncFinancialGoalsIfSignedIn() {
+        val uid =
+            auth.currentUser?.uid
+                ?: return
+
+        runCatching {
+            financialGoalCloudSyncManager
+                .sync(uid)
+        }
+    }
 
     val goals by
         financePreferences
@@ -413,6 +443,8 @@ fun FinancialGoalScreen(
                                     .deleteFinancialGoal(
                                         id
                                     )
+
+                                syncFinancialGoalsIfSignedIn()
                             }
                         }
 
@@ -749,6 +781,8 @@ fun FinancialGoalScreen(
                                         .saveFinancialGoal(
                                             savedGoal
                                         )
+
+                                    syncFinancialGoalsIfSignedIn()
                                 }
 
                                 analytics.logEvent(
