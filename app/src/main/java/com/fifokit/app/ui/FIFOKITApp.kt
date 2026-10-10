@@ -541,17 +541,16 @@ fun FIFOKITApp(
             } else if (showAnnualEarnings) {
                 AnnualEarningsScreen(
                     selectedPattern = rosterSetupViewModel.selectedPattern,
-                    isCustomRoster = rosterSetupViewModel.isCustomRoster,
-                    customWorkDays = rosterSetupViewModel.customWorkDays,
-                    customOffDays = rosterSetupViewModel.customOffDays,
-                    rosterStartDate = rosterSetupViewModel.startDate,
-                    selectedStates = rosterSetupViewModel.selectedStates,
-                    rosterEndDate =
-                        if (rosterSetupViewModel.isShutdownRoster) {
-                            rosterSetupViewModel.endDate
-                        } else {
-                            null
-                        },
+                    isCustomRoster =
+                        rosterSetupViewModel.isCustomRoster,
+                    isShutdownRoster =
+                        rosterSetupViewModel.isShutdownRoster,
+                    scheduleSegments =
+                        rosterSetupViewModel.scheduleSegments,
+                    rosterStartDate =
+                        rosterSetupViewModel.startDate,
+                    selectedStates =
+                        rosterSetupViewModel.selectedStates,
                     onBack = {
                         showAnnualEarnings = false
                     }
@@ -559,17 +558,16 @@ fun FIFOKITApp(
             } else if (showPayCalculator) {
                 PayCalculatorScreen(
                     selectedPattern = rosterSetupViewModel.selectedPattern,
-                    isCustomRoster = rosterSetupViewModel.isCustomRoster,
-                    customWorkDays = rosterSetupViewModel.customWorkDays,
-                    customOffDays = rosterSetupViewModel.customOffDays,
-                    rosterStartDate = rosterSetupViewModel.startDate,
-                    selectedStates = rosterSetupViewModel.selectedStates,
-                    rosterEndDate =
-                        if (rosterSetupViewModel.isShutdownRoster) {
-                            rosterSetupViewModel.endDate
-                        } else {
-                            null
-                        },
+                    isCustomRoster =
+                        rosterSetupViewModel.isCustomRoster,
+                    isShutdownRoster =
+                        rosterSetupViewModel.isShutdownRoster,
+                    scheduleSegments =
+                        rosterSetupViewModel.scheduleSegments,
+                    rosterStartDate =
+                        rosterSetupViewModel.startDate,
+                    selectedStates =
+                        rosterSetupViewModel.selectedStates,
                     onBack = {
                         showPayCalculator = false
                     }
