@@ -471,7 +471,7 @@ fun RosterCalendarScreen(
                                     it.id ==
                                             viewModel.activeRosterId
                                 }
-    
+
                         val shareCount =
                             activeRoster
                                 ?.cloudId
@@ -480,7 +480,7 @@ fun RosterCalendarScreen(
                                         .shareCountByCloudId[it]
                                 }
                                 ?: 0
-    
+
                         Text(
                             if (shareCount > 0) {
                                 "Roster: ${viewModel.rosterName} · Shared with $shareCount"
@@ -489,7 +489,7 @@ fun RosterCalendarScreen(
                             }
                         )
                     }
-    
+
                     DropdownMenu(
                         expanded = rosterMenuExpanded,
                         onDismissRequest = {
@@ -506,7 +506,7 @@ fun RosterCalendarScreen(
                                                     .shareCountByCloudId[it]
                                             }
                                             ?: 0
-    
+
                                     Text(
                                         if (shareCount > 0) {
                                             "${roster.name} · Shared with $shareCount"
@@ -517,14 +517,14 @@ fun RosterCalendarScreen(
                                 },
                                 onClick = {
                                     rosterMenuExpanded = false
-    
+
                                     if (roster.id != viewModel.activeRosterId) {
                                         viewModel.switchRoster(roster.id)
                                     }
                                 }
                             )
                         }
-    
+
                         DropdownMenuItem(
                             text = {
                                 Text("+ New roster")
@@ -537,12 +537,21 @@ fun RosterCalendarScreen(
                         )
                     }
                 }
-    
-    
-                Spacer(
-                    modifier = Modifier.height(4.dp)
-                )
+            } else {
+                OutlinedButton(
+                    modifier = Modifier.fillMaxWidth(),
+                    onClick = {
+                        viewModel.createNewRoster()
+                        onBack()
+                    }
+                ) {
+                    Text("Roster: Tap to add roster")
+                }
             }
+
+            Spacer(
+                modifier = Modifier.height(4.dp)
+            )
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
