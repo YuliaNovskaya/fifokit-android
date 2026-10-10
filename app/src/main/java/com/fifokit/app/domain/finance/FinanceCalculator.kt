@@ -16,27 +16,77 @@ object FinanceCalculator {
         saturdayHourlyRate: Double,
         hoursPerDay: Double
     ): LocalPayResult {
-        val weekdayGross =
+        return calculateLocalPay(
+            weekdayHourlyRate =
+                weekdayHourlyRate,
+            weekdayBaseHours =
+                hoursPerDay,
+            weekdayOvertimeHourlyRate =
+                0.0,
+            weekdayOvertimeHours =
+                0.0,
+            saturdayHourlyRate =
+                saturdayHourlyRate,
+            saturdayHours =
+                hoursPerDay,
+            sundayHourlyRate =
+                0.0,
+            sundayHours =
+                0.0
+        )
+    }
+
+    fun calculateLocalPay(
+        weekdayHourlyRate: Double,
+        weekdayBaseHours: Double,
+        weekdayOvertimeHourlyRate: Double,
+        weekdayOvertimeHours: Double,
+        saturdayHourlyRate: Double,
+        saturdayHours: Double,
+        sundayHourlyRate: Double,
+        sundayHours: Double
+    ): LocalPayResult {
+
+        val weekdayBaseGross =
             weekdayHourlyRate *
-                    hoursPerDay *
+                    weekdayBaseHours *
                     5.0
+
+        val weekdayOvertimeGross =
+            weekdayOvertimeHourlyRate *
+                    weekdayOvertimeHours *
+                    5.0
+
+        val weekdayGross =
+            weekdayBaseGross +
+                    weekdayOvertimeGross
 
         val saturdayGross =
             saturdayHourlyRate *
-                    hoursPerDay
+                    saturdayHours
+
+        val sundayGross =
+            sundayHourlyRate *
+                    sundayHours
 
         val weeklyGross =
             weekdayGross +
-                    saturdayGross
+                    saturdayGross +
+                    sundayGross
+
+        val weeklyHours =
+            (
+                weekdayBaseHours +
+                        weekdayOvertimeHours
+            ) * 5.0 +
+                    saturdayHours +
+                    sundayHours
 
         val annualHours =
-            hoursPerDay *
-                    6.0 *
-                    52.0
+            weeklyHours * 52.0
 
         val annualisedGross =
-            weeklyGross *
-                    52.0
+            weeklyGross * 52.0
 
         val effectiveHourlyRate =
             if (annualHours > 0.0) {
@@ -51,6 +101,12 @@ object FinanceCalculator {
                 weekdayGross,
             saturdayGrossPerWeek =
                 saturdayGross,
+            sundayGrossPerWeek =
+                sundayGross,
+            weekdayBaseGrossPerWeek =
+                weekdayBaseGross,
+            weekdayOvertimeGrossPerWeek =
+                weekdayOvertimeGross,
             weeklyGross =
                 weeklyGross,
             annualisedGross =
