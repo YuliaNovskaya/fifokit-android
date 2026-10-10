@@ -375,12 +375,32 @@ fun SharedRosterCalendarScreen(
 
                                 Text(
                                     text =
-                                        if (workDay) {
+                                        if (
+                                            roster.isCustomRoster
+                                        ) {
+                                            RosterScheduleCalculator
+                                                .statusOn(
+                                                    date = date,
+                                                    startDate =
+                                                        startDate,
+                                                    segments =
+                                                        scheduleSegments,
+                                                    repeat =
+                                                        !roster
+                                                            .isShutdownRoster
+                                                )
+                                                ?.segment
+                                                ?.type
+                                                ?.name
+                                                ?: ""
+                                        } else if (workDay) {
                                             "WORK"
                                         } else {
                                             "OFF"
                                         },
-                                    style = MaterialTheme.typography.labelSmall
+                                    style =
+                                        MaterialTheme.typography
+                                            .labelSmall
                                 )
                             }
                         }
