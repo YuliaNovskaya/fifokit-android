@@ -152,5 +152,57 @@ class RosterScheduleCalculatorTest {
                     segments
                 )
         )
+    }    @Test
+    fun dayAndNightSegmentsAreBothWorkDays() {
+        val segments =
+            listOf(
+                RosterScheduleSegment(
+                    type =
+                        RosterSegmentType.DAY,
+                    days = 7
+                ),
+                RosterScheduleSegment(
+                    type =
+                        RosterSegmentType.NIGHT,
+                    days = 7
+                ),
+                RosterScheduleSegment(
+                    type =
+                        RosterSegmentType.OFF,
+                    days = 7
+                )
+            )
+
+        assertTrue(
+            RosterScheduleCalculator
+                .isWorkDay(
+                    start.plusDays(2),
+                    start,
+                    segments,
+                    repeat = true
+                )
+        )
+
+        assertTrue(
+            RosterScheduleCalculator
+                .isWorkDay(
+                    start.plusDays(9),
+                    start,
+                    segments,
+                    repeat = true
+                )
+        )
+
+        assertFalse(
+            RosterScheduleCalculator
+                .isWorkDay(
+                    start.plusDays(16),
+                    start,
+                    segments,
+                    repeat = true
+                )
+        )
     }
+
+
 }
