@@ -36,7 +36,6 @@ fun AccountScreen(
     authViewModel: AuthViewModel = viewModel(),
     onBack: (() -> Unit)? = null,
     onCreateRoster: (() -> Unit)? = null,
-    onSharedRosters: (() -> Unit)? = null,
     onSignedIn: () -> Unit = {}
 ){
     val currentUser by authViewModel.currentUser.collectAsState()
@@ -218,15 +217,6 @@ fun AccountScreen(
                         "Delete account"
                     }
                 )
-            }
-
-            if (onSharedRosters != null) {
-                Button(
-                    modifier = Modifier.padding(top = 20.dp),
-                    onClick = onSharedRosters
-                ) {
-                    Text("View shared rosters")
-                }
             }
 
             if (onCreateRoster != null) {
