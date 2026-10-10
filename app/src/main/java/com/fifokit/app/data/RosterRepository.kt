@@ -26,7 +26,8 @@ class RosterRepository(
         customWorkDays: Int,
         customOffDays: Int,
         isShutdownRoster: Boolean = false,
-        endDate: String? = null
+        endDate: String? = null,
+        scheduleSegmentsJson: String = "[]"
     ): Long {
         return rosterDao.insertRoster(
             RosterEntity(
@@ -38,7 +39,9 @@ class RosterRepository(
                 customWorkDays = customWorkDays,
                 customOffDays = customOffDays,
                 isShutdownRoster = isShutdownRoster,
-                endDate = endDate
+                endDate = endDate,
+                scheduleSegmentsJson =
+                    scheduleSegmentsJson
             )
         )
     }
