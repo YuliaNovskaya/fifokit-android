@@ -119,12 +119,32 @@ fun PayCalculatorScreen(
         mutableStateOf("")
     }
 
+    var localWeekdayBaseHours by remember {
+        mutableStateOf("8")
+    }
+
+    var localWeekdayOvertimeRate by remember {
+        mutableStateOf("")
+    }
+
+    var localWeekdayOvertimeHours by remember {
+        mutableStateOf("0")
+    }
+
     var localSaturdayRate by remember {
         mutableStateOf("")
     }
 
-    var localHoursPerDay by remember {
+    var localSaturdayHours by remember {
         mutableStateOf("8")
+    }
+
+    var localSundayRate by remember {
+        mutableStateOf("")
+    }
+
+    var localSundayHours by remember {
+        mutableStateOf("0")
     }
 
     var localResult by remember {
@@ -183,6 +203,27 @@ fun PayCalculatorScreen(
                 savedPayInput.localWeekdayHourlyRate.toString()
             }
 
+        localWeekdayBaseHours =
+            savedPayInput.localWeekdayBaseHours
+                .toString()
+
+        localWeekdayOvertimeRate =
+            if (
+                savedPayInput
+                    .localWeekdayOvertimeHourlyRate ==
+                0.0
+            ) {
+                ""
+            } else {
+                savedPayInput
+                    .localWeekdayOvertimeHourlyRate
+                    .toString()
+            }
+
+        localWeekdayOvertimeHours =
+            savedPayInput.localWeekdayOvertimeHours
+                .toString()
+
         localSaturdayRate =
             if (savedPayInput.localSaturdayHourlyRate == 0.0) {
                 ""
@@ -190,8 +231,24 @@ fun PayCalculatorScreen(
                 savedPayInput.localSaturdayHourlyRate.toString()
             }
 
-        localHoursPerDay =
-            savedPayInput.localHoursPerDay.toString()
+        localSaturdayHours =
+            savedPayInput.localSaturdayHours
+                .toString()
+
+        localSundayRate =
+            if (
+                savedPayInput.localSundayHourlyRate ==
+                0.0
+            ) {
+                ""
+            } else {
+                savedPayInput.localSundayHourlyRate
+                    .toString()
+            }
+
+        localSundayHours =
+            savedPayInput.localSundayHours
+                .toString()
     }
 
     LaunchedEffect(
@@ -662,7 +719,82 @@ fun PayCalculatorScreen(
                     },
                     label = {
                         Text(
-                            text = "Mon-Fri hourly rate",
+                            text = "Mon-Fri base hourly rate",
+                            style = MaterialTheme.typography.bodyLarge,
+                            fontWeight = FontWeight.Medium
+                        )
+                    },
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Decimal
+                    ),
+                    textStyle = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                Spacer(
+                    modifier = Modifier.height(12.dp)
+                )
+
+                OutlinedTextField(
+                    value = localWeekdayBaseHours,
+                    onValueChange = {
+                        localWeekdayBaseHours = it
+                        localResult = null
+                        validationError = null
+                    },
+                    label = {
+                        Text(
+                            text = "Mon-Fri base hours per day",
+                            style = MaterialTheme.typography.bodyLarge,
+                            fontWeight = FontWeight.Medium
+                        )
+                    },
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Decimal
+                    ),
+                    textStyle = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                Spacer(
+                    modifier = Modifier.height(12.dp)
+                )
+
+                OutlinedTextField(
+                    value = localWeekdayOvertimeRate,
+                    onValueChange = {
+                        localWeekdayOvertimeRate = it
+                        localResult = null
+                        validationError = null
+                    },
+                    label = {
+                        Text(
+                            text = "Mon-Fri overtime hourly rate",
+                            style = MaterialTheme.typography.bodyLarge,
+                            fontWeight = FontWeight.Medium
+                        )
+                    },
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Decimal
+                    ),
+                    textStyle = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                Spacer(
+                    modifier = Modifier.height(12.dp)
+                )
+
+                OutlinedTextField(
+                    value = localWeekdayOvertimeHours,
+                    onValueChange = {
+                        localWeekdayOvertimeHours = it
+                        localResult = null
+                        validationError = null
+                    },
+                    label = {
+                        Text(
+                            text = "Overtime hours per weekday",
                             style = MaterialTheme.typography.bodyLarge,
                             fontWeight = FontWeight.Medium
                         )
@@ -704,15 +836,65 @@ fun PayCalculatorScreen(
                 )
 
                 OutlinedTextField(
-                    value = localHoursPerDay,
+                    value = localSaturdayHours,
                     onValueChange = {
-                        localHoursPerDay = it
+                        localSaturdayHours = it
                         localResult = null
                         validationError = null
                     },
                     label = {
                         Text(
-                            text = "Hours per work day",
+                            text = "Saturday hours",
+                            style = MaterialTheme.typography.bodyLarge,
+                            fontWeight = FontWeight.Medium
+                        )
+                    },
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Decimal
+                    ),
+                    textStyle = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                Spacer(
+                    modifier = Modifier.height(12.dp)
+                )
+
+                OutlinedTextField(
+                    value = localSundayRate,
+                    onValueChange = {
+                        localSundayRate = it
+                        localResult = null
+                        validationError = null
+                    },
+                    label = {
+                        Text(
+                            text = "Sunday hourly rate",
+                            style = MaterialTheme.typography.bodyLarge,
+                            fontWeight = FontWeight.Medium
+                        )
+                    },
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Decimal
+                    ),
+                    textStyle = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                Spacer(
+                    modifier = Modifier.height(12.dp)
+                )
+
+                OutlinedTextField(
+                    value = localSundayHours,
+                    onValueChange = {
+                        localSundayHours = it
+                        localResult = null
+                        validationError = null
+                    },
+                    label = {
+                        Text(
+                            text = "Sunday hours",
                             style = MaterialTheme.typography.bodyLarge,
                             fontWeight = FontWeight.Medium
                         )
@@ -729,7 +911,8 @@ fun PayCalculatorScreen(
                 )
 
                 Text(
-                    text = "Local week: 5 weekdays + Saturday. Sunday excluded.",
+                    text =
+                        "Set overtime, Saturday or Sunday hours to 0 when they do not apply.",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -746,20 +929,62 @@ fun PayCalculatorScreen(
 
                         val weekday =
                             localWeekdayRate.toDoubleOrNull()
+                        val weekdayBaseHours =
+                            localWeekdayBaseHours.toDoubleOrNull()
+                        val overtimeRate =
+                            localWeekdayOvertimeRate
+                                .toDoubleOrNull()
+                                ?: 0.0
+                        val overtimeHours =
+                            localWeekdayOvertimeHours
+                                .toDoubleOrNull()
                         val saturday =
-                            localSaturdayRate.toDoubleOrNull()
-                        val hours =
-                            localHoursPerDay.toDoubleOrNull()
+                            localSaturdayRate
+                                .toDoubleOrNull()
+                                ?: 0.0
+                        val saturdayHours =
+                            localSaturdayHours
+                                .toDoubleOrNull()
+                        val sunday =
+                            localSundayRate
+                                .toDoubleOrNull()
+                                ?: 0.0
+                        val sundayHours =
+                            localSundayHours
+                                .toDoubleOrNull()
 
                         validationError = when {
-                            weekday == null || weekday <= 0.0 ->
-                                "Enter a valid Mon-Fri hourly rate"
+                            weekday == null ||
+                                    weekday <= 0.0 ->
+                                "Enter a valid Mon-Fri base rate"
 
-                            saturday == null || saturday <= 0.0 ->
-                                "Enter a valid Saturday hourly rate"
+                            weekdayBaseHours == null ||
+                                    weekdayBaseHours <= 0.0 ->
+                                "Enter valid Mon-Fri base hours"
 
-                            hours == null || hours <= 0.0 ->
-                                "Enter valid work hours"
+                            overtimeHours == null ||
+                                    overtimeHours < 0.0 ->
+                                "Enter valid overtime hours"
+
+                            overtimeHours > 0.0 &&
+                                    overtimeRate <= 0.0 ->
+                                "Enter an overtime rate"
+
+                            saturdayHours == null ||
+                                    saturdayHours < 0.0 ->
+                                "Enter valid Saturday hours"
+
+                            saturdayHours > 0.0 &&
+                                    saturday <= 0.0 ->
+                                "Enter a Saturday rate"
+
+                            sundayHours == null ||
+                                    sundayHours < 0.0 ->
+                                "Enter valid Sunday hours"
+
+                            sundayHours > 0.0 &&
+                                    sunday <= 0.0 ->
+                                "Enter a Sunday rate"
 
                             else ->
                                 null
@@ -769,16 +994,43 @@ fun PayCalculatorScreen(
                             localResult =
                                 FinanceCalculator.calculateLocalPay(
                                     weekdayHourlyRate = weekday!!,
-                                    saturdayHourlyRate = saturday!!,
-                                    hoursPerDay = hours!!
+                                    weekdayBaseHours =
+                                        weekdayBaseHours!!,
+                                    weekdayOvertimeHourlyRate =
+                                        overtimeRate,
+                                    weekdayOvertimeHours =
+                                        overtimeHours!!,
+                                    saturdayHourlyRate =
+                                        saturday,
+                                    saturdayHours =
+                                        saturdayHours!!,
+                                    sundayHourlyRate =
+                                        sunday,
+                                    sundayHours =
+                                        sundayHours!!
                                 )
 
                             val input =
                                 savedPayInput.copy(
                                     localRatesEnabled = true,
-                                    localWeekdayHourlyRate = weekday,
-                                    localSaturdayHourlyRate = saturday,
-                                    localHoursPerDay = hours
+                                    localWeekdayHourlyRate =
+                                        weekday,
+                                    localWeekdayBaseHours =
+                                        weekdayBaseHours,
+                                    localWeekdayOvertimeHourlyRate =
+                                        overtimeRate,
+                                    localWeekdayOvertimeHours =
+                                        overtimeHours,
+                                    localSaturdayHourlyRate =
+                                        saturday,
+                                    localSaturdayHours =
+                                        saturdayHours,
+                                    localSundayHourlyRate =
+                                        sunday,
+                                    localSundayHours =
+                                        sundayHours,
+                                    localHoursPerDay =
+                                        weekdayBaseHours
                                 )
 
                             scope.launch {
@@ -816,16 +1068,53 @@ fun PayCalculatorScreen(
                     )
 
                     Text(
-                        text = "Mon-Fri gross: " +
-                                FinanceFormatter.money(result.weekdayGrossPerWeek),
+                        text = "Mon-Fri base: " +
+                                FinanceFormatter.money(
+                                    result.weekdayBaseGrossPerWeek
+                                ),
                         style = MaterialTheme.typography.bodyLarge
                     )
 
+                    if (
+                        result.weekdayOvertimeGrossPerWeek >
+                        0.0
+                    ) {
+                        Text(
+                            text = "Mon-Fri overtime: " +
+                                    FinanceFormatter.money(
+                                        result.weekdayOvertimeGrossPerWeek
+                                    ),
+                            style = MaterialTheme.typography.bodyLarge
+                        )
+                    }
+
                     Text(
-                        text = "Saturday gross: " +
-                                FinanceFormatter.money(result.saturdayGrossPerWeek),
+                        text = "Mon-Fri total: " +
+                                FinanceFormatter.money(
+                                    result.weekdayGrossPerWeek
+                                ),
                         style = MaterialTheme.typography.bodyLarge
                     )
+
+                    if (result.saturdayGrossPerWeek > 0.0) {
+                        Text(
+                            text = "Saturday gross: " +
+                                    FinanceFormatter.money(
+                                        result.saturdayGrossPerWeek
+                                    ),
+                            style = MaterialTheme.typography.bodyLarge
+                        )
+                    }
+
+                    if (result.sundayGrossPerWeek > 0.0) {
+                        Text(
+                            text = "Sunday gross: " +
+                                    FinanceFormatter.money(
+                                        result.sundayGrossPerWeek
+                                    ),
+                            style = MaterialTheme.typography.bodyLarge
+                        )
+                    }
 
                     Text(
                         text = "Weekly gross: " +
