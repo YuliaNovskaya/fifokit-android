@@ -311,36 +311,76 @@ fun RosterCalendarScreen(
                             )
                         }
                     } else {
-                        val daysFromStart =
-                            ChronoUnit.DAYS.between(
-                                viewModel.startDate,
-                                selectedDate
-                            )
-
-                        val cycleLength =
-                            workDays + offDays
-
-                        val cycleDay =
-                            Math.floorMod(
-                                daysFromStart,
-                                cycleLength.toLong()
-                            ).toInt()
-
                         val statusText =
-                            if (cycleDay < workDays) {
-                                "WORK day " +
-                                        (cycleDay + 1) +
-                                        " of " +
-                                        workDays
+                            if (
+                                viewModel.isCustomRoster
+                            ) {
+                                val status =
+                                    viewModel
+                                        .scheduleStatusOn(
+                                            selectedDate
+                                        )
+
+                                if (status != null) {
+                                    val label =
+                                        if (
+                                            status.segment
+                                                .isWork
+                                        ) {
+                                            "WORK"
+                                        } else {
+                                            "OFF"
+                                        }
+
+                                    label +
+                                            " day " +
+                                            status
+                                                .dayInSegment +
+                                            " of " +
+                                            status
+                                                .segment
+                                                .days
+                                } else {
+                                    ""
+                                }
                             } else {
-                                "OFF day " +
-                                        (
-                                            cycleDay -
+                                val daysFromStart =
+                                    ChronoUnit.DAYS
+                                        .between(
+                                            viewModel
+                                                .startDate,
+                                            selectedDate
+                                        )
+
+                                val cycleLength =
+                                    workDays +
+                                            offDays
+
+                                val cycleDay =
+                                    Math.floorMod(
+                                        daysFromStart,
+                                        cycleLength
+                                            .toLong()
+                                    ).toInt()
+
+                                if (
+                                    cycleDay <
+                                    workDays
+                                ) {
+                                    "WORK day " +
+                                            (cycleDay + 1) +
+                                            " of " +
+                                            workDays
+                                } else {
+                                    "OFF day " +
+                                            (
+                                                cycleDay -
                                                     workDays +
                                                     1
-                                            ) +
-                                        " of " +
-                                        offDays
+                                                ) +
+                                            " of " +
+                                            offDays
+                                }
                             }
 
                         Text(
@@ -679,10 +719,10 @@ fun RosterCalendarScreen(
                     text =
                         when {
                             viewModel.isShutdownRoster ->
-                                "${viewModel.customWorkDays}/${viewModel.customOffDays} shutdown roster · ends ${viewModel.endDate}"
+                                "Shutdown · ${viewModel.scheduleSegments.size} periods · ends ${viewModel.endDate}"
 
                             viewModel.isCustomRoster ->
-                                "${viewModel.customWorkDays}/${viewModel.customOffDays} custom roster"
+                                "Custom sequence · ${viewModel.scheduleSegments.size} periods"
 
                             else ->
                                 "${viewModel.selectedPattern.label} roster"
