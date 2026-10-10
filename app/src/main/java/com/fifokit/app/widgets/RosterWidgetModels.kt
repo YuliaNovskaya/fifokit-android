@@ -10,6 +10,9 @@ import com.fifokit.app.domain.model.RosterPattern
 import com.fifokit.app.domain.roster.AustralianState
 import com.fifokit.app.domain.roster.PublicHolidayProvider
 import com.fifokit.app.domain.roster.RosterCalculator
+import com.fifokit.app.domain.roster.RosterScheduleCalculator
+import com.fifokit.app.domain.roster.RosterScheduleCodec
+import com.fifokit.app.domain.roster.RosterScheduleSegment
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -23,6 +26,10 @@ data class WidgetRoster(
     val startDate: LocalDate,
     val workDays: Int,
     val offDays: Int,
+    val isCustomRoster: Boolean = false,
+    val scheduleSegments:
+        List<RosterScheduleSegment> =
+        emptyList(),
     val isShutdownRoster: Boolean = false,
     val endDate: LocalDate? = null,
     val selectedStates: Set<AustralianState> =
@@ -150,12 +157,36 @@ class RosterWidgetDataSource(
                     )
                 }
 
+        val decodedSegments =
+            RosterScheduleCodec.decode(
+                scheduleSegmentsJson
+            )
+
+        val resolvedSegments =
+            if (
+                isCustomRoster &&
+                decodedSegments.isEmpty()
+            ) {
+                RosterScheduleCalculator
+                    .legacyRepeatingSequence(
+                        workDays =
+                            customWorkDays,
+                        offDays =
+                            customOffDays
+                    )
+            } else {
+                decodedSegments
+            }
+
         return WidgetRoster(
             id = id,
             name = name,
             startDate = parsedStartDate,
             workDays = resolvedWorkDays,
             offDays = resolvedOffDays,
+            isCustomRoster = isCustomRoster,
+            scheduleSegments =
+                resolvedSegments,
             isShutdownRoster = isShutdownRoster,
             endDate =
                 endDate?.let {
@@ -231,6 +262,46 @@ object SwingStatusCalculator {
                 )
         )
     }
+
+    fun calculate(
+        date: LocalDate,
+        startDate: LocalDate,
+        segments:
+            List<RosterScheduleSegment>,
+        repeat: Boolean
+    ): SwingStatus? {
+        val status =
+            RosterScheduleCalculator
+                .statusOn(
+                    date = date,
+                    startDate =
+                        startDate,
+                    segments = segments,
+                    repeat = repeat
+                )
+                ?: return null
+
+        val daysUntilTransition =
+            status.segment.days -
+                    status.dayInSegment +
+                    1
+
+        return SwingStatus(
+            isWorkDay =
+                status.segment.isWork,
+            dayInPeriod =
+                status.dayInSegment,
+            periodLength =
+                status.segment.days,
+            daysUntilTransition =
+                daysUntilTransition,
+            nextTransitionDate =
+                date.plusDays(
+                    daysUntilTransition
+                        .toLong()
+                )
+        )
+    }
 }
 
 object CompactRosterCalendarCalculator {
@@ -266,21 +337,33 @@ object CompactRosterCalendarCalculator {
                 WidgetCalendarDay(
                     date = date,
                     isWorkDay =
-                        (
-                            !roster.isShutdownRoster ||
-                            roster.endDate == null ||
-                            !date.isAfter(roster.endDate)
-                        ) &&
-                                RosterCalculator
-                                    .isWorkDay(
-                                        date = date,
-                                        startDate =
-                                            roster.startDate,
-                                        workDays =
-                                            roster.workDays,
-                                        offDays =
-                                            roster.offDays
-                                    ),
+                        if (
+                            roster.isCustomRoster &&
+                            roster.scheduleSegments
+                                .isNotEmpty()
+                        ) {
+                            RosterScheduleCalculator
+                                .isWorkDay(
+                                    date = date,
+                                    startDate =
+                                        roster.startDate,
+                                    segments =
+                                        roster.scheduleSegments,
+                                    repeat =
+                                        !roster.isShutdownRoster
+                                )
+                        } else {
+                            RosterCalculator
+                                .isWorkDay(
+                                    date = date,
+                                    startDate =
+                                        roster.startDate,
+                                    workDays =
+                                        roster.workDays,
+                                    offDays =
+                                        roster.offDays
+                                )
+                        },
                     isToday =
                         date == today,
                     isPublicHoliday =
