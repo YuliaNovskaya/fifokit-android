@@ -64,13 +64,25 @@ class PayInputCloudSyncManager(
                         localInput.localRatesEnabled,
                     localWeekdayHourlyRate =
                         localInput.localWeekdayHourlyRate,
+                    localWeekdayBaseHours =
+                        localInput.localWeekdayBaseHours,
+                    localWeekdayOvertimeHourlyRate =
+                        localInput.localWeekdayOvertimeHourlyRate,
+                    localWeekdayOvertimeHours =
+                        localInput.localWeekdayOvertimeHours,
                     localSaturdayHourlyRate =
                         localInput.localSaturdayHourlyRate,
+                    localSaturdayHours =
+                        localInput.localSaturdayHours,
+                    localSundayHourlyRate =
+                        localInput.localSundayHourlyRate,
+                    localSundayHours =
+                        localInput.localSundayHours,
                     localHoursPerDay =
                         localInput.localHoursPerDay,
                     updatedAt = localUpdatedAt,
                     deviceId = deviceId,
-                    schemaVersion = 3
+                    schemaVersion = 4
                 )
             )
 
@@ -115,8 +127,20 @@ class PayInputCloudSyncManager(
                         cloudInput.localRatesEnabled,
                     localWeekdayHourlyRate =
                         cloudInput.localWeekdayHourlyRate,
+                    localWeekdayBaseHours =
+                        cloudInput.localWeekdayBaseHours,
+                    localWeekdayOvertimeHourlyRate =
+                        cloudInput.localWeekdayOvertimeHourlyRate,
+                    localWeekdayOvertimeHours =
+                        cloudInput.localWeekdayOvertimeHours,
                     localSaturdayHourlyRate =
                         cloudInput.localSaturdayHourlyRate,
+                    localSaturdayHours =
+                        cloudInput.localSaturdayHours,
+                    localSundayHourlyRate =
+                        cloudInput.localSundayHourlyRate,
+                    localSundayHours =
+                        cloudInput.localSundayHours,
                     localHoursPerDay =
                         cloudInput.localHoursPerDay
                 ),
@@ -149,15 +173,27 @@ class PayInputCloudSyncManager(
                         localInput.localRatesEnabled,
                     localWeekdayHourlyRate =
                         localInput.localWeekdayHourlyRate,
+                    localWeekdayBaseHours =
+                        localInput.localWeekdayBaseHours,
+                    localWeekdayOvertimeHourlyRate =
+                        localInput.localWeekdayOvertimeHourlyRate,
+                    localWeekdayOvertimeHours =
+                        localInput.localWeekdayOvertimeHours,
                     localSaturdayHourlyRate =
                         localInput.localSaturdayHourlyRate,
+                    localSaturdayHours =
+                        localInput.localSaturdayHours,
+                    localSundayHourlyRate =
+                        localInput.localSundayHourlyRate,
+                    localSundayHours =
+                        localInput.localSundayHours,
                     localHoursPerDay =
                         localInput.localHoursPerDay,
                     updatedAt =
                         localUpdatedAt,
                     deviceId =
                         deviceId,
-                    schemaVersion = 3
+                    schemaVersion = 4
                 )
             )
 
