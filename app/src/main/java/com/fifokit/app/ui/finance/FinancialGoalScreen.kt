@@ -1431,7 +1431,6 @@ private fun FinancialGoalEditFields(
                     .onSurfaceVariant
         )
     }
-    )
 }
 
 @Composable
