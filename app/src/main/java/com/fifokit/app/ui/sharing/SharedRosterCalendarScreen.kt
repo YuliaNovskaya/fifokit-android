@@ -30,6 +30,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.fifokit.app.domain.model.RosterPattern
 import com.fifokit.app.domain.roster.RosterCalculator
+import com.fifokit.app.domain.roster.RosterScheduleCalculator
+import com.fifokit.app.domain.roster.RosterScheduleCodec
 import com.fifokit.app.domain.roster.PublicHolidayProvider
 import com.fifokit.app.domain.roster.AustralianState
 import androidx.compose.foundation.background
@@ -104,30 +106,39 @@ fun SharedRosterCalendarScreen(
         mutableStateOf(YearMonth.now())
     }
 
-    val rosterEndDate =
-        roster.endDate?.let {
-            runCatching {
-                LocalDate.parse(it)
-            }.getOrNull()
+    val decodedSegments =
+        RosterScheduleCodec.decode(
+            roster.scheduleSegmentsJson
+        )
+
+    val scheduleSegments =
+        if (
+            roster.isCustomRoster &&
+            decodedSegments.isEmpty()
+        ) {
+            RosterScheduleCalculator
+                .legacyRepeatingSequence(
+                    workDays =
+                        roster.customWorkDays,
+                    offDays =
+                        roster.customOffDays
+                )
+        } else {
+            decodedSegments
         }
 
     fun isWorkDay(date: LocalDate): Boolean {
-        if (
-            roster.isShutdownRoster &&
-            rosterEndDate != null &&
-            date.isAfter(rosterEndDate)
-        ) {
-            return false
-        }
-
         return if (roster.isCustomRoster) {
 
-            RosterCalculator.isWorkDay(
-                date = date,
-                startDate = startDate,
-                workDays = roster.customWorkDays,
-                offDays = roster.customOffDays
-            )
+            RosterScheduleCalculator
+                .isWorkDay(
+                    date = date,
+                    startDate = startDate,
+                    segments =
+                        scheduleSegments,
+                    repeat =
+                        !roster.isShutdownRoster
+                )
 
         } else {
 
