@@ -394,5 +394,51 @@ class FinanceCalculatorTest {
         )
     }
 
+    @Test
+    fun financialGoalUsesCompletedWorkSwings() {
+        val start =
+            LocalDate.of(
+                2026,
+                1,
+                1
+            )
+
+        val goal =
+            FinancialGoal(
+                targetAmount = 2000.0,
+                currentAmount = 0.0,
+                contributionPerPay = 1000.0,
+                contributionTiming =
+                    GoalContributionTiming
+                        .COMPLETED_SWING
+            )
+
+        val result =
+            FinanceCalculator
+                .calculateFinancialGoal(
+                    goal = goal,
+                    fromDate = start,
+                    isWorkDay = { date ->
+                        RosterCalculator
+                            .isWorkDay(
+                                date = date,
+                                startDate = start,
+                                workDays = 3,
+                                offDays = 4
+                            )
+                    }
+                )
+
+        assertEquals(
+            2,
+            result?.contributionsRequired
+        )
+
+        assertEquals(
+            9,
+            result?.daysRequired
+        )
+    }
+
 
 }
