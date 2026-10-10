@@ -146,6 +146,9 @@ fun RosterCalendarScreen(
         mutableStateOf<LocalDate?>(null)
     }
 
+    val hasOwnRoster =
+        viewModel.rosters.isNotEmpty()
+
     if (showReviewPrompt) {
         AlertDialog(
             onDismissRequest = {
@@ -204,7 +207,8 @@ fun RosterCalendarScreen(
         )
     }
 
-    selectedCalendarDate?.let { selectedDate ->
+    if (hasOwnRoster) {
+        selectedCalendarDate?.let { selectedDate ->
         val workDays =
             if (viewModel.isCustomRoster) {
                 viewModel.customWorkDays
@@ -396,6 +400,7 @@ fun RosterCalendarScreen(
                 }
             }
         )
+        }
     }
 
     Scaffold(
@@ -450,89 +455,94 @@ fun RosterCalendarScreen(
                 )
                 .padding(horizontal = 16.dp)
         ) {
-            Box(
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                OutlinedButton(
-                    modifier = Modifier.fillMaxWidth(),
-                    onClick = {
-                        rosterMenuExpanded = true
-                    }
+            if (hasOwnRoster) {
+                Box(
+                    modifier = Modifier.fillMaxWidth()
                 ) {
-                    val activeRoster =
-                        viewModel.rosters
-                            .firstOrNull {
-                                it.id ==
-                                        viewModel.activeRosterId
-                            }
-
-                    val shareCount =
-                        activeRoster
-                            ?.cloudId
-                            ?.let {
-                                viewModel
-                                    .shareCountByCloudId[it]
-                            }
-                            ?: 0
-
-                    Text(
-                        if (shareCount > 0) {
-                            "Roster: ${viewModel.rosterName} · Shared with $shareCount"
-                        } else {
-                            "Roster: ${viewModel.rosterName}"
+                    OutlinedButton(
+                        modifier = Modifier.fillMaxWidth(),
+                        onClick = {
+                            rosterMenuExpanded = true
                         }
-                    )
-                }
-
-                DropdownMenu(
-                    expanded = rosterMenuExpanded,
-                    onDismissRequest = {
-                        rosterMenuExpanded = false
-                    }
-                ) {
-                    viewModel.rosters.forEach { roster ->
-                        DropdownMenuItem(
-                            text = {
-                                val shareCount =
-                                    roster.cloudId
-                                        ?.let {
-                                            viewModel
-                                                .shareCountByCloudId[it]
-                                        }
-                                        ?: 0
-
-                                Text(
-                                    if (shareCount > 0) {
-                                        "${roster.name} · Shared with $shareCount"
-                                    } else {
-                                        roster.name
-                                    }
-                                )
-                            },
-                            onClick = {
-                                rosterMenuExpanded = false
-
-                                if (roster.id != viewModel.activeRosterId) {
-                                    viewModel.switchRoster(roster.id)
+                    ) {
+                        val activeRoster =
+                            viewModel.rosters
+                                .firstOrNull {
+                                    it.id ==
+                                            viewModel.activeRosterId
                                 }
+    
+                        val shareCount =
+                            activeRoster
+                                ?.cloudId
+                                ?.let {
+                                    viewModel
+                                        .shareCountByCloudId[it]
+                                }
+                                ?: 0
+    
+                        Text(
+                            if (shareCount > 0) {
+                                "Roster: ${viewModel.rosterName} · Shared with $shareCount"
+                            } else {
+                                "Roster: ${viewModel.rosterName}"
                             }
                         )
                     }
-
-                    DropdownMenuItem(
-                        text = {
-                            Text("+ New roster")
-                        },
-                        onClick = {
+    
+                    DropdownMenu(
+                        expanded = rosterMenuExpanded,
+                        onDismissRequest = {
                             rosterMenuExpanded = false
-                            viewModel.createNewRoster()
-                            onBack()
                         }
-                    )
+                    ) {
+                        viewModel.rosters.forEach { roster ->
+                            DropdownMenuItem(
+                                text = {
+                                    val shareCount =
+                                        roster.cloudId
+                                            ?.let {
+                                                viewModel
+                                                    .shareCountByCloudId[it]
+                                            }
+                                            ?: 0
+    
+                                    Text(
+                                        if (shareCount > 0) {
+                                            "${roster.name} · Shared with $shareCount"
+                                        } else {
+                                            roster.name
+                                        }
+                                    )
+                                },
+                                onClick = {
+                                    rosterMenuExpanded = false
+    
+                                    if (roster.id != viewModel.activeRosterId) {
+                                        viewModel.switchRoster(roster.id)
+                                    }
+                                }
+                            )
+                        }
+    
+                        DropdownMenuItem(
+                            text = {
+                                Text("+ New roster")
+                            },
+                            onClick = {
+                                rosterMenuExpanded = false
+                                viewModel.createNewRoster()
+                                onBack()
+                            }
+                        )
+                    }
                 }
+    
+    
+                Spacer(
+                    modifier = Modifier.height(4.dp)
+                )
             }
-
-            Spacer(modifier = Modifier.height(4.dp))
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -655,31 +665,39 @@ fun RosterCalendarScreen(
                 }
             }
 
-            Text(
-                text =
-                    when {
-                        viewModel.isShutdownRoster ->
-                            "${viewModel.customWorkDays}/${viewModel.customOffDays} shutdown roster · ends ${viewModel.endDate}"
+            if (hasOwnRoster) {
+                Text(
+                    text =
+                        when {
+                            viewModel.isShutdownRoster ->
+                                "${viewModel.customWorkDays}/${viewModel.customOffDays} shutdown roster · ends ${viewModel.endDate}"
 
-                        viewModel.isCustomRoster ->
-                            "${viewModel.customWorkDays}/${viewModel.customOffDays} custom roster"
+                            viewModel.isCustomRoster ->
+                                "${viewModel.customWorkDays}/${viewModel.customOffDays} custom roster"
 
-                        else ->
-                            "${viewModel.selectedPattern.label} roster"
-                    },
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 2.dp),
-                textAlign = TextAlign.Center
-            )
+                            else ->
+                                "${viewModel.selectedPattern.label} roster"
+                        },
+                    style =
+                        MaterialTheme.typography.bodyMedium,
+                    color =
+                        MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 2.dp),
+                    textAlign = TextAlign.Center
+                )
 
-            Spacer(modifier = Modifier.height(8.dp))
+                Spacer(
+                    modifier = Modifier.height(8.dp)
+                )
 
-            RosterTodaySummary(viewModel)
+                RosterTodaySummary(viewModel)
 
-            Spacer(modifier = Modifier.height(4.dp))
+                Spacer(
+                    modifier = Modifier.height(4.dp)
+                )
+            }
 
             if (calendarViewMode == CalendarViewMode.MONTH) {
 
@@ -689,47 +707,86 @@ fun RosterCalendarScreen(
 
                 CalendarGrid(
                     month = month,
-                    startDate = viewModel.startDate,
-                    isWorkDay = viewModel::isWorkDay,
-                    isPublicHoliday = { date ->
-                        PublicHolidayProvider.isPublicHoliday(
-                            date,
-                            viewModel.selectedStates
-                        )
+                    startDate =
+                        if (hasOwnRoster) {
+                            viewModel.startDate
+                        } else {
+                            LocalDate.MIN
+                        },
+                    showRosterStatus = hasOwnRoster,
+                    isWorkDay = { date ->
+                        hasOwnRoster &&
+                                viewModel.isWorkDay(date)
                     },
-                    isRosterActive = viewModel::isRosterActive,
+                    isPublicHoliday = { date ->
+                        hasOwnRoster &&
+                                PublicHolidayProvider
+                                    .isPublicHoliday(
+                                        date,
+                                        viewModel.selectedStates
+                                    )
+                    },
+                    isRosterActive = { date ->
+                        hasOwnRoster &&
+                                viewModel.isRosterActive(date)
+                    },
                     onDateSelected = {
-                        selectedCalendarDate = it
+                        if (hasOwnRoster) {
+                            selectedCalendarDate = it
+                        }
                     }
                 )
 
-                Spacer(modifier = Modifier.height(4.dp))
+                if (hasOwnRoster) {
+                    Spacer(
+                        modifier = Modifier.height(4.dp)
+                    )
 
-                TodayPhrase(viewModel)
+                    TodayPhrase(viewModel)
 
-                Spacer(modifier = Modifier.height(4.dp))
+                    Spacer(
+                        modifier = Modifier.height(4.dp)
+                    )
 
-                CalendarLegend()
+                    CalendarLegend()
+                }
 
             } else {
 
                 YearCalendarGrid(
                     year = month.year,
-                    startDate = viewModel.startDate,
-                    isRosterActive = viewModel::isRosterActive,
-                    isWorkDay = viewModel::isWorkDay,
+                    startDate =
+                        if (hasOwnRoster) {
+                            viewModel.startDate
+                        } else {
+                            LocalDate.MIN
+                        },
+                    isRosterActive = { date ->
+                        hasOwnRoster &&
+                                viewModel.isRosterActive(date)
+                    },
+                    isWorkDay = { date ->
+                        hasOwnRoster &&
+                                viewModel.isWorkDay(date)
+                    },
                     isPublicHoliday = { date ->
-                        PublicHolidayProvider.isPublicHoliday(
-                            date,
-                            viewModel.selectedStates
-                        )
+                        hasOwnRoster &&
+                                PublicHolidayProvider
+                                    .isPublicHoliday(
+                                        date,
+                                        viewModel.selectedStates
+                                    )
                     },
                     modifier = Modifier.weight(1f)
                 )
 
-                Spacer(modifier = Modifier.height(8.dp))
+                if (hasOwnRoster) {
+                    Spacer(
+                        modifier = Modifier.height(8.dp)
+                    )
 
-                CalendarLegend()
+                    CalendarLegend()
+                }
             }
 
             Spacer(modifier = Modifier.height(6.dp))
@@ -759,6 +816,7 @@ private fun WeekdayHeader() {
 private fun CalendarGrid(
     month: YearMonth,
     startDate: LocalDate,
+    showRosterStatus: Boolean,
     isWorkDay: (LocalDate) -> Boolean,
     isPublicHoliday: (LocalDate) -> Boolean,
     isRosterActive: (LocalDate) -> Boolean,
@@ -803,8 +861,14 @@ private fun CalendarGrid(
                         date = date,
                         isRosterActive = isRosterActive(date),
                         isWorkDay = isWorkDay(date),
-                        isStartDate = date == startDate,
-                        isPublicHoliday = isPublicHoliday(date),
+                        isStartDate =
+                            showRosterStatus &&
+                                    date == startDate,
+                        isPublicHoliday =
+                            showRosterStatus &&
+                                    isPublicHoliday(date),
+                        showRosterStatus =
+                            showRosterStatus,
                         onClick = {
                             onDateSelected(date)
                         }
@@ -822,14 +886,24 @@ private fun CalendarDay(
     isWorkDay: Boolean,
     isStartDate: Boolean,
     isPublicHoliday: Boolean,
+    showRosterStatus: Boolean,
     onClick: () -> Unit
 ) {
     val isToday = date == LocalDate.now()
-    val workOffColor = when {
-        !isRosterActive -> MaterialTheme.colorScheme.surface
-        isWorkDay -> MaterialTheme.colorScheme.primaryContainer
-        else -> MaterialTheme.colorScheme.surfaceContainerHigh
-    }
+    val workOffColor =
+        when {
+            !showRosterStatus ->
+                MaterialTheme.colorScheme.surface
+
+            !isRosterActive ->
+                MaterialTheme.colorScheme.surface
+
+            isWorkDay ->
+                MaterialTheme.colorScheme.primaryContainer
+
+            else ->
+                MaterialTheme.colorScheme.surfaceContainerHigh
+        }
     Surface(
         modifier = Modifier
             .aspectRatio(1f)
@@ -851,63 +925,99 @@ private fun CalendarDay(
             else -> null
         }
     ) {
-        Box(
-            modifier = Modifier.fillMaxSize()
-        ) {
-
-            if (isPublicHoliday) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .fillMaxHeight(0.5f)
-                        .align(Alignment.TopCenter)
-                        .background(MaterialTheme.colorScheme.tertiaryContainer)
+        if (!showRosterStatus) {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = date.dayOfMonth.toString(),
+                    style =
+                        MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Medium
                 )
             }
-
-            Column(
+        } else {
+            Box(
                 modifier = Modifier.fillMaxSize()
             ) {
 
-                Box(
-                    modifier = Modifier
-                        .weight(1f)
-                        .fillMaxWidth(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Text(
-                            text = date.dayOfMonth.toString(),
-                            style = MaterialTheme.typography.titleSmall,
-                            fontWeight = FontWeight.Medium
-                        )
-
-                        if (isPublicHoliday) {
-                            Text(
-                                text = "PH",
-                                style = MaterialTheme.typography.labelSmall,
-                                fontWeight = FontWeight.Bold
+                if (isPublicHoliday) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .fillMaxHeight(0.5f)
+                            .align(Alignment.TopCenter)
+                            .background(
+                                MaterialTheme.colorScheme
+                                    .tertiaryContainer
                             )
-                        }
-                    }
+                    )
                 }
 
-                Box(
-                    modifier = Modifier
-                        .weight(1f)
-                        .fillMaxWidth(),
-                    contentAlignment = Alignment.Center
+                Column(
+                    modifier = Modifier.fillMaxSize()
                 ) {
-                    Text(
-                        text = when {
-                            !isRosterActive -> ""
-                            isWorkDay -> "WORK"
-                            else -> "OFF"
-                        },
-                        style = MaterialTheme.typography.labelSmall
-                    )
+
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxWidth(),
+                        contentAlignment =
+                            Alignment.Center
+                    ) {
+                        Column(
+                            horizontalAlignment =
+                                Alignment.CenterHorizontally
+                        ) {
+                            Text(
+                                text =
+                                    date.dayOfMonth
+                                        .toString(),
+                                style =
+                                    MaterialTheme.typography
+                                        .titleSmall,
+                                fontWeight =
+                                    FontWeight.Medium
+                            )
+
+                            if (isPublicHoliday) {
+                                Text(
+                                    text = "PH",
+                                    style =
+                                        MaterialTheme.typography
+                                            .labelSmall,
+                                    fontWeight =
+                                        FontWeight.Bold
+                                )
+                            }
+                        }
+                    }
+
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxWidth(),
+                        contentAlignment =
+                            Alignment.Center
+                    ) {
+                        Text(
+                            text =
+                                when {
+                                    !isRosterActive ->
+                                        ""
+
+                                    isWorkDay ->
+                                        "WORK"
+
+                                    else ->
+                                        "OFF"
+                                },
+                            style =
+                                MaterialTheme.typography
+                                    .labelSmall
+                        )
+                    }
                 }
             }
         }
