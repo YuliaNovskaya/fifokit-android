@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.ContextWrapper
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
@@ -74,6 +75,7 @@ fun AccountScreen(
     val scope = rememberCoroutineScope()
 
     Scaffold(
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
         topBar = {
             if (onBack != null) {
                 FifokitTopBar(
