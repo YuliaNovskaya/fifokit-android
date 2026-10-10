@@ -144,6 +144,10 @@ fun PayCalculatorScreen(
         mutableStateOf("")
     }
 
+    var localSaturdayExtraRate by remember { mutableStateOf("") }
+    var localSaturdayExtraHours by remember { mutableStateOf("0") }
+    var localSundayExtraRate by remember { mutableStateOf("") }
+    var localSundayExtraHours by remember { mutableStateOf("0") }
     var localSundayHours by remember {
         mutableStateOf("0")
     }
@@ -247,6 +251,10 @@ fun PayCalculatorScreen(
                     .toString()
             }
 
+        localSaturdayExtraRate = savedPayInput.localSaturdayExtraRate.takeIf { it != 0.0 }?.toString() ?: ""
+        localSaturdayExtraHours = savedPayInput.localSaturdayExtraHours.toString()
+        localSundayExtraRate = savedPayInput.localSundayExtraRate.takeIf { it != 0.0 }?.toString() ?: ""
+        localSundayExtraHours = savedPayInput.localSundayExtraHours.toString()
         localSundayHours =
             savedPayInput.localSundayHours
                 .toString()
@@ -912,6 +920,38 @@ fun PayCalculatorScreen(
                     modifier = Modifier.height(8.dp)
                 )
 
+                Spacer(modifier = Modifier.height(12.dp))
+                OutlinedTextField(
+                    value = localSaturdayExtraHours,
+                    onValueChange = { localSaturdayExtraHours = it; localResult = null; validationError = null },
+                    label = { Text("Saturday additional hours (second rate)") },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                OutlinedTextField(
+                    value = localSaturdayExtraRate,
+                    onValueChange = { localSaturdayExtraRate = it; localResult = null; validationError = null },
+                    label = { Text("Saturday second hourly rate") },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+                OutlinedTextField(
+                    value = localSundayExtraHours,
+                    onValueChange = { localSundayExtraHours = it; localResult = null; validationError = null },
+                    label = { Text("Sunday additional hours (second rate)") },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                OutlinedTextField(
+                    value = localSundayExtraRate,
+                    onValueChange = { localSundayExtraRate = it; localResult = null; validationError = null },
+                    label = { Text("Sunday second hourly rate") },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                    modifier = Modifier.fillMaxWidth()
+                )
                 Text(
                     text =
                         "Set overtime, Saturday or Sunday hours to 0 when they do not apply.",
@@ -955,6 +995,10 @@ fun PayCalculatorScreen(
                             localSundayHours
                                 .toDoubleOrNull()
 
+                        val satExtraHours = localSaturdayExtraHours.toDoubleOrNull()
+                        val sunExtraHours = localSundayExtraHours.toDoubleOrNull()
+                        val satExtraRate = localSaturdayExtraRate.toDoubleOrNull() ?: 0.0
+                        val sunExtraRate = localSundayExtraRate.toDoubleOrNull() ?: 0.0
                         validationError = when {
                             weekday == null ||
                                     weekday <= 0.0 ->
@@ -988,6 +1032,8 @@ fun PayCalculatorScreen(
                                     sunday <= 0.0 ->
                                 "Enter a Sunday rate"
 
+                            satExtraHours == null || satExtraHours < 0 || (satExtraHours > 0 && satExtraRate <= 0) -> "Enter valid Saturday second-rate hours and rate"
+                            sunExtraHours == null || sunExtraHours < 0 || (sunExtraHours > 0 && sunExtraRate <= 0) -> "Enter valid Sunday second-rate hours and rate"
                             else ->
                                 null
                         }
@@ -1009,7 +1055,11 @@ fun PayCalculatorScreen(
                                     sundayHourlyRate =
                                         sunday,
                                     sundayHours =
-                                        sundayHours!!
+                                        sundayHours!!,
+                                    saturdayExtraRate = satExtraRate,
+                                    saturdayExtraHours = satExtraHours!!,
+                                    sundayExtraRate = sunExtraRate,
+                                    sundayExtraHours = sunExtraHours!!
                                 )
 
                             val input =
@@ -1031,6 +1081,10 @@ fun PayCalculatorScreen(
                                         sunday,
                                     localSundayHours =
                                         sundayHours,
+                                    localSaturdayExtraRate = satExtraRate,
+                                    localSaturdayExtraHours = satExtraHours!!,
+                                    localSundayExtraRate = sunExtraRate,
+                                    localSundayExtraHours = sunExtraHours!!,
                                     localHoursPerDay =
                                         weekdayBaseHours
                                 )
