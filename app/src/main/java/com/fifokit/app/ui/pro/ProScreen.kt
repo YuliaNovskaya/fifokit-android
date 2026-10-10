@@ -124,7 +124,6 @@ fun ProScreen(
             Spacer(modifier = Modifier.height(8.dp))
 
             Text("Multiple rosters")
-            Text("Custom roster patterns")
             Text("Yearly roster view")
             Text("Advanced reminders")
             Text("Detailed financial tools")
