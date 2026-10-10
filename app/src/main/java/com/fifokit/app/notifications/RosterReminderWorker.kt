@@ -16,6 +16,8 @@ import com.fifokit.app.data.RosterRepository
 import com.fifokit.app.data.local.RosterDatabase
 import com.fifokit.app.domain.model.RosterPattern
 import com.fifokit.app.domain.roster.RosterCalculator
+import com.fifokit.app.domain.roster.RosterScheduleCalculator
+import com.fifokit.app.domain.roster.RosterScheduleCodec
 import kotlinx.coroutines.flow.first
 import java.time.LocalDate
 
@@ -70,54 +72,54 @@ class RosterReminderWorker(
         val today = LocalDate.now()
         val tomorrow = today.plusDays(1)
 
-        val rosterEndDate =
-            roster.endDate?.let {
-                runCatching {
-                    LocalDate.parse(it)
-                }.getOrNull()
+        val decodedSegments =
+            RosterScheduleCodec.decode(
+                roster.scheduleSegmentsJson
+            )
+
+        val scheduleSegments =
+            if (
+                roster.isCustomRoster &&
+                decodedSegments.isEmpty()
+            ) {
+                RosterScheduleCalculator
+                    .legacyRepeatingSequence(
+                        workDays =
+                            roster.customWorkDays,
+                        offDays =
+                            roster.customOffDays
+                    )
+            } else {
+                decodedSegments
             }
 
-        fun withinRosterBounds(
+        fun rosterIsWorkDay(
             date: LocalDate
         ): Boolean {
-            return !roster.isShutdownRoster ||
-                    rosterEndDate == null ||
-                    !date.isAfter(rosterEndDate)
+            return if (roster.isCustomRoster) {
+                RosterScheduleCalculator
+                    .isWorkDay(
+                        date = date,
+                        startDate = startDate,
+                        segments =
+                            scheduleSegments,
+                        repeat =
+                            !roster.isShutdownRoster
+                    )
+            } else {
+                RosterCalculator.isWorkDay(
+                    date = date,
+                    startDate = startDate,
+                    pattern = pattern
+                )
+            }
         }
 
         val todayIsWork =
-            withinRosterBounds(today) &&
-            if (roster.isCustomRoster) {
-                RosterCalculator.isWorkDay(
-                    date = today,
-                    startDate = startDate,
-                    workDays = roster.customWorkDays,
-                    offDays = roster.customOffDays
-                )
-            } else {
-                RosterCalculator.isWorkDay(
-                    date = today,
-                    startDate = startDate,
-                    pattern = pattern
-                )
-            }
+            rosterIsWorkDay(today)
 
         val tomorrowIsWork =
-            withinRosterBounds(tomorrow) &&
-            if (roster.isCustomRoster) {
-                RosterCalculator.isWorkDay(
-                    date = tomorrow,
-                    startDate = startDate,
-                    workDays = roster.customWorkDays,
-                    offDays = roster.customOffDays
-                )
-            } else {
-                RosterCalculator.isWorkDay(
-                    date = tomorrow,
-                    startDate = startDate,
-                    pattern = pattern
-                )
-            }
+            rosterIsWorkDay(tomorrow)
 
         if (todayIsWork == tomorrowIsWork) {
             return Result.success()
