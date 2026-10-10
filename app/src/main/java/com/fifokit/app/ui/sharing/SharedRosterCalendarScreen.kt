@@ -65,8 +65,10 @@ fun SharedRosterCalendarScreen(
 
     val roster = sharedRoster.roster
     val patternLabel =
-        if (roster.isCustomRoster) {
-            "${roster.customWorkDays}/${roster.customOffDays} custom roster"
+        if (roster.isShutdownRoster) {
+            "Shutdown sequence"
+        } else if (roster.isCustomRoster) {
+            "Custom sequence"
         } else {
             runCatching {
                 RosterPattern.valueOf(
