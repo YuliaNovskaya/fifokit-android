@@ -349,5 +349,50 @@ class FinanceCalculatorTest {
         assertEquals(0, result.contributionsRequired)
         assertEquals(0, result.daysRequired)
     }
+    @Test
+    fun localOvertimeAndWeekendHoursCalculateCorrectly() {
+        val result =
+            FinanceCalculator.calculateLocalPay(
+                weekdayHourlyRate = 50.0,
+                weekdayBaseHours = 8.0,
+                weekdayOvertimeHourlyRate = 75.0,
+                weekdayOvertimeHours = 4.0,
+                saturdayHourlyRate = 80.0,
+                saturdayHours = 12.0,
+                sundayHourlyRate = 100.0,
+                sundayHours = 12.0
+            )
+
+        assertEquals(
+            2000.0,
+            result.weekdayBaseGrossPerWeek,
+            0.001
+        )
+
+        assertEquals(
+            1500.0,
+            result.weekdayOvertimeGrossPerWeek,
+            0.001
+        )
+
+        assertEquals(
+            960.0,
+            result.saturdayGrossPerWeek,
+            0.001
+        )
+
+        assertEquals(
+            1200.0,
+            result.sundayGrossPerWeek,
+            0.001
+        )
+
+        assertEquals(
+            5660.0,
+            result.weeklyGross,
+            0.001
+        )
+    }
+
 
 }
