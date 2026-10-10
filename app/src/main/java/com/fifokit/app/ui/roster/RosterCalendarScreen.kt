@@ -21,6 +21,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.graphics.Color
 import java.time.LocalDate
 import java.time.YearMonth
 import java.time.format.TextStyle
@@ -835,6 +836,11 @@ fun RosterCalendarScreen(
                                         viewModel.selectedStates
                                     )
                     },
+                    shiftType = { date ->
+                        if (hasOwnRoster && viewModel.isCustomRoster)
+                            viewModel.scheduleStatusOn(date)?.segment?.type?.name
+                        else null
+                    },
                     modifier = Modifier.weight(1f)
                 )
 
@@ -961,6 +967,10 @@ private fun CalendarDay(
             !isRosterActive ->
                 MaterialTheme.colorScheme.surface
 
+            isWorkDay && rosterStatusLabel == "DAY" -> Color(0xFFFFB74D)
+            isWorkDay && rosterStatusLabel == "NIGHT" -> Color(0xFF3949AB)
+            isWorkDay && shiftType == "DAY" -> Color(0xFFFFB74D)
+            isWorkDay && shiftType == "NIGHT" -> Color(0xFF3949AB)
             isWorkDay ->
                 MaterialTheme.colorScheme.primaryContainer
 
@@ -1328,6 +1338,7 @@ private fun YearCalendarGrid(
     isRosterActive: (LocalDate) -> Boolean,
     isWorkDay: (LocalDate) -> Boolean,
     isPublicHoliday: (LocalDate) -> Boolean,
+    shiftType: (LocalDate) -> String?,
     modifier: Modifier = Modifier
 ) {
     val months = (1..12).map { monthNumber ->
@@ -1346,7 +1357,8 @@ private fun YearCalendarGrid(
                 startDate = startDate,
                 isRosterActive = isRosterActive,
                 isWorkDay = isWorkDay,
-                isPublicHoliday = isPublicHoliday
+                isPublicHoliday = isPublicHoliday,
+                shiftType = shiftType
             )
         }
     }
@@ -1358,7 +1370,8 @@ private fun MiniMonthCalendar(
     startDate: LocalDate,
     isRosterActive: (LocalDate) -> Boolean,
     isWorkDay: (LocalDate) -> Boolean,
-    isPublicHoliday: (LocalDate) -> Boolean
+    isPublicHoliday: (LocalDate) -> Boolean,
+    shiftType: (LocalDate) -> String?
 ) {
     val firstDayOffset = month.atDay(1).dayOfWeek.value - 1
 
@@ -1429,7 +1442,8 @@ private fun MiniMonthCalendar(
                                 isRosterActive = isRosterActive(date),
                                 isWorkDay = isWorkDay(date),
                                 isStartDate = date == startDate,
-                                isPublicHoliday = isPublicHoliday(date)
+                                isPublicHoliday = isPublicHoliday(date),
+                                shiftType = shiftType(date)
                             )
                         }
                     }
@@ -1446,7 +1460,8 @@ private fun MiniCalendarDay(
     isRosterActive: Boolean,
     isWorkDay: Boolean,
     isStartDate: Boolean,
-    isPublicHoliday: Boolean
+    isPublicHoliday: Boolean,
+    shiftType: String?
 ) {
     val isToday = date == LocalDate.now()
 
