@@ -5,6 +5,8 @@ import com.fifokit.app.domain.model.RosterPattern
 import com.fifokit.app.domain.roster.RosterCalculator
 import com.fifokit.app.domain.roster.AustralianState
 import com.fifokit.app.domain.roster.PublicHolidayProvider
+import com.fifokit.app.domain.roster.RosterScheduleCalculator
+import com.fifokit.app.domain.roster.RosterScheduleSegment
 import java.time.LocalDate
 
 object FinanceCalculator {
@@ -286,6 +288,85 @@ object FinanceCalculator {
                                 workDays = workDays,
                                 offDays = offDays
                             )
+                }
+        )
+    }
+
+    fun calculateAnnualEarnings(
+        input: PayInput,
+        rosterStartDate: LocalDate,
+        scheduleSegments:
+            List<RosterScheduleSegment>,
+        repeatSchedule: Boolean,
+        year: Int,
+        selectedStates:
+            Set<AustralianState> =
+            emptySet()
+    ): EarningsResult {
+
+        val firstDay =
+            LocalDate.of(
+                year,
+                1,
+                1
+            )
+
+        val lastDay =
+            LocalDate.of(
+                year,
+                12,
+                31
+            )
+
+        var workDaysInYear = 0
+        var totalDays = 0
+        var date = firstDay
+
+        while (!date.isAfter(lastDay)) {
+            if (
+                RosterScheduleCalculator
+                    .isWorkDay(
+                        date = date,
+                        startDate =
+                            rosterStartDate,
+                        segments =
+                            scheduleSegments,
+                        repeat =
+                            repeatSchedule
+                    )
+            ) {
+                workDaysInYear++
+            }
+
+            totalDays++
+            date = date.plusDays(1)
+        }
+
+        return calculateAnnualEarnings(
+            input = input,
+            workDaysPerYear =
+                workDaysInYear
+        ).copy(
+            restDaysPerYear =
+                totalDays -
+                        workDaysInYear,
+            publicHolidaysWorked =
+                countPublicHolidaysWorked(
+                    year = year,
+                    states =
+                        selectedStates
+                ) { holidayDate ->
+                    RosterScheduleCalculator
+                        .isWorkDay(
+                            date =
+                                holidayDate,
+                            startDate =
+                                rosterStartDate,
+                            segments =
+                                scheduleSegments,
+                            repeat =
+                                repeatSchedule
+                        )
                 }
         )
     }
