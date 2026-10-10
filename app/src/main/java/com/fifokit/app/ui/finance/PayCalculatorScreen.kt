@@ -38,6 +38,7 @@ import com.fifokit.app.domain.finance.FinanceCalculator
 import com.fifokit.app.domain.finance.PayInput
 import com.fifokit.app.domain.model.RosterPattern
 import com.fifokit.app.domain.roster.AustralianState
+import com.fifokit.app.domain.roster.RosterScheduleSegment
 import java.time.LocalDate
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -58,11 +59,11 @@ import com.fifokit.app.analytics.AnalyticsParams
 fun PayCalculatorScreen(
     selectedPattern: RosterPattern,
     isCustomRoster: Boolean,
-    customWorkDays: Int,
-    customOffDays: Int,
+    isShutdownRoster: Boolean,
+    scheduleSegments:
+        List<RosterScheduleSegment>,
     rosterStartDate: LocalDate,
     selectedStates: Set<AustralianState>,
-    rosterEndDate: LocalDate?,
     onBack: () -> Unit
 ) {
     val context = LocalContext.current
@@ -487,23 +488,27 @@ fun PayCalculatorScreen(
 
                         annualResult =
                             if (isCustomRoster) {
-                                FinanceCalculator.calculateAnnualEarnings(
-                                    input = input,
-                                    rosterStartDate = rosterStartDate,
-                                    workDays = customWorkDays,
-                                    offDays = customOffDays,
-                                    year = currentYear,
-                                    selectedStates = selectedStates,
-                                    rosterEndDate = rosterEndDate
-                                )
+                                FinanceCalculator
+                                    .calculateAnnualEarnings(
+                                        input = input,
+                                        rosterStartDate =
+                                            rosterStartDate,
+                                        scheduleSegments =
+                                            scheduleSegments,
+                                        repeatSchedule =
+                                            !isShutdownRoster,
+                                        year =
+                                            currentYear,
+                                        selectedStates =
+                                            selectedStates
+                                    )
                             } else {
                                 FinanceCalculator.calculateAnnualEarnings(
                                     input = input,
                                     pattern = selectedPattern,
                                     rosterStartDate = rosterStartDate,
                                     year = currentYear,
-                                    selectedStates = selectedStates,
-                                    rosterEndDate = rosterEndDate
+                                    selectedStates = selectedStates
                                 )
                             }
                         analytics.logEvent(
@@ -585,9 +590,12 @@ fun PayCalculatorScreen(
                 )
 
                 Text(
-                    text = if (isCustomRoster) {
-                        "Active roster: $customWorkDays/$customOffDays"
-                    } else {
+                    text =
+                        if (isShutdownRoster) {
+                            "Active roster: shutdown sequence"
+                        } else if (isCustomRoster) {
+                            "Active roster: custom sequence"
+                        } else {
                         "Active roster: ${selectedPattern.label}"
                     }
                 )
