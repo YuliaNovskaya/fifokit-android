@@ -77,7 +77,13 @@ fun FIFOKITApp(
     var selectedSharedRoster by remember { mutableStateOf<SharedRoster?>(null) }
 
     val showCalendar =
-        screenOverride ?: (rosterSetupViewModel.hasSavedRoster == true)
+        screenOverride ?: (
+            rosterSetupViewModel.hasSavedRoster == true ||
+            (
+                currentUser != null &&
+                rosterSetupViewModel.hasSavedRoster == false
+            )
+        )
 
     var showSettings by remember { mutableStateOf(false) }
 
@@ -342,15 +348,7 @@ fun FIFOKITApp(
     fun goToCalendar() {
         clearOpenScreens()
         showAcceptInvite = false
-
-        if (
-            rosterSetupViewModel.rosters.isEmpty()
-        ) {
-            showSharedRosters = true
-            screenOverride = true
-        } else {
-            screenOverride = true
-        }
+        screenOverride = true
     }
 
     Scaffold(
@@ -670,13 +668,9 @@ fun FIFOKITApp(
                         rosterSetupViewModel.createNewRoster()
                         screenOverride = false
                     },
-                    onSharedRosters = {
-                        clearOpenScreens()
-                        showSharedRosters = true
-                        screenOverride = true
-                    },
                     onSignedIn = {
                         rosterSetupViewModel.refreshFromLocalStorage()
+                        screenOverride = true
                     }
                 )
             }
