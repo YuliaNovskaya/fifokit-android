@@ -3,6 +3,9 @@ package com.fifokit.app.ui.settings
 import android.content.Intent
 import android.provider.Settings
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -41,7 +44,10 @@ import com.google.firebase.analytics.FirebaseAnalytics
 import com.google.firebase.analytics.logEvent
 
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(
+    ExperimentalMaterial3Api::class,
+    ExperimentalLayoutApi::class
+)
 @Composable
 fun SettingsScreen(
     onBack: () -> Unit,
@@ -341,31 +347,46 @@ fun SettingsScreen(
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            AustralianState.entries.chunked(4).forEach { states ->
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    states.forEach { state ->
-                        if (state in selectedStates) {
-                            Button(
-                                modifier = Modifier.weight(1f),
-                                onClick = { onStateToggle(state) }
-                            ) {
-                                Text(state.code)
+            FlowRow(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement =
+                    Arrangement.spacedBy(8.dp),
+                verticalArrangement =
+                    Arrangement.spacedBy(8.dp)
+            ) {
+                AustralianState.entries.forEach { state ->
+                    if (state in selectedStates) {
+                        Button(
+                            modifier =
+                                Modifier.widthIn(
+                                    min = 76.dp
+                                ),
+                            onClick = {
+                                onStateToggle(state)
                             }
-                        } else {
-                            OutlinedButton(
-                                modifier = Modifier.weight(1f),
-                                onClick = { onStateToggle(state) }
-                            ) {
-                                Text(state.code)
+                        ) {
+                            Text(
+                                text = state.code,
+                                maxLines = 1
+                            )
+                        }
+                    } else {
+                        OutlinedButton(
+                            modifier =
+                                Modifier.widthIn(
+                                    min = 76.dp
+                                ),
+                            onClick = {
+                                onStateToggle(state)
                             }
+                        ) {
+                            Text(
+                                text = state.code,
+                                maxLines = 1
+                            )
                         }
                     }
                 }
-
-                Spacer(modifier = Modifier.height(8.dp))
             }
         }
     }
