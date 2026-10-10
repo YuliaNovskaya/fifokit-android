@@ -51,8 +51,6 @@ fun RosterSetupRoute(
         onRosterNameChanged = viewModel::updateRosterName,
         selectedRoster = viewModel.selectedPattern,
         isCustomRoster = viewModel.isCustomRoster,
-        customWorkDays = viewModel.customWorkDays,
-        customOffDays = viewModel.customOffDays,
         scheduleSegments = viewModel.scheduleSegments,
         startDate = viewModel.startDate,
         isShutdownRoster = viewModel.isShutdownRoster,
@@ -81,8 +79,6 @@ fun RosterSetupRoute(
                 onProRequested("shutdown_roster")
             }
         },
-        onCustomWorkDaysChanged = viewModel::updateCustomWorkDays,
-        onCustomOffDaysChanged = viewModel::updateCustomOffDays,
         onAddScheduleSegment =
             viewModel::addScheduleSegment,
         onUpdateScheduleSegmentType =
@@ -92,7 +88,6 @@ fun RosterSetupRoute(
         onRemoveScheduleSegment =
             viewModel::removeScheduleSegment,
         onStartDateSelected = viewModel::selectStartDate,
-        onEndDateSelected = viewModel::selectEndDate,
         showCancelNewRoster = viewModel.isCreatingNewRoster,
         onCancelNewRoster = {
             viewModel.cancelNewRoster()
