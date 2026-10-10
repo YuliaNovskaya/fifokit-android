@@ -8,6 +8,7 @@ import com.fifokit.app.domain.roster.PublicHolidayProvider
 import com.fifokit.app.domain.roster.RosterScheduleCalculator
 import com.fifokit.app.domain.roster.RosterScheduleSegment
 import java.time.LocalDate
+import java.time.temporal.ChronoUnit
 
 object FinanceCalculator {
 
@@ -221,6 +222,98 @@ object FinanceCalculator {
             daysRequired = contributionsRequired * goal.payFrequencyDays
         )
     }
+    fun calculateFinancialGoal(
+        goal: FinancialGoal,
+        fromDate: LocalDate,
+        isWorkDay: (LocalDate) -> Boolean
+    ): FinancialGoalResult? {
+
+        if (
+            goal.contributionTiming !=
+            GoalContributionTiming.COMPLETED_SWING
+        ) {
+            return calculateFinancialGoal(goal)
+        }
+
+        val remaining =
+            (
+                goal.targetAmount -
+                        goal.currentAmount
+            ).coerceAtLeast(0.0)
+
+        if (remaining == 0.0) {
+            return FinancialGoalResult(
+                amountRemaining = 0.0,
+                contributionsRequired = 0,
+                daysRequired = 0
+            )
+        }
+
+        if (goal.contributionPerPay <= 0.0) {
+            return FinancialGoalResult(
+                amountRemaining = remaining,
+                contributionsRequired = 0,
+                daysRequired = 0
+            )
+        }
+
+        val contributionsRequired =
+            ceil(
+                remaining /
+                        goal.contributionPerPay
+            ).toInt()
+
+        var completedSwings = 0
+        var date = fromDate
+        var daysChecked = 0
+        val maxDaysToCheck = 36500
+
+        while (
+            completedSwings <
+            contributionsRequired &&
+            daysChecked <
+            maxDaysToCheck
+        ) {
+            if (
+                isWorkDay(date) &&
+                !isWorkDay(
+                    date.plusDays(1)
+                )
+            ) {
+                completedSwings++
+            }
+
+            if (
+                completedSwings <
+                contributionsRequired
+            ) {
+                date = date.plusDays(1)
+                daysChecked++
+            }
+        }
+
+        if (
+            completedSwings <
+            contributionsRequired
+        ) {
+            return null
+        }
+
+        return FinancialGoalResult(
+            amountRemaining = remaining,
+            contributionsRequired =
+                contributionsRequired,
+            daysRequired =
+                ChronoUnit.DAYS
+                    .between(
+                        fromDate,
+                        date
+                    )
+                    .toInt()
+                    .coerceAtLeast(0)
+        )
+    }
+
     fun calculateAnnualEarnings(
         input: PayInput,
         pattern: RosterPattern,
