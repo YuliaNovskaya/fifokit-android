@@ -19,6 +19,7 @@ import com.fifokit.app.domain.roster.RosterScheduleSegment
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.YearMonth
+import com.fifokit.app.ui.components.FifokitTopBar
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -41,8 +42,7 @@ fun AdvancedPayPreviewScreen(
     var error by remember { mutableStateOf<String?>(null) }
     var result by remember { mutableStateOf<PayBreakdown?>(null) }
 
-    Scaffold(topBar = { TopAppBar(title = { Text("Advanced pay estimate") },
-        navigationIcon = { TextButton(onClick = onBack) { Text("Back") } }) }) { inner ->
+    Scaffold(topBar = { FifokitTopBar(title = "Advanced pay estimate", onBack = onBack) }) { inner ->
         Column(Modifier.fillMaxSize().padding(inner).verticalScroll(rememberScrollState()).padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Text("Uses the active roster and saved Advanced pay settings.")
