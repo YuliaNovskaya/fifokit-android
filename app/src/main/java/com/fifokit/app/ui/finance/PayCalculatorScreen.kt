@@ -274,6 +274,10 @@ fun PayCalculatorScreen(
         }
     }
 
+    var showAdvancedPaySettings by remember { mutableStateOf(false) }
+    if (showAdvancedPaySettings) {
+        AdvancedPaySettingsScreen(onBack = { showAdvancedPaySettings = false })
+    } else {
     Scaffold(
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
         topBar = {
@@ -293,6 +297,10 @@ fun PayCalculatorScreen(
             verticalArrangement = Arrangement.Top
         ) {
 
+            OutlinedButton(onClick = { showAdvancedPaySettings = true }, modifier = Modifier.fillMaxWidth()) {
+                Text("Advanced pay settings")
+            }
+            Spacer(modifier = Modifier.height(12.dp))
             Text(
                 text = "Work type",
                 style = MaterialTheme.typography.titleMedium,
@@ -1200,5 +1208,6 @@ fun PayCalculatorScreen(
             }
 
         }
+    }
     }
 }
