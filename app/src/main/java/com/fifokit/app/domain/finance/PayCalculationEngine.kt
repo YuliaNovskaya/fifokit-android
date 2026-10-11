@@ -19,6 +19,7 @@ object PayCalculationEngine {
         annualSalaryPeriodFraction: Double = 1.0
     ): PayBreakdown {
         require(profile.baseRate >= 0.0)
+        require(profile.pipValue >= 0.0)
         require(profile.casualLoadingPercent >= 0.0)
         require(annualSalaryPeriodFraction >= 0.0)
         require(profile.overtimeRules.all {
@@ -112,7 +113,16 @@ object PayCalculationEngine {
                     else -> 0.0
                 }
             }
-            ShiftPayBreakdown(shift, if (profile.basis == AdvancedPayBasis.HOURLY) lines else emptyList(), shiftGross, allowanceAmount, shiftGross + allowanceAmount)
+            val pipPerShift = when (profile.pipType) {
+                PipType.PER_HOUR -> profile.pipValue * hours
+                PipType.PER_DAY -> profile.pipValue
+                PipType.PERCENT_BASE ->
+                    if (profile.basis == AdvancedPayBasis.ANNUAL_SALARY) 0.0
+                    else shiftGross * profile.pipValue / 100.0
+                PipType.NONE, PipType.FIXED_AMOUNT -> 0.0
+            }
+            ShiftPayBreakdown(shift, if (profile.basis == AdvancedPayBasis.HOURLY) lines else emptyList(),
+                shiftGross, allowanceAmount + pipPerShift, shiftGross + allowanceAmount + pipPerShift)
         }
         val fixed = profile.allowances.sumOf { allowance ->
             when (allowance.frequency) {
@@ -128,9 +138,15 @@ object PayCalculationEngine {
             }
         }
         val salary = if (profile.basis == AdvancedPayBasis.ANNUAL_SALARY) profile.baseRate * annualSalaryPeriodFraction else 0.0
-        val total = calculated.sumOf { it.totalGross } + fixed + salary
+        val periodPip = when (profile.pipType) {
+            PipType.FIXED_AMOUNT -> profile.pipValue
+            PipType.PERCENT_BASE ->
+                if (profile.basis == AdvancedPayBasis.ANNUAL_SALARY) salary * profile.pipValue / 100.0 else 0.0
+            else -> 0.0
+        }
+        val total = calculated.sumOf { it.totalGross } + fixed + salary + periodPip
         val totalHours = ordered.sumOf { ChronoUnit.MINUTES.between(it.start, it.end) / 60.0 }
-        return PayBreakdown(calculated, fixed + salary, totalHours, total, if (totalHours > 0) total / totalHours else 0.0)
+        return PayBreakdown(calculated, fixed + salary + periodPip, totalHours, total, if (totalHours > 0) total / totalHours else 0.0)
     }
 
     private fun applyRate(base: Double, value: Double, type: RateValueType, combination: RateCombination): Double {
