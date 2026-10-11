@@ -163,6 +163,16 @@ fun AdvancedPayPreviewScreen(
                                 style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                             Text("Shift gross: ${FinanceFormatter.money(shift.totalGross)}",
                                 fontWeight = FontWeight.SemiBold)
+                            profile.allowances.filter {
+                                it.frequency == AllowanceFrequency.PER_HOUR ||
+                                it.frequency == AllowanceFrequency.PER_SHIFT
+                            }.forEach { allowance ->
+                                val amount = if (allowance.frequency == AllowanceFrequency.PER_HOUR)
+                                    allowance.amount * java.time.temporal.ChronoUnit.MINUTES.between(
+                                        shift.shift.start, shift.shift.end
+                                    ) / 60.0 else allowance.amount
+                                Text("${allowance.name} (${allowance.frequency.name}): ${FinanceFormatter.money(amount)}")
+                            }
                             shift.lines.forEach { line ->
                                 Text("${line.start.format(timestampFormat)} – ${line.end.format(timestampFormat)}")
                                 Text("${"%.2f".format(line.hours)} h × ${FinanceFormatter.money(line.hourlyRate)} = ${FinanceFormatter.money(line.gross)}")
