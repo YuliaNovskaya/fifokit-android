@@ -20,6 +20,9 @@ import java.time.LocalDate
 import java.time.LocalTime
 import java.time.YearMonth
 import com.fifokit.app.ui.components.FifokitTopBar
+import com.fifokit.app.domain.finance.FinanceFormatter
+import androidx.compose.ui.text.font.FontWeight
+import java.time.temporal.ChronoUnit
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -41,6 +44,9 @@ fun AdvancedPayPreviewScreen(
     var shiftHours by remember { mutableStateOf("12") }
     var error by remember { mutableStateOf<String?>(null) }
     var result by remember { mutableStateOf<PayBreakdown?>(null) }
+    var annualResult by remember { mutableStateOf<PayBreakdown?>(null) }
+    var annualPublicHolidaysWorked by remember { mutableIntStateOf(0) }
+    var monthlyPublicHolidaysWorked by remember { mutableIntStateOf(0) }
 
     Scaffold(topBar = { FifokitTopBar(title = "Advanced pay estimate", onBack = onBack) }) { inner ->
         Column(Modifier.fillMaxSize().padding(inner).verticalScroll(rememberScrollState()).padding(16.dp),
@@ -62,6 +68,7 @@ fun AdvancedPayPreviewScreen(
             Text("These shift times are inputs for this estimate, not saved roster times. WORK segments use the selected shift type; ROTATING/CUSTOM without DAY/NIGHT segments currently default to DAY.")
             Button(modifier = Modifier.fillMaxWidth(), onClick = {
                 result = null
+                annualResult = null
                 val hours = shiftHours.toDoubleOrNull()
                 val day = runCatching { LocalTime.parse(dayStart) }.getOrNull()
                 val night = runCatching { LocalTime.parse(nightStart) }.getOrNull()
@@ -87,27 +94,92 @@ fun AdvancedPayPreviewScreen(
                         val holidays = (0L..(month.lengthOfMonth() + 1).toLong())
                             .map { holidayStart.plusDays(it) }
                             .filter { PublicHolidayProvider.isPublicHoliday(it, selectedStates) }.toSet()
+                        val yearStart = LocalDate.of(month.year, 1, 1)
+                        val yearEnd = LocalDate.of(month.year, 12, 31)
+                        val annualShifts = RosterPayShiftGenerator.generate(
+                            from = yearStart, until = yearEnd,
+                            rosterStart = rosterStartDate, pattern = selectedPattern,
+                            isCustomRoster = isCustomRoster, isShutdownRoster = isShutdownRoster,
+                            segments = scheduleSegments, dayStart = day, nightStart = night,
+                            hoursPerShift = hours, defaultShiftType = profile.shiftType
+                        )
+                        val annualHolidays = (0L until yearStart.lengthOfYear().toLong())
+                            .map { yearStart.plusDays(it) }
+                            .filter { PublicHolidayProvider.isPublicHoliday(it, selectedStates) }.toSet()
+                        annualPublicHolidaysWorked = annualShifts.count { it.start.toLocalDate() in annualHolidays }
+                        monthlyPublicHolidaysWorked = shifts.count { it.start.toLocalDate() in holidays }
+                        annualResult = PayCalculationEngine.calculate(
+                            profile, annualShifts, annualHolidays,
+                            annualSalaryPeriodFraction = 1.0
+                        )
                         PayCalculationEngine.calculate(profile, shifts, holidays,
                             annualSalaryPeriodFraction = month.lengthOfMonth().toDouble() / month.atDay(1).lengthOfYear())
                     }.onSuccess { result = it }.onFailure { error = it.message ?: "Unable to calculate" }
                 }
             }) { Text("Calculate advanced estimate") }
             error?.let { Text(it, color = MaterialTheme.colorScheme.error) }
+            annualResult?.let { annual ->
+                val rosterLabel = when {
+                    isShutdownRoster -> "Shutdown sequence"
+                    isCustomRoster -> "Custom sequence"
+                    else -> selectedPattern.label
+                }
+                Text("Annual results — ${month.year}", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                Text("Annual gross: ${FinanceFormatter.money(annual.totalGross)}",
+                    style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                Text("Active roster: $rosterLabel")
+                Text("Work days this year: ${annual.shifts.size}")
+                Text("Work hours this year: ${"%.1f".format(annual.totalHours)}")
+                Text("Base: ${FinanceFormatter.money(advancedBaseGross(annual, profile, 1.0))}")
+                Text("PIP: ${FinanceFormatter.money(advancedPipGross(annual, profile, 1.0))}")
+                Text("Allowances: ${FinanceFormatter.money(advancedAllowanceGross(annual, profile, 1.0))}")
+                Text("Equivalent hourly rate: ${FinanceFormatter.money(annual.effectiveHourlyRate)} / hour")
+                Text("Public holidays worked this year: $annualPublicHolidaysWorked")
+                HorizontalDivider()
+            }
             result?.let { r ->
-                Text("Shifts: ${r.shifts.size}")
-                Text("Hours: ${"%.2f".format(r.totalHours)}")
-                Text("Gross estimate: ${"%.2f".format(r.totalGross)}",
-                    style = MaterialTheme.typography.titleMedium)
-                Text("Effective hourly: ${"%.2f".format(r.effectiveHourlyRate)}")
-                Text("Breakdown by shift", style = MaterialTheme.typography.titleMedium)
+                Text("Monthly results — ${month.month.name.lowercase().replaceFirstChar { it.uppercase() }} ${month.year}",
+                    style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                Text("Monthly gross: ${FinanceFormatter.money(r.totalGross)}",
+                    style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                Text("Work days this month: ${r.shifts.size}")
+                Text("Work hours this month: ${"%.1f".format(r.totalHours)}")
+                val salaryFraction = month.lengthOfMonth().toDouble() / month.atDay(1).lengthOfYear()
+                Text("Base: ${FinanceFormatter.money(advancedBaseGross(r, profile, salaryFraction))}")
+                Text("PIP: ${FinanceFormatter.money(advancedPipGross(r, profile, salaryFraction))}")
+                Text("Allowances: ${FinanceFormatter.money(advancedAllowanceGross(r, profile, salaryFraction))}")
+                Text("Effective hourly rate: ${FinanceFormatter.money(r.effectiveHourlyRate)} / hour")
+                Text("Public holidays worked this month: $monthlyPublicHolidaysWorked")
+                HorizontalDivider()
+                Text("Breakdown by shift — selected month", style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold)
                 r.shifts.forEach { shift ->
-                    Text("${shift.shift.start} — ${shift.shift.shiftType}: ${"%.2f".format(shift.totalGross)}")
+                    Text("${shift.shift.start} — ${shift.shift.shiftType}: ${FinanceFormatter.money(shift.totalGross)}")
                     shift.lines.forEach { line ->
-                        Text("  ${line.start.toLocalTime()}–${line.end.toLocalTime()}  ${"%.2f".format(line.hours)} h × ${"%.2f".format(line.hourlyRate)} = ${"%.2f".format(line.gross)}")
+                        Text("  ${line.start.toLocalTime()}–${line.end.toLocalTime()}  ${"%.2f".format(line.hours)} h × ${FinanceFormatter.money(line.hourlyRate)} = ${FinanceFormatter.money(line.gross)}")
                     }
                 }
-                if (r.fixedAllowances != 0.0) Text("Period amount and fixed allowances: ${"%.2f".format(r.fixedAllowances)}")
+                if (r.fixedAllowances != 0.0) Text("Period amount and fixed allowances: ${FinanceFormatter.money(r.fixedAllowances)}")
             }
         }
     }
 }
+
+private fun advancedBaseGross(result: PayBreakdown, profile: PayProfile, salaryFraction: Double): Double =
+    if (profile.basis == AdvancedPayBasis.ANNUAL_SALARY) profile.baseRate * salaryFraction
+    else result.shifts.sumOf { it.baseGross }
+
+private fun advancedPipGross(result: PayBreakdown, profile: PayProfile, salaryFraction: Double): Double {
+    val base = advancedBaseGross(result, profile, salaryFraction)
+    return when (profile.pipType) {
+        PipType.NONE -> 0.0
+        PipType.PER_HOUR -> result.totalHours * profile.pipValue
+        PipType.PER_DAY -> result.shifts.size * profile.pipValue
+        PipType.PERCENT_BASE -> base * profile.pipValue / 100.0
+        PipType.FIXED_AMOUNT -> profile.pipValue
+    }
+}
+
+private fun advancedAllowanceGross(result: PayBreakdown, profile: PayProfile, salaryFraction: Double): Double =
+    result.totalGross - advancedBaseGross(result, profile, salaryFraction) -
+        advancedPipGross(result, profile, salaryFraction)
