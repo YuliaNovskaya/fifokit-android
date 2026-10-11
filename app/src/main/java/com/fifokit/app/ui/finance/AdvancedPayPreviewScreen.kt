@@ -53,9 +53,9 @@ fun AdvancedPayPreviewScreen(
             verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Text("Uses the active roster and saved Advanced pay settings.")
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                TextButton(onClick = { month = month.minusMonths(1); result = null }) { Text("Previous") }
+                TextButton(onClick = { month = month.minusMonths(1); result = null; annualResult = null }) { Text("Previous") }
                 Text(month.toString())
-                TextButton(onClick = { month = month.plusMonths(1); result = null }) { Text("Next") }
+                TextButton(onClick = { month = month.plusMonths(1); result = null; annualResult = null }) { Text("Next") }
             }
             OutlinedTextField(value = dayStart, onValueChange = { dayStart = it; result = null },
                 label = { Text("Day shift start (HH:mm)") }, modifier = Modifier.fillMaxWidth())
@@ -100,8 +100,8 @@ fun AdvancedPayPreviewScreen(
                             from = yearStart, until = yearEnd,
                             rosterStart = rosterStartDate, pattern = selectedPattern,
                             isCustomRoster = isCustomRoster, isShutdownRoster = isShutdownRoster,
-                            segments = scheduleSegments, dayStart = day, nightStart = night,
-                            hoursPerShift = hours, defaultShiftType = profile.shiftType
+                            segments = scheduleSegments, dayStart = day!!, nightStart = night!!,
+                            hoursPerShift = hours!!, defaultShiftType = profile.shiftType
                         )
                         val annualHolidays = (0L until yearStart.lengthOfYear().toLong())
                             .map { yearStart.plusDays(it) }
