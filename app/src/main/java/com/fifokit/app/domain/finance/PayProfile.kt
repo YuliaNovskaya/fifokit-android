@@ -19,6 +19,8 @@ data class PayProfile(
     val effectiveFrom: LocalDate? = null,
     val effectiveUntil: LocalDate? = null,
     val casualLoadingPercent: Double = 0.0,
+    val pipType: PipType = PipType.NONE,
+    val pipValue: Double = 0.0,
     val rateRules: List<RateRule> = emptyList(),
     val overtimeRules: List<OvertimeRule> = emptyList(),
     val allowances: List<Allowance> = emptyList()
