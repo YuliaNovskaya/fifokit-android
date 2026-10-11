@@ -53,6 +53,9 @@ object PayCalculationEngine {
                     else -> DayCategory.WEEKDAY
                 }
                 val applicable = profile.rateRules.filter { rule ->
+                    // A zero-valued absolute rate means no override; use the base rate.
+                    !(rule.valueType == RateValueType.HOURLY_AMOUNT &&
+                        rule.combination == RateCombination.REPLACE && rule.value <= 0.0) &&
                     (rule.category == null || rule.category == category) &&
                     (rule.weekday == null || rule.weekday == current.dayOfWeek) &&
                     (rule.shiftType == null || rule.shiftType == shift.shiftType) &&
