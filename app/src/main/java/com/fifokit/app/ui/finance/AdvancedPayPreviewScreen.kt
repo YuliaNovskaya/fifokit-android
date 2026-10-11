@@ -19,6 +19,7 @@ import com.fifokit.app.domain.roster.RosterScheduleSegment
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.YearMonth
+import java.time.format.DateTimeFormatter
 import com.fifokit.app.ui.components.FifokitTopBar
 import com.fifokit.app.domain.finance.FinanceFormatter
 import androidx.compose.ui.text.font.FontWeight
@@ -151,12 +152,22 @@ fun AdvancedPayPreviewScreen(
                 Text("Effective hourly rate: ${FinanceFormatter.money(r.effectiveHourlyRate)} / hour")
                 Text("Public holidays worked this month: $monthlyPublicHolidaysWorked")
                 HorizontalDivider()
-                Text("Breakdown by shift — selected month", style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold)
+                Text("Breakdown by shift — ${month.month.name.lowercase().replaceFirstChar { it.uppercase() }} ${month.year}",
+                    style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                val timestampFormat = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm")
                 r.shifts.forEach { shift ->
-                    Text("${shift.shift.start} — ${shift.shift.shiftType}: ${FinanceFormatter.money(shift.totalGross)}")
-                    shift.lines.forEach { line ->
-                        Text("  ${line.start.toLocalTime()}–${line.end.toLocalTime()}  ${"%.2f".format(line.hours)} h × ${FinanceFormatter.money(line.hourlyRate)} = ${FinanceFormatter.money(line.gross)}")
+                    ElevatedCard(modifier = Modifier.fillMaxWidth()) {
+                        Column(modifier = Modifier.padding(12.dp),
+                            verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                            Text("${shift.shift.start.format(timestampFormat)} — ${shift.shift.shiftType}",
+                                style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                            Text("Shift gross: ${FinanceFormatter.money(shift.totalGross)}",
+                                fontWeight = FontWeight.SemiBold)
+                            shift.lines.forEach { line ->
+                                Text("${line.start.format(timestampFormat)} – ${line.end.format(timestampFormat)}")
+                                Text("${"%.2f".format(line.hours)} h × ${FinanceFormatter.money(line.hourlyRate)} = ${FinanceFormatter.money(line.gross)}")
+                            }
+                        }
                     }
                 }
                 if (r.fixedAllowances != 0.0) Text("Period amount and fixed allowances: ${FinanceFormatter.money(r.fixedAllowances)}")
