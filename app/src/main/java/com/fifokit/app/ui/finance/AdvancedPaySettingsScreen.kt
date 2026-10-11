@@ -55,7 +55,7 @@ fun AdvancedPaySettingsScreen(onBack: () -> Unit) {
                                     entry = value
                                     val parsed = value.toDoubleOrNull()
                                     profile = profile.copy(rateRules = profile.rateRules.filterNot { it.id == id } +
-                                        (if (parsed != null && parsed >= 0) listOf(RateRule(id, category = category, shiftType = shift, value = parsed, priority = 10)) else emptyList()))
+                                        (if (parsed != null && parsed > 0) listOf(RateRule(id, category = category, shiftType = shift, value = parsed, priority = 10)) else emptyList()))
                                 }
                             }
                         }
