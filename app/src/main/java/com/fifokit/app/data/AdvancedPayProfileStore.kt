@@ -10,6 +10,16 @@ import java.time.DayOfWeek
 class AdvancedPayProfileStore(context: Context) {
     private val preferences = context.getSharedPreferences("advanced_pay_v1", Context.MODE_PRIVATE)
 
+    fun updatedAt(): Long = preferences.getLong("updatedAt", 0L)
+
+    fun exportJson(): String? = preferences.getString("profile", null)
+
+    fun applyCloudJson(json: String, updatedAt: Long) {
+        require(JSONObject(json).optInt("schemaVersion") == 1)
+        check(preferences.edit().putString("profile", json)
+            .putLong("updatedAt", updatedAt).commit()) { "Could not apply cloud pay settings" }
+    }
+
     fun load(): PayProfile {
         val raw = preferences.getString("profile", null) ?: return PayProfile()
         return runCatching {
@@ -96,6 +106,7 @@ class AdvancedPayProfileStore(context: Context) {
                     .put("amount", a.amount).put("frequency", a.frequency.name))
             }
         })
-        check(preferences.edit().putString("profile", j.toString()).commit()) { "Could not save advanced pay settings" }
+        check(preferences.edit().putString("profile", j.toString())
+            .putLong("updatedAt", System.currentTimeMillis()).commit()) { "Could not save advanced pay settings" }
     }
 }
