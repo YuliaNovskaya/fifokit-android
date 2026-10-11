@@ -50,6 +50,24 @@ class PayCalculationEngineTest {
         assertEquals(120000.0 / 52.0, result.totalGross, 0.001)
     }
 
+    @Test fun advancedPipPerHourIncreasesEstimatedPay() {
+        val result = PayCalculationEngine.calculate(
+            PayProfile(baseRate = 50.0, pipType = PipType.PER_HOUR, pipValue = 5.0),
+            listOf(shift("2026-10-12T07:00:00", "2026-10-12T19:00:00"))
+        )
+        assertEquals(660.0, result.totalGross, 0.001)
+    }
+
+    @Test fun salaryPercentagePipAppliesOncePerPeriod() {
+        val result = PayCalculationEngine.calculate(
+            PayProfile(basis = AdvancedPayBasis.ANNUAL_SALARY, baseRate = 120000.0,
+                pipType = PipType.PERCENT_BASE, pipValue = 10.0),
+            listOf(shift("2026-10-12T07:00:00", "2026-10-12T19:00:00")),
+            annualSalaryPeriodFraction = 1.0 / 12.0
+        )
+        assertEquals(11000.0, result.totalGross, 0.001)
+    }
+
     @Test fun optionalWeekendsNeedNoWeekendRules() {
         val result = PayCalculationEngine.calculate(
             PayProfile(baseRate = 40.0),
