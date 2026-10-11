@@ -276,8 +276,19 @@ fun PayCalculatorScreen(
     }
 
     var showAdvancedPaySettings by remember { mutableStateOf(false) }
+    var showAdvancedPayPreview by remember { mutableStateOf(false) }
     if (showAdvancedPaySettings) {
         AdvancedPaySettingsScreen(onBack = { showAdvancedPaySettings = false })
+    } else if (showAdvancedPayPreview) {
+        AdvancedPayPreviewScreen(
+            selectedPattern = selectedPattern,
+            isCustomRoster = isCustomRoster,
+            isShutdownRoster = isShutdownRoster,
+            scheduleSegments = scheduleSegments,
+            rosterStartDate = rosterStartDate,
+            selectedStates = selectedStates,
+            onBack = { showAdvancedPayPreview = false }
+        )
     } else {
     Scaffold(
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
@@ -300,6 +311,10 @@ fun PayCalculatorScreen(
 
             OutlinedButton(onClick = { showAdvancedPaySettings = true }, modifier = Modifier.fillMaxWidth()) {
                 Text("Advanced pay settings")
+            }
+            Spacer(modifier = Modifier.height(8.dp))
+            OutlinedButton(onClick = { showAdvancedPayPreview = true }, modifier = Modifier.fillMaxWidth()) {
+                Text("Calculate advanced pay")
             }
             Spacer(modifier = Modifier.height(12.dp))
             Text(
