@@ -19,10 +19,13 @@ class AdvancedPayCloudSyncManager(
         val cloudJson = cloud?.get("json") as? String
 
         when {
-            cloudJson == null && localJson != null && localTimestamp > 0L ->
+            cloudJson == null && localJson != null -> {
+                val timestamp = if (localTimestamp > 0L) localTimestamp else System.currentTimeMillis()
+                if (localTimestamp == 0L) local.applyCloudJson(localJson, timestamp)
                 repository.saveAdvancedPayProfile(
-                    uid, localJson, localTimestamp, deviceIdProvider.getDeviceId()
+                    uid, localJson, timestamp, deviceIdProvider.getDeviceId()
                 )
+            }
             cloudJson != null && cloudTimestamp > localTimestamp ->
                 local.applyCloudJson(cloudJson, cloudTimestamp)
             localJson != null && localTimestamp > cloudTimestamp ->
