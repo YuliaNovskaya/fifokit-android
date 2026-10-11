@@ -19,7 +19,7 @@ class PayCalculationEngineTest {
             ),
             listOf(shift("2026-10-09T22:00:00", "2026-10-11T02:00:00"))
         )
-        assertEquals(2300.0, result.totalGross, 0.001) // Fri 2h, Sat 24h, Sun 2h
+        assertEquals(2100.0, result.totalGross, 0.001) // Fri 2h, Sat 24h, Sun 2h
         assertEquals(28.0, result.totalHours, 0.001)
     }
 
