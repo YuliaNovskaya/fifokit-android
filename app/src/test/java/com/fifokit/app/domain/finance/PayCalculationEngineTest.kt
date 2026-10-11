@@ -114,6 +114,20 @@ class PayCalculationEngineTest {
         assertEquals(560.0, result.totalGross, 0.001)
     }
 
+    @Test fun zeroWeekendRateFallsBackToBaseThroughOvertimeTiers() {
+        val result = PayCalculationEngine.calculate(
+            PayProfile(baseRate = 50.0, pipType = PipType.PER_HOUR, pipValue = 5.0,
+                rateRules = listOf(RateRule("day", category = DayCategory.SATURDAY,
+                    shiftType = PayShiftType.DAY, value = 0.0)),
+                overtimeRules = listOf(
+                    OvertimeRule("ot1", afterHours = 8.0, untilHours = 10.0, value = 1.5),
+                    OvertimeRule("ot2", afterHours = 10.0, value = 2.0)
+                )),
+            listOf(shift("2026-10-10T07:00:00", "2026-10-10T19:00:00"))
+        )
+        assertEquals(810.0, result.totalGross, 0.001)
+    }
+
     @Test fun optionalWeekendsNeedNoWeekendRules() {
         val result = PayCalculationEngine.calculate(
             PayProfile(baseRate = 40.0),
