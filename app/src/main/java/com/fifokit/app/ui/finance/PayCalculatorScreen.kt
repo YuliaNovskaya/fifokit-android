@@ -56,6 +56,8 @@ import com.fifokit.app.domain.finance.FinanceFormatter
 import com.fifokit.app.analytics.AnalyticsEvents
 import com.fifokit.app.analytics.AnalyticsParams
 
+private enum class PayCalculatorMode { BASIC, ADVANCED }
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PayCalculatorScreen(
@@ -275,6 +277,7 @@ fun PayCalculatorScreen(
         }
     }
 
+    var payMode by remember { mutableStateOf(PayCalculatorMode.BASIC) }
     var showAdvancedPaySettings by remember { mutableStateOf(false) }
     var showAdvancedPayPreview by remember { mutableStateOf(false) }
     if (showAdvancedPaySettings) {
@@ -309,14 +312,35 @@ fun PayCalculatorScreen(
             verticalArrangement = Arrangement.Top
         ) {
 
-            OutlinedButton(onClick = { showAdvancedPaySettings = true }, modifier = Modifier.fillMaxWidth()) {
-                Text("Advanced pay settings")
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                if (payMode == PayCalculatorMode.BASIC) {
+                    Button(modifier = Modifier.weight(1f), onClick = {}) { Text("Basic") }
+                    TextButton(modifier = Modifier.weight(1f), onClick = {
+                        payMode = PayCalculatorMode.ADVANCED
+                    }) { Text("Advanced") }
+                } else {
+                    TextButton(modifier = Modifier.weight(1f), onClick = {
+                        payMode = PayCalculatorMode.BASIC
+                    }) { Text("Basic") }
+                    Button(modifier = Modifier.weight(1f), onClick = {}) { Text("Advanced") }
+                }
             }
-            Spacer(modifier = Modifier.height(8.dp))
-            OutlinedButton(onClick = { showAdvancedPayPreview = true }, modifier = Modifier.fillMaxWidth()) {
-                Text("Calculate advanced pay")
-            }
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(16.dp))
+            if (payMode == PayCalculatorMode.ADVANCED) {
+                Text("Advanced pay calculator", style = MaterialTheme.typography.titleMedium)
+                Text("Configure contract-specific rates and calculate against your roster.")
+                Spacer(modifier = Modifier.height(12.dp))
+                OutlinedButton(onClick = { showAdvancedPaySettings = true }, modifier = Modifier.fillMaxWidth()) {
+                    Text("Advanced pay settings")
+                }
+                Spacer(modifier = Modifier.height(8.dp))
+                Button(onClick = { showAdvancedPayPreview = true }, modifier = Modifier.fillMaxWidth()) {
+                    Text("Calculate advanced pay")
+                }
+            } else {
             Text(
                 text = "Work type",
                 style = MaterialTheme.typography.titleMedium,
@@ -1223,6 +1247,7 @@ fun PayCalculatorScreen(
                 }
             }
 
+            }
         }
     }
     }
