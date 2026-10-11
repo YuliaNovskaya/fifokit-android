@@ -56,10 +56,7 @@ object PayCalculationEngine {
                     (rule.category == null || rule.category == category) &&
                     (rule.weekday == null || rule.weekday == current.dayOfWeek) &&
                     (rule.shiftType == null || rule.shiftType == shift.shiftType) &&
-                    (rule.fromTime == null || !current.toLocalTime().isBefore(rule.fromTime)) &&
-                    (rule.untilTime == null || current.toLocalTime().isBefore(rule.untilTime) ||
-                        (rule.fromTime != null && rule.untilTime <= rule.fromTime &&
-                         !current.toLocalTime().isBefore(rule.fromTime)))
+                    matchesTimeWindow(current.toLocalTime(), rule.fromTime, rule.untilTime)
                 }.sortedWith(compareByDescending<RateRule> { it.priority }.thenBy { it.id })
                 val dayKey = java.time.temporal.WeekFields.ISO
                 val week = current.get(dayKey.weekBasedYear()) to current.get(dayKey.weekOfWeekBasedYear())
@@ -147,6 +144,18 @@ object PayCalculationEngine {
         val total = calculated.sumOf { it.totalGross } + fixed + salary + periodPip
         val totalHours = ordered.sumOf { ChronoUnit.MINUTES.between(it.start, it.end) / 60.0 }
         return PayBreakdown(calculated, fixed + salary + periodPip, totalHours, total, if (totalHours > 0) total / totalHours else 0.0)
+    }
+
+    private fun matchesTimeWindow(time: LocalTime, from: LocalTime?, until: LocalTime?): Boolean {
+        if (from == null && until == null) return true
+        if (from == null) return time.isBefore(until)
+        if (until == null) return !time.isBefore(from)
+        if (from == until) return true
+        return if (from.isBefore(until)) {
+            !time.isBefore(from) && time.isBefore(until)
+        } else {
+            !time.isBefore(from) || time.isBefore(until)
+        }
     }
 
     private fun applyRate(base: Double, value: Double, type: RateValueType, combination: RateCombination): Double {
