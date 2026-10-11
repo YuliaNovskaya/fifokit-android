@@ -68,6 +68,52 @@ class PayCalculationEngineTest {
         assertEquals(11000.0, result.totalGross, 0.001)
     }
 
+    @Test fun nightWindowContinuesPastMidnight() {
+        val result = PayCalculationEngine.calculate(
+            PayProfile(baseRate = 50.0, rateRules = listOf(
+                RateRule("night", fromTime = java.time.LocalTime.of(22, 0),
+                    untilTime = java.time.LocalTime.of(6, 0), value = 70.0)
+            )),
+            listOf(shift("2026-10-12T21:00:00", "2026-10-13T07:00:00"))
+        )
+        assertEquals(660.0, result.totalGross, 0.001)
+    }
+
+    @Test fun publicHolidayOverridesWeekendWhenConfigured() {
+        val result = PayCalculationEngine.calculate(
+            PayProfile(baseRate = 50.0, rateRules = listOf(
+                RateRule("sat", category = DayCategory.SATURDAY, value = 75.0),
+                RateRule("ph", category = DayCategory.PUBLIC_HOLIDAY, value = 125.0)
+            )),
+            listOf(shift("2026-10-10T08:00:00", "2026-10-10T16:00:00")),
+            publicHolidays = setOf(java.time.LocalDate.of(2026, 10, 10))
+        )
+        assertEquals(1000.0, result.totalGross, 0.001)
+    }
+
+    @Test fun casualLoadingAndPerShiftAllowance() {
+        val result = PayCalculationEngine.calculate(
+            PayProfile(baseRate = 40.0, employmentType = EmploymentType.CASUAL,
+                casualLoadingPercent = 25.0,
+                allowances = listOf(Allowance("travel", "Travel", 30.0, AllowanceFrequency.PER_SHIFT))),
+            listOf(shift("2026-10-12T08:00:00", "2026-10-12T16:00:00"))
+        )
+        assertEquals(430.0, result.totalGross, 0.001)
+    }
+
+    @Test fun weeklyOvertimeStartsAfterWeeklyThreshold() {
+        val result = PayCalculationEngine.calculate(
+            PayProfile(baseRate = 40.0, overtimeRules = listOf(
+                OvertimeRule("weekly", period = OvertimePeriod.WEEK, afterHours = 8.0, value = 1.5)
+            )),
+            listOf(
+                shift("2026-10-12T08:00:00", "2026-10-12T16:00:00"),
+                shift("2026-10-13T08:00:00", "2026-10-13T12:00:00")
+            )
+        )
+        assertEquals(560.0, result.totalGross, 0.001)
+    }
+
     @Test fun optionalWeekendsNeedNoWeekendRules() {
         val result = PayCalculationEngine.calculate(
             PayProfile(baseRate = 40.0),
