@@ -13,6 +13,7 @@ import androidx.compose.ui.unit.dp
 import com.fifokit.app.data.AdvancedPayProfileStore
 import com.fifokit.app.domain.finance.*
 import java.util.UUID
+import com.fifokit.app.ui.components.FifokitTopBar
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -24,11 +25,10 @@ fun AdvancedPaySettingsScreen(onBack: () -> Unit) {
     var saved by remember { mutableStateOf(false) }
     var baseText by remember { mutableStateOf(profile.baseRate.toString()) }
     var loadingText by remember { mutableStateOf(profile.casualLoadingPercent.toString()) }
+    var pipValueText by remember { mutableStateOf(if (profile.pipValue == 0.0) "" else profile.pipValue.toString()) }
     val rates = listOf(DayCategory.WEEKDAY, DayCategory.SATURDAY, DayCategory.SUNDAY, DayCategory.PUBLIC_HOLIDAY)
 
-    Scaffold(topBar = { TopAppBar(title = { Text("Advanced pay settings") }, navigationIcon = {
-        TextButton(onClick = onBack) { Text("Back") }
-    }) }) { padding ->
+    Scaffold(topBar = { FifokitTopBar(title = "Advanced pay settings", onBack = onBack) }) { padding ->
         Column(Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState()).padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Text("Employment", style = MaterialTheme.typography.titleMedium)
@@ -103,22 +103,30 @@ fun AdvancedPaySettingsScreen(onBack: () -> Unit) {
             }
             OutlinedButton(onClick = { profile = profile.copy(allowances = profile.allowances + Allowance(UUID.randomUUID().toString(), "Allowance", 0.0, AllowanceFrequency.PER_SHIFT)) }) { Text("Add allowance") }
             NumericField("Casual loading %", loadingText) { loadingText = it }
+            PipInputSection(
+                pipType = profile.pipType,
+                pipValue = pipValueText,
+                onPipTypeChange = { profile = profile.copy(pipType = it); saved = false },
+                onPipValueChange = { pipValueText = it; saved = false }
+            )
             Text("Rules are contract-specific. Advanced settings are saved locally; calculations are not yet connected to Basic mode.", style = MaterialTheme.typography.bodySmall)
             error?.let { Text(it, color = MaterialTheme.colorScheme.error) }
             if (saved) Text("Advanced pay settings saved")
             Button(onClick = {
                 val base = baseText.toDoubleOrNull()
                 val loading = loadingText.toDoubleOrNull()
+                val pip = if (profile.pipType == PipType.NONE) 0.0 else pipValueText.toDoubleOrNull()
                 error = when {
                     base == null || base < 0 -> "Enter a valid base rate"
                     loading == null || loading < 0 -> "Enter valid casual loading"
+                    pip == null || pip < 0 -> "Enter valid PIP value"
                     profile.overtimeRules.any { it.afterHours < 0 || it.value < 0 || (it.untilHours != null && it.untilHours <= it.afterHours) } -> "Check overtime thresholds"
                     profile.allowances.any { it.amount < 0 } -> "Check allowance amounts"
                     else -> null
                 }
                 if (error == null) {
                     runCatching {
-                        store.save(profile.copy(baseRate = base!!, casualLoadingPercent = loading!!))
+                        store.save(profile.copy(baseRate = base!!, casualLoadingPercent = loading!!, pipValue = pip!!))
                     }.onSuccess { saved = true }.onFailure { error = it.message ?: "Save failed" }
                 }
             }, modifier = Modifier.fillMaxWidth()) { Text("Save advanced settings") }
