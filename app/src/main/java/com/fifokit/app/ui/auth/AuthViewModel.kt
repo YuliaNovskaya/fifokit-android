@@ -30,6 +30,7 @@ import kotlinx.coroutines.flow.asSharedFlow
 import com.fifokit.app.data.FinancePreferences
 import com.fifokit.app.data.cloud.FinancialGoalCloudSyncManager
 import com.fifokit.app.data.cloud.PayInputCloudSyncManager
+import com.fifokit.app.data.cloud.AdvancedPayCloudSyncManager
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.collectLatest
@@ -73,6 +74,8 @@ class AuthViewModel(
             context = application,
             financePreferences = financePreferences
         )
+
+    private val advancedPayCloudSyncManager = AdvancedPayCloudSyncManager(application)
 
     private val cloudRepository = CloudRepository()
 
@@ -304,6 +307,9 @@ class AuthViewModel(
                     withTimeout(10_000L) {
                         payInputCloudSyncManager.sync(uid)
                     }
+
+                _errorMessage.value = "Syncing advanced pay..."
+                withTimeout(10_000L) { advancedPayCloudSyncManager.sync(uid) }
 
                 _errorMessage.value = null
 
