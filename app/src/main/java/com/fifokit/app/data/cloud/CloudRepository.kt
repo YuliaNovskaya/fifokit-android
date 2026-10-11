@@ -321,6 +321,19 @@ class CloudRepository(
             .toObject(CloudPayInput::class.java)
     }
 
+    suspend fun saveAdvancedPayProfile(uid: String, json: String, updatedAt: Long, deviceId: String) {
+        val doc = firestore.collection(FirestorePaths.USERS).document(uid)
+            .collection(FirestorePaths.FINANCE).document(FirestorePaths.ADVANCED_PAY_DOCUMENT)
+        doc.set(mapOf("json" to json, "updatedAt" to updatedAt,
+            "deviceId" to deviceId, "schemaVersion" to 1)).awaitResult()
+    }
+
+    suspend fun getAdvancedPayProfile(uid: String): Map<String, Any>? {
+        return firestore.collection(FirestorePaths.USERS).document(uid)
+            .collection(FirestorePaths.FINANCE).document(FirestorePaths.ADVANCED_PAY_DOCUMENT)
+            .get(Source.SERVER).awaitResult().data
+    }
+
     suspend fun deleteAllUserData(
         uid: String
     ) {
