@@ -26,6 +26,8 @@ class AdvancedPayProfileStore(context: Context) {
                 baseRate = j.optDouble("baseRate"),
                 shiftType = PayShiftType.valueOf(j.getString("shiftType")),
                 casualLoadingPercent = j.optDouble("casualLoading"),
+                pipType = runCatching { PipType.valueOf(j.optString("pipType", "NONE")) }.getOrDefault(PipType.NONE),
+                pipValue = j.optDouble("pipValue", 0.0),
                 rateRules = (0 until rates.length()).map { index ->
                     val r = rates.getJSONObject(index)
                     RateRule(
@@ -70,6 +72,8 @@ class AdvancedPayProfileStore(context: Context) {
             .put("baseRate", profile.baseRate)
             .put("shiftType", profile.shiftType.name)
             .put("casualLoading", profile.casualLoadingPercent)
+            .put("pipType", profile.pipType.name)
+            .put("pipValue", profile.pipValue)
         j.put("rates", JSONArray().apply {
             profile.rateRules.forEach { r ->
                 put(JSONObject().put("id", r.id).put("category", r.category?.name ?: "")
