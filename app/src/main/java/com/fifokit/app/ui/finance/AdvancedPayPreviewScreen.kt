@@ -83,7 +83,9 @@ fun AdvancedPayPreviewScreen(
                             segments = scheduleSegments, dayStart = day!!, nightStart = night!!,
                             hoursPerShift = hours!!, defaultShiftType = profile.shiftType
                         )
-                        val holidays = (month.atDay(1).minusDays(1)..month.atEndOfMonth().plusDays(1))
+                        val holidayStart = month.atDay(1).minusDays(1)
+                        val holidays = (0L..(month.lengthOfMonth() + 1).toLong())
+                            .map { holidayStart.plusDays(it) }
                             .filter { PublicHolidayProvider.isPublicHoliday(it, selectedStates) }.toSet()
                         PayCalculationEngine.calculate(profile, shifts, holidays,
                             annualSalaryPeriodFraction = month.lengthOfMonth().toDouble() / month.atDay(1).lengthOfYear())
