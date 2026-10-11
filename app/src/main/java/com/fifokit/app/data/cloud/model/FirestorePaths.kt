@@ -13,6 +13,7 @@ object FirestorePaths {
     const val FINANCE = "finance"
 
     const val PAY_INPUT_DOCUMENT = "payInput"
+    const val ADVANCED_PAY_DOCUMENT = "advancedPayProfile"
 
     const val ROSTER_SHARES = "rosterShares"
 
