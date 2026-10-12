@@ -16,7 +16,8 @@ enum class PipType {
 
 enum class GoalContributionTiming {
     FIXED_DAYS,
-    COMPLETED_SWING
+    COMPLETED_SWING,
+    WORKING_WEEK
 }
 
 data class PayInput(
