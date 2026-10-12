@@ -237,6 +237,36 @@ object FinanceCalculator {
             return calculateFinancialGoal(goal)
         }
 
+        if (goal.contributionTiming == GoalContributionTiming.WORKING_WEEK) {
+            val remainingAmount = (goal.targetAmount - goal.currentAmount).coerceAtLeast(0.0)
+            if (remainingAmount == 0.0 || goal.contributionPerPay <= 0.0)
+                return FinancialGoalResult(remainingAmount, 0, 0)
+            val count = ceil(remainingAmount / goal.contributionPerPay).toInt()
+            var checked = 0
+            var contributions = 0
+            var date = fromDate
+            while (checked < 36500 && contributions < count) {
+                // Contribute on the last working day of each ISO week.
+                val endOfWeek = date.plusDays((7 - date.dayOfWeek.value).toLong())
+                var cursor = date
+                var lastWorkDay: LocalDate? = null
+                while (!cursor.isAfter(endOfWeek)) {
+                    if (isWorkDay(cursor)) lastWorkDay = cursor
+                    cursor = cursor.plusDays(1)
+                }
+                if (lastWorkDay != null) {
+                    date = lastWorkDay
+                    contributions++
+                    if (contributions == count) break
+                }
+                date = endOfWeek.plusDays(1)
+                checked += 7
+            }
+            if (contributions < count) return null
+            return FinancialGoalResult(remainingAmount, count,
+                ChronoUnit.DAYS.between(fromDate, date).toInt().coerceAtLeast(0))
+        }
+
         val remaining =
             (
                 goal.targetAmount -
