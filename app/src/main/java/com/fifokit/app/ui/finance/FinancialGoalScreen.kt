@@ -230,7 +230,8 @@ fun FinancialGoalScreen(
                     null
                 }
 
-            GoalContributionTiming.COMPLETED_SWING ->
+            GoalContributionTiming.COMPLETED_SWING,
+            GoalContributionTiming.WORKING_WEEK ->
                 isRosterWorkDay?.let {
                         workDayCalculator ->
                     FinanceCalculator
@@ -808,9 +809,7 @@ fun FinancialGoalScreen(
                                             ) ->
                                         "Enter a valid pay frequency"
 
-                                    contributionTiming ==
-                                            GoalContributionTiming
-                                                .COMPLETED_SWING &&
+                                    contributionTiming != GoalContributionTiming.FIXED_DAYS &&
                                             isRosterWorkDay ==
                                                 null ->
                                         "Create a roster to use completed swings"
@@ -1053,6 +1052,9 @@ private fun FinancialGoalCard(
                                     GoalContributionTiming
                                         .COMPLETED_SWING ->
                                         " per completed swing"
+
+                                    GoalContributionTiming.WORKING_WEEK ->
+                                        " per working week"
                                 },
                     style =
                         MaterialTheme
@@ -1407,6 +1409,18 @@ private fun FinancialGoalEditFields(
         modifier =
             Modifier.height(10.dp)
     )
+
+    if (rosterAvailable) {
+        val selected = contributionTiming == GoalContributionTiming.WORKING_WEEK
+        if (selected) {
+            Button(onClick = { onContributionTimingChange(GoalContributionTiming.WORKING_WEEK) },
+                modifier = Modifier.fillMaxWidth()) { Text("During working weeks") }
+        } else {
+            OutlinedButton(onClick = { onContributionTimingChange(GoalContributionTiming.WORKING_WEEK) },
+                modifier = Modifier.fillMaxWidth()) { Text("During working weeks") }
+        }
+    }
+    Spacer(modifier = Modifier.height(10.dp))
 
     if (
         contributionTiming ==
