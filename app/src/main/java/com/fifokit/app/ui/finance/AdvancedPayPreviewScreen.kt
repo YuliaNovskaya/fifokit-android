@@ -24,6 +24,9 @@ import com.fifokit.app.ui.components.FifokitTopBar
 import com.fifokit.app.ui.theme.FifoDayShift
 import com.fifokit.app.ui.theme.FifoNightShift
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.lerp
+import androidx.compose.foundation.background
 import com.fifokit.app.domain.finance.FinanceFormatter
 import androidx.compose.ui.text.font.FontWeight
 import java.time.temporal.ChronoUnit
@@ -193,13 +196,35 @@ fun AdvancedPayPreviewScreen(
                     style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
                 val timestampFormat = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm")
                 r.shifts.forEach { shift ->
+                    val isHolidayShift = generateSequence(shift.shift.start.toLocalDate()) { it.plusDays(1) }
+                        .takeWhile { it.atStartOfDay().isBefore(shift.shift.end) }
+                        .any { PublicHolidayProvider.isPublicHoliday(it, selectedStates) }
+                    val surfaceColor = MaterialTheme.colorScheme.surface
+                    val shiftColor = lerp(
+                        surfaceColor,
+                        if (shift.shift.shiftType == PayShiftType.NIGHT) FifoNightShift else FifoDayShift,
+                        0.22f
+                    )
+                    val holidayColor = lerp(surfaceColor, MaterialTheme.colorScheme.tertiaryContainer, 0.65f)
                     ElevatedCard(
                         modifier = Modifier.fillMaxWidth(),
                         colors = CardDefaults.elevatedCardColors(
-                            containerColor = if (shift.shift.shiftType == PayShiftType.NIGHT) FifoNightShift else FifoDayShift,
-                            contentColor = if (shift.shift.shiftType == PayShiftType.NIGHT) Color.White else Color.Black
+                            containerColor = shiftColor,
+                            contentColor = MaterialTheme.colorScheme.onSurface
                         )
                     ) {
+                        Box(
+                            modifier = Modifier.fillMaxWidth().then(
+                                if (isHolidayShift) Modifier.background(
+                                    Brush.verticalGradient(
+                                        0.0f to holidayColor,
+                                        0.5f to holidayColor,
+                                        0.5f to shiftColor,
+                                        1.0f to shiftColor
+                                    )
+                                ) else Modifier
+                            )
+                        ) {
                         Column(modifier = Modifier.padding(12.dp),
                             verticalArrangement = Arrangement.spacedBy(6.dp)) {
                             Text("${shift.shift.start.format(timestampFormat)} — ${shift.shift.shiftType}",
@@ -220,6 +245,7 @@ fun AdvancedPayPreviewScreen(
                                 Text("${line.start.format(timestampFormat)} – ${line.end.format(timestampFormat)}")
                                 Text("${"%.2f".format(line.hours)} h × ${FinanceFormatter.money(line.hourlyRate)} = ${FinanceFormatter.money(line.gross)}")
                             }
+                        }
                         }
                     }
                 }
