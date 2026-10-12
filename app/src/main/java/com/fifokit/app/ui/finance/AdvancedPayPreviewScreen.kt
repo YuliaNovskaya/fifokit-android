@@ -21,6 +21,9 @@ import java.time.LocalTime
 import java.time.YearMonth
 import java.time.format.DateTimeFormatter
 import com.fifokit.app.ui.components.FifokitTopBar
+import com.fifokit.app.ui.theme.FifoDayShift
+import com.fifokit.app.ui.theme.FifoNightShift
+import androidx.compose.ui.graphics.Color
 import com.fifokit.app.domain.finance.FinanceFormatter
 import androidx.compose.ui.text.font.FontWeight
 import java.time.temporal.ChronoUnit
@@ -190,7 +193,13 @@ fun AdvancedPayPreviewScreen(
                     style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
                 val timestampFormat = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm")
                 r.shifts.forEach { shift ->
-                    ElevatedCard(modifier = Modifier.fillMaxWidth()) {
+                    ElevatedCard(
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = CardDefaults.elevatedCardColors(
+                            containerColor = if (shift.shift.shiftType == PayShiftType.NIGHT) FifoNightShift else FifoDayShift,
+                            contentColor = if (shift.shift.shiftType == PayShiftType.NIGHT) Color.White else Color.Black
+                        )
+                    ) {
                         Column(modifier = Modifier.padding(12.dp),
                             verticalArrangement = Arrangement.spacedBy(6.dp)) {
                             Text("${shift.shift.start.format(timestampFormat)} — ${shift.shift.shiftType}",
