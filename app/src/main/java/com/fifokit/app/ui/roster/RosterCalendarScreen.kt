@@ -21,6 +21,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.fifokit.app.ui.theme.FifoDayShift
+import com.fifokit.app.ui.theme.FifoNightShift
 import androidx.compose.ui.graphics.Color
 import java.time.LocalDate
 import java.time.YearMonth
@@ -967,8 +969,8 @@ private fun CalendarDay(
             !isRosterActive ->
                 MaterialTheme.colorScheme.surface
 
-            isWorkDay && rosterStatusLabel == "DAY" -> Color(0xFFFFB74D)
-            isWorkDay && rosterStatusLabel == "NIGHT" -> Color(0xFF3949AB)
+            isWorkDay && rosterStatusLabel == "DAY" -> FifoDayShift
+            isWorkDay && rosterStatusLabel == "NIGHT" -> FifoNightShift
             isWorkDay ->
                 MaterialTheme.colorScheme.primaryContainer
 
@@ -982,6 +984,11 @@ private fun CalendarDay(
             .clickable(onClick = onClick),
         shape = MaterialTheme.shapes.small,
         color = workOffColor,
+        contentColor = when {
+            isWorkDay && rosterStatusLabel == "DAY" -> Color.Black
+            isWorkDay && rosterStatusLabel == "NIGHT" -> Color.White
+            else -> MaterialTheme.colorScheme.onSurface
+        },
         border = when {
             isToday -> BorderStroke(
                 width = 3.dp,
@@ -1468,6 +1475,8 @@ private fun MiniCalendarDay(
             !isRosterActive ->
                 MaterialTheme.colorScheme.surface
 
+            isWorkDay && shiftType == "DAY" -> FifoDayShift
+            isWorkDay && shiftType == "NIGHT" -> FifoNightShift
             isWorkDay ->
                 MaterialTheme.colorScheme.primaryContainer
 
@@ -1481,6 +1490,11 @@ private fun MiniCalendarDay(
             .padding(1.dp),
         shape = MaterialTheme.shapes.small,
         color = workOffColor,
+        contentColor = when {
+            isWorkDay && shiftType == "DAY" -> Color.Black
+            isWorkDay && shiftType == "NIGHT" -> Color.White
+            else -> MaterialTheme.colorScheme.onSurface
+        },
         border = when {
             isToday -> BorderStroke(
                 2.dp,
