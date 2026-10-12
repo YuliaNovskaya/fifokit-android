@@ -1,6 +1,7 @@
 package com.fifokit.app.data.cloud
 
 import android.content.Context
+import android.util.Log
 import com.fifokit.app.data.FinancePreferences
 import com.fifokit.app.data.cloud.model.CloudFinancialGoal
 import com.fifokit.app.domain.finance.FinancialGoal
@@ -50,6 +51,8 @@ class FinancialGoalCloudSyncManager(
         val allIds =
             localById.keys + cloudById.keys
 
+        Log.d("GoalSync", "goals local=${localById.size} cloud=${cloudById.size}")
+
         var uploaded = false
         var downloaded = false
 
@@ -60,6 +63,8 @@ class FinancialGoalCloudSyncManager(
 
             val cloud =
                 cloudById[goalId]
+
+            Log.d("GoalSync", "id=$goalId localDeleted=${local?.isDeleted} cloudDeleted=${cloud?.isDeleted} localAt=${local?.updatedAt} cloudAt=${cloud?.updatedAt}")
 
             when {
                 local != null &&
@@ -158,6 +163,8 @@ class FinancialGoalCloudSyncManager(
             }
         }
 
+        val after = financePreferences.financialGoalsForSync.first()
+        Log.d("GoalSync", "AFTER local=" + after.joinToString { "${it.id}:deleted=${it.isDeleted}:at=${it.updatedAt}" })
         return FinancialGoalSyncResult(
             uploaded = uploaded,
             downloaded = downloaded
