@@ -104,25 +104,16 @@ class FinancialGoalCloudSyncManager(
                 local != null &&
                         cloud != null -> {
 
-                    // A deletion is terminal for this goal ID. A stale active
-                    // copy on another device must never resurrect it.
-                    if (local.isDeleted != cloud.isDeleted) {
+                    // A newer intentional save may recreate the primary goal.
+                    // For equal timestamps, deletion wins over an active copy.
+                    if (local.isDeleted != cloud.isDeleted &&
+                        local.updatedAt == cloud.updatedAt) {
                         if (local.isDeleted) {
-                            val tombstone = local.copy(
-                                updatedAt = maxOf(local.updatedAt, cloud.updatedAt) + 1L,
-                                deletedAt = maxOf(local.deletedAt, cloud.updatedAt) + 1L
-                            )
-                            financePreferences.applyCloudFinancialGoal(tombstone, tombstone.updatedAt)
-                            cloudRepository.saveFinancialGoal(uid, tombstone.toCloud(deviceId))
+                            cloudRepository.saveFinancialGoal(uid, local.toCloud(deviceId))
                             uploaded = true
                         } else {
-                            val tombstone = cloud.copy(
-                                updatedAt = maxOf(cloud.updatedAt, local.updatedAt) + 1L,
-                                deletedAt = maxOf(cloud.deletedAt, local.updatedAt) + 1L
-                            )
-                            cloudRepository.saveFinancialGoal(uid, tombstone)
                             financePreferences.applyCloudFinancialGoal(
-                                tombstone.toLocal(), tombstone.updatedAt
+                                cloud.toLocal(), cloud.updatedAt
                             )
                             downloaded = true
                         }
