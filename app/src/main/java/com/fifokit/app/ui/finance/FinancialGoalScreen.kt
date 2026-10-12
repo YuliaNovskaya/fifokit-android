@@ -120,10 +120,7 @@ fun FinancialGoalScreen(
         financePreferences
             .financialGoals
             .collectAsState(
-                initial =
-                    listOf(
-                        FinancialGoal()
-                    )
+                initial = emptyList()
             )
 
     val scope =
