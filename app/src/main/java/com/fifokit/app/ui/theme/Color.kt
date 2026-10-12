@@ -10,3 +10,6 @@ val FifoOrange = Color(0xFFF5A623)
 
 val FifoWhite = Color(0xFFFFFFFF)
 val FifoTextSecondary = Color(0xFFB3B3B3)
+// Shift backgrounds; black on DAY = 7.07:1, white on NIGHT = 7.73:1.
+val FifoDayShift = Color(0xFF23AD23)
+val FifoNightShift = Color(0xFF3949AB)
