@@ -667,7 +667,7 @@ class FinancePreferences(
                     }
                 }.getOrNull()
 
-            if (!decoded.isNullOrEmpty()) {
+            if (decoded != null) {
                 return decoded
             }
         }
@@ -676,6 +676,8 @@ class FinancePreferences(
             preferences[
                 Keys.FINANCIAL_GOAL_UPDATED_AT
             ] ?: 0L
+
+        if (updatedAt == 0L) return emptyList()
 
         return listOf(
             FinancialGoal(
