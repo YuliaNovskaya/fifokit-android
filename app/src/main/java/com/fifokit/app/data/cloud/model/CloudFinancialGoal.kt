@@ -11,7 +11,6 @@ data class CloudFinancialGoal(
     val contributionTiming: String = "FIXED_DAYS",
 
     val isDeleted: Boolean = false,
-    val deleted: Boolean = false,
     val deletedAt: Long = 0L,
     val createdAt: Long = 0L,
     val updatedAt: Long = 0L,
