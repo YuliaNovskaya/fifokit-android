@@ -35,6 +35,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.collectLatest
 import android.content.Context
+import android.util.Log
 import android.net.ConnectivityManager
 import android.net.Network
 import com.fifokit.app.data.cloud.RosterSharingCleanupRepository
@@ -226,6 +227,7 @@ class AuthViewModel(
                         )
                     )
                 } catch (e: Exception) {
+            Log.e("CloudSyncTrace", "Cloud sync failed during: ${_errorMessage.value}", e)
                     analytics.logEvent("cloud_user_save_failed") {
                         param("error_type", e.javaClass.simpleName)
                     }
@@ -294,6 +296,7 @@ class AuthViewModel(
                         settingsCloudSyncManager.sync(uid)
                     }
 
+                Log.d("CloudSyncTrace", "Settings sync complete; starting Financial Goals")
                 _errorMessage.value = "Syncing financial goal..."
 
                 val financialGoalResult =
@@ -301,6 +304,7 @@ class AuthViewModel(
                         financialGoalCloudSyncManager.sync(uid)
                     }
 
+                Log.d("CloudSyncTrace", "Financial Goals sync complete")
                 _errorMessage.value = "Syncing pay inputs..."
 
                 val payInputResult =
@@ -367,6 +371,7 @@ class AuthViewModel(
 
 
         } catch (e: TimeoutCancellationException) {
+            Log.e("CloudSyncTrace", "Cloud sync timed out during: ${_errorMessage.value}", e)
 
             analytics.logEvent(
                 "cloud_sync_timeout"
