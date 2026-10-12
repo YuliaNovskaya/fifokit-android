@@ -230,10 +230,7 @@ object FinanceCalculator {
         isWorkDay: (LocalDate) -> Boolean
     ): FinancialGoalResult? {
 
-        if (
-            goal.contributionTiming !=
-            GoalContributionTiming.COMPLETED_SWING
-        ) {
+        if (goal.contributionTiming == GoalContributionTiming.FIXED_DAYS) {
             return calculateFinancialGoal(goal)
         }
 
