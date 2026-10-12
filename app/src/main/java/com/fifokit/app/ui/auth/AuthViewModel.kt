@@ -383,6 +383,7 @@ class AuthViewModel(
             }
 
         } catch (e: Exception) {
+            Log.e("CloudSyncTrace", "Sync exception during: ${_errorMessage.value}", e)
 
             analytics.logEvent(
                 "cloud_sync_failed"
@@ -395,7 +396,7 @@ class AuthViewModel(
 
             if (reportError) {
                 _errorMessage.value =
-                    "Cloud sync failed"
+                    "Cloud sync failed: ${e.javaClass.simpleName}: ${e.message.orEmpty().take(160)}"
             }
 
         } finally {
