@@ -187,7 +187,6 @@ class FinancialGoalCloudSyncManager(
             contributionTiming =
                 contributionTiming.name,
             isDeleted = isDeleted,
-            deleted = isDeleted,
             deletedAt = deletedAt,
             createdAt = createdAt,
             updatedAt = updatedAt,
