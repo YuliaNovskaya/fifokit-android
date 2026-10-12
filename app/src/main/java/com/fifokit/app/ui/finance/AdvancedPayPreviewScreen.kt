@@ -50,25 +50,7 @@ fun AdvancedPayPreviewScreen(
     var monthlyPublicHolidaysWorked by remember { mutableIntStateOf(0) }
     var rosterBasedSalary by remember { mutableStateOf(false) }
 
-    Scaffold(topBar = { FifokitTopBar(title = "Advanced pay estimate", onBack = onBack) }) { inner ->
-        Column(Modifier.fillMaxSize().padding(inner).verticalScroll(rememberScrollState()).padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            Text("Uses the active roster and saved Advanced pay settings.")
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                TextButton(onClick = { month = month.minusMonths(1); result = null; annualResult = null }) { Text("Previous") }
-                Text(month.toString())
-                TextButton(onClick = { month = month.plusMonths(1); result = null; annualResult = null }) { Text("Next") }
-            }
-            OutlinedTextField(value = dayStart, onValueChange = { dayStart = it; result = null },
-                label = { Text("Day shift start (HH:mm)") }, modifier = Modifier.fillMaxWidth())
-            OutlinedTextField(value = nightStart, onValueChange = { nightStart = it; result = null },
-                label = { Text("Night shift start (HH:mm)") }, modifier = Modifier.fillMaxWidth())
-            OutlinedTextField(value = shiftHours, onValueChange = { shiftHours = it; result = null },
-                label = { Text("Hours per shift") },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                modifier = Modifier.fillMaxWidth())
-            Text("These shift times are inputs for this estimate, not saved roster times. WORK segments use the selected shift type; ROTATING/CUSTOM without DAY/NIGHT segments currently default to DAY.")
-            Button(modifier = Modifier.fillMaxWidth(), onClick = {
+    val calculateEstimate: () -> Unit = {
                 result = null
                 annualResult = null
                 val hours = shiftHours.toDoubleOrNull()
@@ -123,8 +105,51 @@ fun AdvancedPayPreviewScreen(
                             annualSalaryPeriodFraction = salaryFraction)
                     }.onSuccess { result = it }.onFailure { error = it.message ?: "Unable to calculate" }
                 }
-            }) { Text("Calculate advanced estimate") }
+    }
+
+    Scaffold(topBar = { FifokitTopBar(title = "Advanced pay estimate", onBack = onBack) }) { inner ->
+        Column(Modifier.fillMaxSize().padding(inner).verticalScroll(rememberScrollState()).padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Text("Uses the active roster and saved Advanced pay settings.")
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                TextButton(onClick = { month = month.minusMonths(1); if (result != null) calculateEstimate() }) { Text("Previous") }
+                Text(month.toString())
+                TextButton(onClick = { month = month.plusMonths(1); if (result != null) calculateEstimate() }) { Text("Next") }
+            }
+            OutlinedTextField(value = dayStart, onValueChange = { dayStart = it; result = null },
+                label = { Text("Day shift start (HH:mm)") }, modifier = Modifier.fillMaxWidth())
+            OutlinedTextField(value = nightStart, onValueChange = { nightStart = it; result = null },
+                label = { Text("Night shift start (HH:mm)") }, modifier = Modifier.fillMaxWidth())
+            OutlinedTextField(value = shiftHours, onValueChange = { shiftHours = it; result = null },
+                label = { Text("Hours per shift") },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                modifier = Modifier.fillMaxWidth())
+            Text("These shift times are inputs for this estimate, not saved roster times. WORK segments use the selected shift type; ROTATING/CUSTOM without DAY/NIGHT segments currently default to DAY.")
+            Button(modifier = Modifier.fillMaxWidth(), onClick = calculateEstimate) { Text("Calculate advanced estimate") }
             error?.let { Text(it, color = MaterialTheme.colorScheme.error) }
+            if (result != null && profile.basis == AdvancedPayBasis.ANNUAL_SALARY) {
+                Text("Salary calculation method", style = MaterialTheme.typography.titleMedium)
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    if (!rosterBasedSalary) {
+                        Button(onClick = {}, modifier = Modifier.weight(1f)) { Text("Calendar-based") }
+                        TextButton(onClick = {
+                            rosterBasedSalary = true
+                            calculateEstimate()
+                        }, modifier = Modifier.weight(1f)) { Text("Roster-based") }
+                    } else {
+                        TextButton(onClick = {
+                            rosterBasedSalary = false
+                            calculateEstimate()
+                        }, modifier = Modifier.weight(1f)) { Text("Calendar-based") }
+                        Button(onClick = {}, modifier = Modifier.weight(1f)) { Text("Roster-based") }
+                    }
+                }
+                Text(
+                    if (rosterBasedSalary) "Monthly salary allocated by rostered workdays; actual pay may differ."
+                    else "Monthly salary prorated by calendar days.",
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
             annualResult?.let { annual ->
                 val rosterLabel = when {
                     isShutdownRoster -> "Shutdown sequence"
@@ -147,19 +172,6 @@ fun AdvancedPayPreviewScreen(
             result?.let { r ->
                 Text("Monthly results — ${month.month.name.lowercase().replaceFirstChar { it.uppercase() }} ${month.year}",
                     style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-                if (profile.basis == AdvancedPayBasis.ANNUAL_SALARY) {
-                    Text("Monthly salary calculation", style = MaterialTheme.typography.titleMedium)
-                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        if (!rosterBasedSalary) {
-                            Button(onClick = {}, modifier = Modifier.weight(1f)) { Text("Calendar-based") }
-                            TextButton(onClick = { rosterBasedSalary = true; result = null; annualResult = null }, modifier = Modifier.weight(1f)) { Text("Roster-based") }
-                        } else {
-                            TextButton(onClick = { rosterBasedSalary = false; result = null; annualResult = null }, modifier = Modifier.weight(1f)) { Text("Calendar-based") }
-                            Button(onClick = {}, modifier = Modifier.weight(1f)) { Text("Roster-based") }
-                        }
-                    }
-                    Text(if (rosterBasedSalary) "Allocated salary based on rostered work days. This may differ from actual monthly pay." else "Salary prorated by calendar days in the selected month.", style = MaterialTheme.typography.bodySmall)
-                }
                 Text("Monthly gross: ${FinanceFormatter.money(r.totalGross)}",
                     style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                 Text("Work days this month: ${r.shifts.size}")
