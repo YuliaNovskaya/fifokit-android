@@ -17,6 +17,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
@@ -986,6 +987,20 @@ private fun FinancialGoalCard(
                     FontWeight.Bold
             )
 
+            Text(
+                text = FinanceFormatter.money(goal.currentAmount) + " / " +
+                    FinanceFormatter.money(goal.targetAmount),
+                style = MaterialTheme.typography.bodyMedium
+            )
+            calculation?.let { summary ->
+                Text(
+                    text = "Estimated completion: " +
+                        LocalDate.now().plusDays(summary.daysRequired.toLong())
+                            .format(DateTimeFormatter.ofPattern("d MMM yyyy")),
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
+            Spacer(modifier = Modifier.height(6.dp))
             val progress = if (goal.targetAmount > 0.0)
                 (goal.currentAmount / goal.targetAmount).toFloat().coerceIn(0f, 1f)
                 else 0f
@@ -1277,7 +1292,7 @@ private fun FinancialGoalEditFields(
         label = {
             Text(
                 text =
-                    "Contribution per pay",
+                    "Contribution per payment",
                 style =
                     MaterialTheme
                         .typography
