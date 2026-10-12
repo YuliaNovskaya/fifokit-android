@@ -541,22 +541,7 @@ fun TogetherRosterCalendarScreen(
                         val isPublicHoliday =
                             if (showMyRosterOnly) myPublicHoliday else myPublicHoliday || partnerPublicHoliday
 
-                        val publicHolidayLabel =
-                            when {
-                                showMyRosterOnly -> if (myPublicHoliday) "PH" else ""
-                                myPublicHoliday &&
-                                        partnerPublicHoliday ->
-                                    "PH BOTH"
-
-                                myPublicHoliday ->
-                                    "PH ME"
-
-                                partnerPublicHoliday ->
-                                    "PH THEM"
-
-                                else ->
-                                    ""
-                            }
+                        val publicHolidayLabel = if (isPublicHoliday) "PH" else ""
 
                         val cellBackground =
                             when {
@@ -744,7 +729,7 @@ fun TogetherRosterCalendarScreen(
                     )
 
                     TogetherLegendChip(
-                        text = "PH ME/THEM",
+                        text = "PH",
                         background =
                             MaterialTheme.colorScheme
                                 .secondaryContainer,
