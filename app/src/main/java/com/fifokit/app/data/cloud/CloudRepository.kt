@@ -238,7 +238,12 @@ class CloudRepository(
             .collection(FirestorePaths.FINANCIAL_GOALS)
             .get()
             .awaitResult()
-            .toObjects(CloudFinancialGoal::class.java)
+            .documents.mapNotNull { document ->
+                document.toObject(CloudFinancialGoal::class.java)?.copy(
+                    isDeleted = document.getBoolean("isDeleted") == true ||
+                        document.getBoolean("deleted") == true
+                )
+            }
     }
 
     suspend fun deleteFinancialGoal(
