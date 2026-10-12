@@ -116,6 +116,7 @@ fun TogetherRosterCalendarScreen(
     var month by remember {
         mutableStateOf(YearMonth.now())
     }
+    var showMyRosterOnly by remember { mutableStateOf(false) }
 
     val decodedPartnerSegments =
         RosterScheduleCodec.decode(
@@ -256,14 +257,14 @@ fun TogetherRosterCalendarScreen(
 
                 OutlinedButton(
                     modifier = Modifier.weight(1f),
-                    onClick = onSharedRoster
+                    onClick = { showMyRosterOnly = true }
                 ) {
-                    Text("Shared roster")
+                    Text("My roster")
                 }
 
                 androidx.compose.material3.Button(
                     modifier = Modifier.weight(1f),
-                    onClick = {}
+                    onClick = { showMyRosterOnly = false }
                 ) {
                     Text("Together")
                 }
@@ -272,7 +273,7 @@ fun TogetherRosterCalendarScreen(
             Spacer(
                 modifier = Modifier.height(12.dp)
             )
-            Surface(
+            if (!showMyRosterOnly) Surface(
                 modifier = Modifier.fillMaxWidth(),
                 shape = MaterialTheme.shapes.medium,
                 color = MaterialTheme.colorScheme.surfaceVariant
@@ -347,7 +348,7 @@ fun TogetherRosterCalendarScreen(
                 modifier = Modifier.height(12.dp)
             )
 
-            nextSharedOff?.let { period ->
+            if (!showMyRosterOnly) nextSharedOff?.let { period ->
 
                 Surface(
                     modifier = Modifier
@@ -538,11 +539,11 @@ fun TogetherRosterCalendarScreen(
                             )
 
                         val isPublicHoliday =
-                            myPublicHoliday ||
-                                    partnerPublicHoliday
+                            if (showMyRosterOnly) myPublicHoliday else myPublicHoliday || partnerPublicHoliday
 
                         val publicHolidayLabel =
                             when {
+                                showMyRosterOnly -> if (myPublicHoliday) "PH" else ""
                                 myPublicHoliday &&
                                         partnerPublicHoliday ->
                                     "PH BOTH"
@@ -559,6 +560,8 @@ fun TogetherRosterCalendarScreen(
 
                         val cellBackground =
                             when {
+                                showMyRosterOnly && myWork -> MaterialTheme.colorScheme.primaryContainer
+                                showMyRosterOnly -> MaterialTheme.colorScheme.surfaceContainerHigh
                                 sharedOff ->
                                     MaterialTheme.colorScheme
                                         .tertiaryContainer
@@ -578,6 +581,8 @@ fun TogetherRosterCalendarScreen(
 
                         val cellContentColor =
                             when {
+                                showMyRosterOnly && myWork -> MaterialTheme.colorScheme.onPrimaryContainer
+                                showMyRosterOnly -> MaterialTheme.colorScheme.onSurface
                                 sharedOff ->
                                     MaterialTheme.colorScheme
                                         .onTertiaryContainer
@@ -647,6 +652,7 @@ fun TogetherRosterCalendarScreen(
                                         Text(
                                             text =
                                                 when {
+                                                    showMyRosterOnly -> if (myWork) "WORK" else "OFF"
                                                     sharedOff ->
                                                         "BOTH\nOFF"
 
@@ -680,7 +686,7 @@ fun TogetherRosterCalendarScreen(
                 modifier = Modifier.height(12.dp)
             )
 
-            Column(
+            if (!showMyRosterOnly) Column(
                 modifier = Modifier.fillMaxWidth(),
                 verticalArrangement =
                     Arrangement.spacedBy(6.dp)
