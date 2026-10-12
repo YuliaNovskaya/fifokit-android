@@ -48,6 +48,7 @@ fun AdvancedPayPreviewScreen(
     var annualResult by remember { mutableStateOf<PayBreakdown?>(null) }
     var annualPublicHolidaysWorked by remember { mutableIntStateOf(0) }
     var monthlyPublicHolidaysWorked by remember { mutableIntStateOf(0) }
+    var rosterBasedSalary by remember { mutableStateOf(false) }
 
     Scaffold(topBar = { FifokitTopBar(title = "Advanced pay estimate", onBack = onBack) }) { inner ->
         Column(Modifier.fillMaxSize().padding(inner).verticalScroll(rememberScrollState()).padding(16.dp),
@@ -113,8 +114,13 @@ fun AdvancedPayPreviewScreen(
                             profile, annualShifts, annualHolidays,
                             annualSalaryPeriodFraction = 1.0
                         )
+                        val salaryFraction = if (profile.basis == AdvancedPayBasis.ANNUAL_SALARY && rosterBasedSalary) {
+                            if (annualShifts.isEmpty()) 0.0 else shifts.size.toDouble() / annualShifts.size
+                        } else {
+                            month.lengthOfMonth().toDouble() / month.atDay(1).lengthOfYear()
+                        }
                         PayCalculationEngine.calculate(profile, shifts, holidays,
-                            annualSalaryPeriodFraction = month.lengthOfMonth().toDouble() / month.atDay(1).lengthOfYear())
+                            annualSalaryPeriodFraction = salaryFraction)
                     }.onSuccess { result = it }.onFailure { error = it.message ?: "Unable to calculate" }
                 }
             }) { Text("Calculate advanced estimate") }
@@ -141,11 +147,27 @@ fun AdvancedPayPreviewScreen(
             result?.let { r ->
                 Text("Monthly results — ${month.month.name.lowercase().replaceFirstChar { it.uppercase() }} ${month.year}",
                     style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                if (profile.basis == AdvancedPayBasis.ANNUAL_SALARY) {
+                    Text("Monthly salary calculation", style = MaterialTheme.typography.titleMedium)
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        if (!rosterBasedSalary) {
+                            Button(onClick = {}, modifier = Modifier.weight(1f)) { Text("Calendar-based") }
+                            TextButton(onClick = { rosterBasedSalary = true; result = null; annualResult = null }, modifier = Modifier.weight(1f)) { Text("Roster-based") }
+                        } else {
+                            TextButton(onClick = { rosterBasedSalary = false; result = null; annualResult = null }, modifier = Modifier.weight(1f)) { Text("Calendar-based") }
+                            Button(onClick = {}, modifier = Modifier.weight(1f)) { Text("Roster-based") }
+                        }
+                    }
+                    Text(if (rosterBasedSalary) "Allocated salary based on rostered work days. This may differ from actual monthly pay." else "Salary prorated by calendar days in the selected month.", style = MaterialTheme.typography.bodySmall)
+                }
                 Text("Monthly gross: ${FinanceFormatter.money(r.totalGross)}",
                     style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                 Text("Work days this month: ${r.shifts.size}")
                 Text("Work hours this month: ${"%.1f".format(r.totalHours)}")
-                val salaryFraction = month.lengthOfMonth().toDouble() / month.atDay(1).lengthOfYear()
+                val salaryFraction = if (profile.basis == AdvancedPayBasis.ANNUAL_SALARY && rosterBasedSalary) {
+                    val annualDays = annualResult?.shifts?.size ?: 0
+                    if (annualDays == 0) 0.0 else r.shifts.size.toDouble() / annualDays
+                } else month.lengthOfMonth().toDouble() / month.atDay(1).lengthOfYear()
                 Text("Base: ${FinanceFormatter.money(advancedBaseGross(r, profile, salaryFraction))}")
                 Text("PIP: ${FinanceFormatter.money(advancedPipGross(r, profile, salaryFraction))}")
                 Text("Allowances: ${FinanceFormatter.money(advancedAllowanceGross(r, profile, salaryFraction))}")
