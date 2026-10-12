@@ -954,6 +954,7 @@ private fun FinancialGoalCard(
     onEdit: () -> Unit,
     onDelete: () -> Unit
 ) {
+    var expanded by remember(goal.id) { mutableStateOf(false) }
     Surface(
         modifier =
             Modifier.fillMaxWidth(),
@@ -985,6 +986,18 @@ private fun FinancialGoalCard(
                     FontWeight.Bold
             )
 
+            val progress = if (goal.targetAmount > 0.0)
+                (goal.currentAmount / goal.targetAmount).toFloat().coerceIn(0f, 1f)
+                else 0f
+            LinearProgressIndicator(
+                progress = { progress },
+                modifier = Modifier.fillMaxWidth()
+            )
+            TextButton(
+                onClick = { expanded = !expanded },
+                modifier = Modifier.fillMaxWidth()
+            ) { Text(if (expanded) "Show less" else "Details and actions") }
+            if (expanded) {
             if (goal.targetAmount > 0.0) {
                 Spacer(
                     modifier =
@@ -1111,15 +1124,12 @@ private fun FinancialGoalCard(
             }
 
             Spacer(
-                modifier =
-                    Modifier.height(8.dp)
+                modifier = Modifier.height(8.dp)
             )
 
             Row(
-                modifier =
-                    Modifier.fillMaxWidth(),
-                horizontalArrangement =
-                    Arrangement.spacedBy(8.dp)
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 OutlinedButton(
                     modifier =
@@ -1136,6 +1146,7 @@ private fun FinancialGoalCard(
                 ) {
                     Text("Delete")
                 }
+            }
             }
         }
     }
