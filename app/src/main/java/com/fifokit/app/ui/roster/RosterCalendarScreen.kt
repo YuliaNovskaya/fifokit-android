@@ -809,7 +809,7 @@ fun RosterCalendarScreen(
                         modifier = Modifier.height(4.dp)
                     )
 
-                    CalendarLegend(shiftTypes = viewModel.scheduleSegments.map { it.type.name }.toSet().takeIf { viewModel.isCustomRoster } ?: emptySet())
+                    CalendarLegend(shiftTypes = viewModel.scheduleSegments.map { it.type.name }.toSet().takeIf { viewModel.isCustomRoster || viewModel.isShutdownRoster } ?: emptySet())
                 }
 
             } else {
@@ -851,7 +851,7 @@ fun RosterCalendarScreen(
                         modifier = Modifier.height(8.dp)
                     )
 
-                    CalendarLegend(shiftTypes = viewModel.scheduleSegments.map { it.type.name }.toSet().takeIf { viewModel.isCustomRoster } ?: emptySet())
+                    CalendarLegend(shiftTypes = viewModel.scheduleSegments.map { it.type.name }.toSet().takeIf { viewModel.isCustomRoster || viewModel.isShutdownRoster } ?: emptySet())
                 }
             }
 
