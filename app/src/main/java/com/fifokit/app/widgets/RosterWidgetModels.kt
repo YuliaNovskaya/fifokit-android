@@ -136,6 +136,11 @@ class RosterWidgetDataSource(
                 rosterPattern.offDays
         }
 
+        val decodedSegments =
+            RosterScheduleCodec.decode(
+                scheduleSegmentsJson
+            )
+
         if (
             (resolvedWorkDays <= 0 || resolvedOffDays <= 0) &&
             !(isShutdownRoster && decodedSegments.isNotEmpty())
@@ -158,11 +163,6 @@ class RosterWidgetDataSource(
                         AustralianState.WA
                     )
                 }
-
-        val decodedSegments =
-            RosterScheduleCodec.decode(
-                scheduleSegmentsJson
-            )
 
         val resolvedSegments =
             if (
