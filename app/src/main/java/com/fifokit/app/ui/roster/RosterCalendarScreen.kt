@@ -809,7 +809,7 @@ fun RosterCalendarScreen(
                         modifier = Modifier.height(4.dp)
                     )
 
-                    CalendarLegend()
+                    CalendarLegend(shiftTypes = viewModel.scheduleSegments.map { it.type.name }.toSet().takeIf { viewModel.isCustomRoster } ?: emptySet())
                 }
 
             } else {
@@ -851,7 +851,7 @@ fun RosterCalendarScreen(
                         modifier = Modifier.height(8.dp)
                     )
 
-                    CalendarLegend()
+                    CalendarLegend(shiftTypes = viewModel.scheduleSegments.map { it.type.name }.toSet().takeIf { viewModel.isCustomRoster } ?: emptySet())
                 }
             }
 
@@ -1106,63 +1106,27 @@ private fun CalendarDay(
 }
 
 @Composable
-private fun CalendarLegend() {
-    Column(
-        modifier = Modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(4.dp)
-    ) {
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Surface(
-                shape = MaterialTheme.shapes.small,
-                color = MaterialTheme.colorScheme.primaryContainer
-            ) {
-                Text(
-                    text = "WORK",
-                    modifier = Modifier.padding(
-                        horizontal = 10.dp,
-                        vertical = 3.dp
-                    ),
-                    style = MaterialTheme.typography.labelMedium
-                )
+private fun CalendarLegend(shiftTypes: Set<String>) {
+    val labels = buildList {
+        if ("DAY" in shiftTypes) add(Triple("DAY", FifoDayShift, Color.Black))
+        if ("NIGHT" in shiftTypes) add(Triple("NIGHT", FifoNightShift, Color.White))
+        if ("WORK" in shiftTypes || none { it.first == "DAY" || it.first == "NIGHT" })
+            add(Triple("WORK", MaterialTheme.colorScheme.primaryContainer, MaterialTheme.colorScheme.onPrimaryContainer))
+        add(Triple("OFF", MaterialTheme.colorScheme.surfaceContainerHigh, MaterialTheme.colorScheme.onSurface))
+        add(Triple("PH", MaterialTheme.colorScheme.tertiaryContainer, MaterialTheme.colorScheme.onTertiaryContainer))
+    }
+    Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
+            labels.forEach { (label, background, foreground) ->
+                Surface(shape = MaterialTheme.shapes.small, color = background, contentColor = foreground) {
+                    Text(label, modifier = Modifier.padding(horizontal = 7.dp, vertical = 3.dp),
+                        style = MaterialTheme.typography.labelSmall)
+                }
             }
-
-            Surface(
-                shape = MaterialTheme.shapes.small,
-                color = MaterialTheme.colorScheme.surfaceContainerHigh
-            ) {
-                Text(
-                    text = "OFF",
-                    modifier = Modifier.padding(
-                        horizontal = 10.dp,
-                        vertical = 3.dp
-                    ),
-                    style = MaterialTheme.typography.labelMedium
-                )
-            }
-            Surface(
-                shape = MaterialTheme.shapes.small,
-                color = MaterialTheme.colorScheme.tertiaryContainer
-            ) {
-                Text(
-                    text = "PH",
-                    modifier = Modifier.padding(
-                        horizontal = 10.dp,
-                        vertical = 3.dp
-                    ),
-                    style = MaterialTheme.typography.labelMedium
-                )
-            }
-
         }
-
-        Text(
-            text = "Thick border = today · Thin border = roster start",
+        Text("Thick border = today · Thin border = roster start",
             style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
+            color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }
 
