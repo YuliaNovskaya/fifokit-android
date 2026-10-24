@@ -29,7 +29,6 @@ import com.fifokit.app.domain.pro.ProFeature
 import com.fifokit.app.domain.sharing.SharedRoster
 import com.fifokit.app.ui.auth.AccountScreen
 import com.fifokit.app.ui.auth.AuthViewModel
-import com.fifokit.app.ui.finance.AnnualEarningsScreen
 import com.fifokit.app.ui.finance.FinancialGoalScreen
 import com.fifokit.app.ui.finance.PayCalculatorScreen
 import com.fifokit.app.ui.export.RosterExportScreen
@@ -97,7 +96,6 @@ fun FIFOKITApp(
         mutableStateOf(false)
     }
     var showPayCalculator by remember { mutableStateOf(false) }
-    var showAnnualEarnings by remember { mutableStateOf(false) }
     var showFinancialGoal by remember { mutableStateOf(false) }
     var showPro by remember(initialShowPro) {
         mutableStateOf(initialShowPro)
@@ -132,7 +130,6 @@ fun FIFOKITApp(
         showPro = false
         showAccount = false
         showFinancialGoal = false
-        showAnnualEarnings = false
         showPayCalculator = false
         showSettings = false
         showRosterActionsSheet = false
@@ -155,8 +152,7 @@ fun FIFOKITApp(
                 showPro = false
                 showAccount = false
                 showFinancialGoal = false
-                showAnnualEarnings = false
-                showPayCalculator = false
+                        showPayCalculator = false
                 showSettings = false
                 screenOverride = null
             }
@@ -171,8 +167,7 @@ fun FIFOKITApp(
                 showPro = false
                 showAccount = false
                 showFinancialGoal = false
-                showAnnualEarnings = false
-                showPayCalculator = false
+                        showPayCalculator = false
                 showSettings = false
                 screenOverride = true
                 showToolsActionsSheet = true
@@ -187,8 +182,7 @@ fun FIFOKITApp(
                 showPro = false
                 showAccount = false
                 showFinancialGoal = false
-                showAnnualEarnings = false
-                showPayCalculator = false
+                        showPayCalculator = false
                 showSettings = false
                 showAcceptInvite =
                     inviteId != null
@@ -213,7 +207,6 @@ fun FIFOKITApp(
             showPro ||
             showAccount ||
             showFinancialGoal ||
-            showAnnualEarnings ||
             showPayCalculator ||
             showSettings
     ) {
@@ -249,9 +242,6 @@ fun FIFOKITApp(
 
             showFinancialGoal ->
                 showFinancialGoal = false
-
-            showAnnualEarnings ->
-                showAnnualEarnings = false
 
             showPayCalculator ->
                 showPayCalculator = false
@@ -308,29 +298,6 @@ fun FIFOKITApp(
                 clearOpenScreens()
                 showPayCalculator = true
                 screenOverride = true
-            },
-            onAnnualEarnings = {
-                clearOpenScreens()
-
-                if (
-                    ProAccess.canUse(
-                        ProFeature.DETAILED_ANNUAL_EARNINGS
-                    )
-                ) {
-                    showAnnualEarnings = true
-                    screenOverride = true
-                } else {
-                    analytics.logEvent(
-                        AnalyticsEvents.PRO_FEATURE_LOCKED
-                    ) {
-                        param(
-                            AnalyticsParams.FEATURE,
-                            "annual_earnings"
-                        )
-                    }
-                    showPro = true
-                    screenOverride = true
-                }
             },
             onFinancialGoal = {
                 clearOpenScreens()
@@ -558,23 +525,6 @@ fun FIFOKITApp(
 
                         showFinancialGoal = false
                         showPro = true
-                    }
-                )
-            } else if (showAnnualEarnings) {
-                AnnualEarningsScreen(
-                    selectedPattern = rosterSetupViewModel.selectedPattern,
-                    isCustomRoster =
-                        rosterSetupViewModel.isCustomRoster,
-                    isShutdownRoster =
-                        rosterSetupViewModel.isShutdownRoster,
-                    scheduleSegments =
-                        rosterSetupViewModel.scheduleSegments,
-                    rosterStartDate =
-                        rosterSetupViewModel.startDate,
-                    selectedStates =
-                        rosterSetupViewModel.selectedStates,
-                    onBack = {
-                        showAnnualEarnings = false
                     }
                 )
             } else if (showPayCalculator) {
