@@ -229,7 +229,6 @@ fun RosterActionsSheet(
 fun ToolsActionsSheet(
     onDismiss: () -> Unit,
     onPayCalculator: () -> Unit,
-    onAnnualEarnings: () -> Unit,
     onFinancialGoal: () -> Unit
 ) {
     ModalBottomSheet(
@@ -246,16 +245,6 @@ fun ToolsActionsSheet(
             description =
                 "Calculate pay using your hourly, daily or salary rate.",
             onClick = onPayCalculator
-        )
-
-        HorizontalDivider()
-
-        ActionSheetItem(
-            icon = Icons.Default.TrendingUp,
-            title = "Annual Earnings · PRO",
-            description =
-                "Estimate yearly work days, hours and gross earnings.",
-            onClick = onAnnualEarnings
         )
 
         HorizontalDivider()
