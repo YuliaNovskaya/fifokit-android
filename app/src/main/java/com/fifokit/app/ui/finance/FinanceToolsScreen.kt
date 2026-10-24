@@ -40,7 +40,6 @@ fun FinanceToolsScreen(
     rosterStartDate: LocalDate,
     onBack: () -> Unit,
     onPayCalculator: () -> Unit = {},
-    onAnnualEarnings: () -> Unit = {},
     onFinancialGoal: () -> Unit = {}
 ) {
     val context = LocalContext.current
@@ -116,33 +115,6 @@ fun FinanceToolsScreen(
                 ) {
                     Text("FIFO Pay Calculator")
                     Text("Calculate pay using your active roster.")
-                }
-            }
-
-            Spacer(
-                modifier = Modifier.height(12.dp)
-            )
-
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                onClick = {
-                    analytics.logEvent(
-                        AnalyticsEvents.FINANCE_TOOL_SELECTED,
-                        Bundle().apply {
-                            putString(AnalyticsParams.TOOL, "annual_earnings")
-                        }
-                    )
-                    onAnnualEarnings()
-                },
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant
-                )
-            ) {
-                Column(
-                    modifier = Modifier.padding(16.dp)
-                ) {
-                    Text("Annual Earnings · PRO")
-                    Text("Estimate yearly work days, hours and gross earnings.")
                 }
             }
 
