@@ -13,6 +13,7 @@ import com.fifokit.app.domain.roster.RosterCalculator
 import com.fifokit.app.domain.roster.RosterScheduleCalculator
 import com.fifokit.app.domain.roster.RosterScheduleCodec
 import com.fifokit.app.domain.roster.RosterScheduleSegment
+import com.fifokit.app.domain.roster.RosterSegmentType
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -48,7 +49,8 @@ data class WidgetCalendarDay(
     val date: LocalDate,
     val isWorkDay: Boolean,
     val isToday: Boolean,
-    val isPublicHoliday: Boolean
+    val isPublicHoliday: Boolean,
+    val shiftType: RosterSegmentType? = null
 )
 
 class RosterWidgetDataSource(
@@ -112,7 +114,7 @@ class RosterWidgetDataSource(
         val resolvedWorkDays: Int
         val resolvedOffDays: Int
 
-        if (isCustomRoster) {
+        if (isCustomRoster || isShutdownRoster) {
             resolvedWorkDays =
                 customWorkDays
 
@@ -135,8 +137,8 @@ class RosterWidgetDataSource(
         }
 
         if (
-            resolvedWorkDays <= 0 ||
-            resolvedOffDays <= 0
+            (resolvedWorkDays <= 0 || resolvedOffDays <= 0) &&
+            !(isShutdownRoster && decodedSegments.isNotEmpty())
         ) {
             return null
         }
@@ -165,6 +167,7 @@ class RosterWidgetDataSource(
         val resolvedSegments =
             if (
                 isCustomRoster &&
+                !isShutdownRoster &&
                 decodedSegments.isEmpty()
             ) {
                 RosterScheduleCalculator
@@ -333,12 +336,23 @@ object CompactRosterCalendarCalculator {
             val date =
                 month.atDay(day)
 
+            val status = if ((roster.isCustomRoster || roster.isShutdownRoster) &&
+                roster.scheduleSegments.isNotEmpty()) {
+                RosterScheduleCalculator.statusOn(
+                    date = date,
+                    startDate = roster.startDate,
+                    segments = roster.scheduleSegments,
+                    repeat = !roster.isShutdownRoster
+                )
+            } else null
+
             cells +=
                 WidgetCalendarDay(
                     date = date,
+                    shiftType = status?.segment?.type,
                     isWorkDay =
                         if (
-                            roster.isCustomRoster &&
+                            (roster.isCustomRoster || roster.isShutdownRoster) &&
                             roster.scheduleSegments
                                 .isNotEmpty()
                         ) {
