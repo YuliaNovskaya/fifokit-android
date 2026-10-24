@@ -28,6 +28,9 @@ import androidx.glance.text.TextAlign
 import androidx.glance.text.TextStyle
 import androidx.glance.unit.ColorProvider
 import com.fifokit.app.MainActivity
+import com.fifokit.app.domain.roster.RosterSegmentType
+import com.fifokit.app.ui.theme.FifoDayShift
+import com.fifokit.app.ui.theme.FifoNightShift
 import com.fifokit.app.domain.pro.ProEntitlementManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -109,6 +112,10 @@ private val compactOrange =
     ColorProvider(
         Color(0xFFF5A623)
     )
+
+private val compactDay = ColorProvider(FifoDayShift)
+private val compactNight = ColorProvider(FifoNightShift)
+private val compactHoliday = ColorProvider(Color(0xFFF5CB66))
 
 private val compactWhite =
     ColorProvider(
@@ -266,7 +273,7 @@ private fun CompactRosterCalendarContent(
 
                 Text(
                     text =
-                        "Orange WORK · [ ] Today · P Public holiday",
+                        "Green DAY · Blue NIGHT · Orange WORK · PH Holiday",
                     style = TextStyle(
                         color =
                             compactSecondary,
@@ -350,85 +357,61 @@ private fun CompactCalendarRows(
                                         )
                             )
                         } else {
-                            Text(
-                                text =
-                                    (
-                                        if (day.isToday) {
-                                            "[${day.date.dayOfMonth}]"
-                                        } else {
-                                            day.date.dayOfMonth.toString()
-                                        }
-                                    ) +
-                                            (
-                                                if (
-                                                    day.isPublicHoliday
-                                                ) {
-                                                    "P"
-                                                } else {
-                                                    ""
-                                                }
-                                            ),
-                                modifier =
-                                    GlanceModifier
-                                        .width(
-                                            30.dp
-                                        )
-                                        .padding(
-                                            2.dp
-                                        )
-                                        .background(
-                                            if (
-                                                day.isWorkDay
-                                            ) {
-                                                compactOrange
-                                            } else {
-                                                compactSurface
-                                            }
-                                        )
-                                        .padding(
-                                            vertical =
-                                                3.dp
+                            val background = when {
+                                !day.isWorkDay -> compactSurface
+                                day.shiftType == RosterSegmentType.DAY -> compactDay
+                                day.shiftType == RosterSegmentType.NIGHT -> compactNight
+                                else -> compactOrange
+                            }
+                            val foreground = when {
+                                day.shiftType == RosterSegmentType.NIGHT && day.isWorkDay -> compactWhite
+                                day.isWorkDay -> compactDark
+                                else -> compactWhite
+                            }
+                            val dayLabel = if (day.isToday) "[${day.date.dayOfMonth}]"
+                                else day.date.dayOfMonth.toString()
+                            if (day.isPublicHoliday) {
+                                // Two stacked halves retain shift identity and distinguish PH.
+                                Column(
+                                    modifier = GlanceModifier.width(30.dp).padding(2.dp)
+                                ) {
+                                    Text(
+                                        text = dayLabel,
+                                        modifier = GlanceModifier.fillMaxWidth()
+                                            .background(background).padding(vertical = 1.dp),
+                                        style = TextStyle(
+                                            color = foreground, fontSize = 10.sp,
+                                            fontWeight = if (day.isToday) FontWeight.Bold else FontWeight.Normal,
+                                            textAlign = TextAlign.Center
                                         ),
-                                style =
-                                    TextStyle(
-                                        color =
-                                            when {
-                                                day.isToday &&
-                                                        day.isWorkDay ->
-                                                    compactWhite
-
-                                                day.isToday ->
-                                                    compactOrange
-
-                                                day.isWorkDay ->
-                                                    compactDark
-
-                                                else ->
-                                                    compactWhite
-                                            },
-                                        fontSize =
-                                            if (day.isToday) {
-                                                11.sp
-                                            } else {
-                                                11.sp
-                                            },
-                                        fontWeight =
-                                            if (
-                                                day
-                                                    .isToday
-                                            ) {
-                                                FontWeight
-                                                    .Bold
-                                            } else {
-                                                FontWeight
-                                                    .Normal
-                                            },
-                                        textAlign =
-                                            TextAlign
-                                                .Center
+                                        maxLines = 1
+                                    )
+                                    Text(
+                                        text = "PH",
+                                        modifier = GlanceModifier.fillMaxWidth()
+                                            .background(compactHoliday).padding(vertical = 1.dp),
+                                        style = TextStyle(
+                                            color = compactDark, fontSize = 9.sp,
+                                            fontWeight = FontWeight.Bold, textAlign = TextAlign.Center
+                                        ),
+                                        maxLines = 1
+                                    )
+                                }
+                            } else {
+                                Text(
+                                    text = dayLabel,
+                                    modifier = GlanceModifier.width(30.dp)
+                                        .padding(2.dp).background(background)
+                                        .padding(vertical = 3.dp),
+                                    style = TextStyle(
+                                        color = if (day.isToday && !day.isWorkDay) compactOrange else foreground,
+                                        fontSize = 11.sp,
+                                        fontWeight = if (day.isToday) FontWeight.Bold else FontWeight.Normal,
+                                        textAlign = TextAlign.Center
                                     ),
-                                maxLines = 1
-                            )
+                                    maxLines = 1
+                                )
+                            }
                         }
                     }
                 }
