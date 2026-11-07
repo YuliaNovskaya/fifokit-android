@@ -31,6 +31,7 @@ fun RosterMonthGrid(
     daysInMonth: Int,
     firstWeekday: Int,
     firstDayOffset: Long,
+    todayDayOffset: Long? = null,
     pattern: RosterPattern,
     modifier: Modifier = Modifier
 ) {
@@ -57,6 +58,7 @@ fun RosterMonthGrid(
                         val dayOffset = firstDayOffset + day - 1
                         val isWork = RosterCalculator.isWorkDay(dayOffset, pattern)
                         val isStartDate = dayOffset == 0L
+                        val isToday = dayOffset == todayDayOffset
                         val background = if (isWork) MaterialTheme.colorScheme.primaryContainer
                                          else MaterialTheme.colorScheme.surfaceVariant
                         Box(
@@ -65,11 +67,19 @@ fun RosterMonthGrid(
                                 .aspectRatio(1f)
                                 .background(background, RoundedCornerShape(6.dp))
                                 .then(
-                                    if (isStartDate) Modifier.border(
-                                        width = 2.dp,
-                                        color = MaterialTheme.colorScheme.outline,
-                                        shape = RoundedCornerShape(6.dp)
-                                    ) else Modifier
+                                    when {
+                                        isToday -> Modifier.border(
+                                            width = 3.dp,
+                                            color = MaterialTheme.colorScheme.primary,
+                                            shape = RoundedCornerShape(6.dp)
+                                        )
+                                        isStartDate -> Modifier.border(
+                                            width = 2.dp,
+                                            color = MaterialTheme.colorScheme.outline,
+                                            shape = RoundedCornerShape(6.dp)
+                                        )
+                                        else -> Modifier
+                                    }
                                 )
                                 .padding(2.dp),
                             contentAlignment = Alignment.Center
@@ -81,7 +91,7 @@ fun RosterMonthGrid(
             }
         }
         Text(
-            "Work: highlighted   Off: neutral   Start: outlined",
+            "Work: highlighted   Off: neutral   Today: bold outline",
             style = MaterialTheme.typography.labelSmall
         )
     }
