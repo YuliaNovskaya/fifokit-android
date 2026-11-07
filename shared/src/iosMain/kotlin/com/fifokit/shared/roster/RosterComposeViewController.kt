@@ -57,7 +57,7 @@ fun rosterComposeViewController(): UIViewController {
             rosterStart.year, rosterStart.month, rosterStart.day
         ) + it.day - 1
     }
-    val status = todayOffset?.let { rosterSwingStatus(it, selectedPattern) }
+    val status = todayOffset?.takeIf { it >= 0L }?.let { rosterSwingStatus(it, selectedPattern) }
 
     MaterialTheme {
         Surface(modifier = Modifier.fillMaxSize()) {
@@ -89,6 +89,12 @@ fun rosterComposeViewController(): UIViewController {
                     ) {
                         DatePicker(state = pickerState)
                     }
+                }
+                if (todayOffset != null && todayOffset < 0L) {
+                    Text(
+                        "Roster starts in ${-todayOffset} day${if (todayOffset == -1L) "" else "s"}",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
                 }
                 if (status != null) {
                     Text(
