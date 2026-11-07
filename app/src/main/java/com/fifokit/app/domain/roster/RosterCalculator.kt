@@ -1,6 +1,7 @@
 package com.fifokit.app.domain.roster
 
 import com.fifokit.app.domain.model.RosterPattern
+import com.fifokit.shared.roster.RosterCalculator as SharedRosterCalculator
 import java.time.LocalDate
 import java.time.temporal.ChronoUnit
 
@@ -26,11 +27,10 @@ object RosterCalculator {
         offDays: Int
     ): Boolean {
         val daysFromStart = ChronoUnit.DAYS.between(startDate, date)
-        val cycleLength = workDays + offDays
-
-        val positionInCycle =
-            Math.floorMod(daysFromStart, cycleLength.toLong()).toInt()
-
-        return positionInCycle < workDays
+        return SharedRosterCalculator.isWorkDay(
+            daysFromStart = daysFromStart,
+            workDays = workDays,
+            offDays = offDays
+        )
     }
 }
