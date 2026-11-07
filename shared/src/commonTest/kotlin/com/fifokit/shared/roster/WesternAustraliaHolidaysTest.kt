@@ -16,8 +16,17 @@ class WesternAustraliaHolidaysTest {
     }
 
     @Test
+    fun includesRevised2028And2029Dates() {
+        assertEquals("Labour Day", WesternAustraliaHolidays.onDate(2028, 3, 13)?.name)
+        assertEquals("Easter Saturday", WesternAustraliaHolidays.onDate(2028, 4, 15)?.name)
+        assertEquals("Western Australia Day",
+            WesternAustraliaHolidays.onDate(2029, 11, 12)?.name)
+        assertNull(WesternAustraliaHolidays.onDate(2028, 9, 25))
+    }
+
+    @Test
     fun unknownYearsAndOrdinaryDaysAreUnmarked() {
         assertNull(WesternAustraliaHolidays.onDate(2026, 11, 7))
-        assertNull(WesternAustraliaHolidays.onDate(2028, 1, 1))
+        assertNull(WesternAustraliaHolidays.onDate(2030, 1, 1))
     }
 }
