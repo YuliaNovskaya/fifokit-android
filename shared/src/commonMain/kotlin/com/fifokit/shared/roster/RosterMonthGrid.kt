@@ -56,11 +56,15 @@ fun RosterMonthGrid(
                         Spacer(modifier = Modifier.weight(1f).aspectRatio(1f))
                     } else {
                         val dayOffset = firstDayOffset + day - 1
-                        val isWork = RosterCalculator.isWorkDay(dayOffset, pattern)
+                        val isScheduled = dayOffset >= 0L
+                        val isWork = isScheduled && RosterCalculator.isWorkDay(dayOffset, pattern)
                         val isStartDate = dayOffset == 0L
                         val isToday = dayOffset == todayDayOffset
-                        val background = if (isWork) MaterialTheme.colorScheme.primaryContainer
-                                         else MaterialTheme.colorScheme.surfaceVariant
+                        val background = when {
+                            !isScheduled -> MaterialTheme.colorScheme.surface
+                            isWork -> MaterialTheme.colorScheme.primaryContainer
+                            else -> MaterialTheme.colorScheme.surfaceVariant
+                        }
                         Box(
                             modifier = Modifier
                                 .weight(1f)
@@ -91,7 +95,7 @@ fun RosterMonthGrid(
             }
         }
         Text(
-            "Work: highlighted   Off: neutral   Today: bold outline",
+            "Work: highlighted   Off: neutral   Before start: blank",
             style = MaterialTheme.typography.labelSmall
         )
     }
