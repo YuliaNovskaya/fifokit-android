@@ -22,6 +22,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.ComposeUIViewController
+import platform.Foundation.NSDate
+import platform.Foundation.NSDateFormatter
 import platform.Foundation.NSUserDefaults
 import platform.UIKit.UIViewController
 
@@ -36,6 +38,8 @@ private const val PATTERN_KEY = "com.fifokit.roster.pattern"
 @OptIn(ExperimentalMaterial3Api::class)
 fun rosterComposeViewController(): UIViewController {
     val preferences = NSUserDefaults.standardUserDefaults
+    val dateFormatter = NSDateFormatter().apply { dateFormat = "yyyy-MM-dd" }
+    val today = RosterStartDate.parseIso(dateFormatter.stringFromDate(NSDate()))
     val savedDate = preferences.stringForKey(START_DATE_KEY)
     val initialStart = RosterStartDate.parseIso(savedDate ?: "")
         ?: RosterStartDate(2026, 11, 1)
@@ -48,6 +52,12 @@ fun rosterComposeViewController(): UIViewController {
     var rosterStart by remember { mutableStateOf(initialStart) }
     var showDatePicker by remember { mutableStateOf(false) }
     var selectedPattern by remember { mutableStateOf(initialPattern) }
+    val todayOffset = today?.let {
+        CalendarMonth(it.year, it.month).daysFrom(
+            rosterStart.year, rosterStart.month, rosterStart.day
+        ) + it.day - 1
+    }
+    val status = todayOffset?.let { rosterSwingStatus(it, selectedPattern) }
 
     MaterialTheme {
         Surface(modifier = Modifier.fillMaxSize()) {
@@ -79,6 +89,13 @@ fun rosterComposeViewController(): UIViewController {
                     ) {
                         DatePicker(state = pickerState)
                     }
+                }
+                if (status != null) {
+                    Text(
+                        "Today: ${if (status.isWorking) "Work" else "Off"} — " +
+                            "day ${status.dayInSwing} of ${status.swingLength}",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
                 }
                 Text("Roster pattern", style = MaterialTheme.typography.labelLarge)
                 Row(
@@ -115,6 +132,7 @@ fun rosterComposeViewController(): UIViewController {
                     firstDayOffset = displayedMonth.daysFrom(
                         rosterStart.year, rosterStart.month, rosterStart.day
                     ),
+                    todayDayOffset = todayOffset,
                     pattern = selectedPattern
                 )
             }
