@@ -8,7 +8,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDialog
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -30,53 +33,52 @@ private val monthNames = listOf(
 private const val START_DATE_KEY = "com.fifokit.roster.startDate"
 private const val PATTERN_KEY = "com.fifokit.roster.pattern"
 
+@OptIn(ExperimentalMaterial3Api::class)
 fun rosterComposeViewController(): UIViewController {
     val preferences = NSUserDefaults.standardUserDefaults
     val savedDate = preferences.stringForKey(START_DATE_KEY)
     val initialStart = RosterStartDate.parseIso(savedDate ?: "")
         ?: RosterStartDate(2026, 11, 1)
-    val initialDateText = if (savedDate != null &&
-        RosterStartDate.parseIso(savedDate) != null) savedDate else "2026-11-01"
     val initialPattern = RosterPattern.entries.firstOrNull {
         it.name == preferences.stringForKey(PATTERN_KEY)
     } ?: RosterPattern.TWO_ONE
 
     return ComposeUIViewController {
     var displayedMonth by remember { mutableStateOf(CalendarMonth(initialStart.year, initialStart.month)) }
-    var startDateText by remember { mutableStateOf(initialDateText) }
     var rosterStart by remember { mutableStateOf(initialStart) }
-    var dateError by remember { mutableStateOf(false) }
+    var showDatePicker by remember { mutableStateOf(false) }
     var selectedPattern by remember { mutableStateOf(initialPattern) }
 
     MaterialTheme {
         Surface(modifier = Modifier.fillMaxSize()) {
             Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text("FIFOKIT roster", style = MaterialTheme.typography.titleLarge)
-                OutlinedTextField(
-                    value = startDateText,
-                    onValueChange = { startDateText = it; dateError = false },
-                    label = { Text("Roster start (YYYY-MM-DD)") },
-                    isError = dateError,
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth()
-                )
-                Button(onClick = {
-                    val parsed = RosterStartDate.parseIso(startDateText)
-                    if (parsed == null) {
-                        dateError = true
-                    } else {
-                        rosterStart = parsed
-                        displayedMonth = CalendarMonth(parsed.year, parsed.month)
-                        preferences.setObject(startDateText, forKey = START_DATE_KEY)
-                    }
-                }) {
-                    Text("Apply start date")
+                Button(onClick = { showDatePicker = true }) {
+                    Text("Start date: ${rosterStart.toIsoString()}")
                 }
-                if (dateError) {
-                    Text(
-                        "Enter a valid date, e.g. 2026-11-01",
-                        color = MaterialTheme.colorScheme.error
+                if (showDatePicker) {
+                    val pickerState = rememberDatePickerState(
+                        initialSelectedDateMillis = rosterStart.toEpochMillis()
                     )
+                    DatePickerDialog(
+                        onDismissRequest = { showDatePicker = false },
+                        confirmButton = {
+                            TextButton(onClick = {
+                                pickerState.selectedDateMillis?.let { millis ->
+                                    val parsed = RosterStartDate.fromEpochMillis(millis)
+                                    rosterStart = parsed
+                                    displayedMonth = CalendarMonth(parsed.year, parsed.month)
+                                    preferences.setObject(parsed.toIsoString(), forKey = START_DATE_KEY)
+                                }
+                                showDatePicker = false
+                            }) { Text("OK") }
+                        },
+                        dismissButton = {
+                            TextButton(onClick = { showDatePicker = false }) { Text("Cancel") }
+                        }
+                    ) {
+                        DatePicker(state = pickerState)
+                    }
                 }
                 Text("Roster pattern", style = MaterialTheme.typography.labelLarge)
                 Row(
