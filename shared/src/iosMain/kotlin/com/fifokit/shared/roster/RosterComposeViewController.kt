@@ -19,6 +19,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.ComposeUIViewController
+import platform.Foundation.NSUserDefaults
 import platform.UIKit.UIViewController
 
 private val monthNames = listOf(
@@ -26,12 +27,26 @@ private val monthNames = listOf(
     "July", "August", "September", "October", "November", "December"
 )
 
-fun rosterComposeViewController(): UIViewController = ComposeUIViewController {
-    var displayedMonth by remember { mutableStateOf(CalendarMonth(2026, 11)) }
-    var startDateText by remember { mutableStateOf("2026-11-01") }
-    var rosterStart by remember { mutableStateOf(RosterStartDate(2026, 11, 1)) }
+private const val START_DATE_KEY = "com.fifokit.roster.startDate"
+private const val PATTERN_KEY = "com.fifokit.roster.pattern"
+
+fun rosterComposeViewController(): UIViewController {
+    val preferences = NSUserDefaults.standardUserDefaults
+    val savedDate = preferences.stringForKey(START_DATE_KEY)
+    val initialStart = RosterStartDate.parseIso(savedDate ?: "")
+        ?: RosterStartDate(2026, 11, 1)
+    val initialDateText = if (savedDate != null &&
+        RosterStartDate.parseIso(savedDate) != null) savedDate else "2026-11-01"
+    val initialPattern = RosterPattern.entries.firstOrNull {
+        it.name == preferences.stringForKey(PATTERN_KEY)
+    } ?: RosterPattern.TWO_ONE
+
+    return ComposeUIViewController {
+    var displayedMonth by remember { mutableStateOf(CalendarMonth(initialStart.year, initialStart.month)) }
+    var startDateText by remember { mutableStateOf(initialDateText) }
+    var rosterStart by remember { mutableStateOf(initialStart) }
     var dateError by remember { mutableStateOf(false) }
-    var selectedPattern by remember { mutableStateOf(RosterPattern.TWO_ONE) }
+    var selectedPattern by remember { mutableStateOf(initialPattern) }
 
     MaterialTheme {
         Surface(modifier = Modifier.fillMaxSize()) {
@@ -52,6 +67,7 @@ fun rosterComposeViewController(): UIViewController = ComposeUIViewController {
                     } else {
                         rosterStart = parsed
                         displayedMonth = CalendarMonth(parsed.year, parsed.month)
+                        preferences.setObject(startDateText, forKey = START_DATE_KEY)
                     }
                 }) {
                     Text("Apply start date")
@@ -68,7 +84,10 @@ fun rosterComposeViewController(): UIViewController = ComposeUIViewController {
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     for (pattern in RosterPattern.entries) {
-                        TextButton(onClick = { selectedPattern = pattern }) {
+                        TextButton(onClick = {
+                            selectedPattern = pattern
+                            preferences.setObject(pattern.name, forKey = PATTERN_KEY)
+                        }) {
                             Text(
                                 if (selectedPattern == pattern) "[${pattern.label}]"
                                 else pattern.label
@@ -99,4 +118,6 @@ fun rosterComposeViewController(): UIViewController = ComposeUIViewController {
             }
         }
     }
+}
+
 }
