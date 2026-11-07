@@ -11,6 +11,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -30,6 +31,7 @@ fun rosterComposeViewController(): UIViewController = ComposeUIViewController {
     var startDateText by remember { mutableStateOf("2026-11-01") }
     var rosterStart by remember { mutableStateOf(RosterStartDate(2026, 11, 1)) }
     var dateError by remember { mutableStateOf(false) }
+    var selectedPattern by remember { mutableStateOf(RosterPattern.TWO_ONE) }
 
     MaterialTheme {
         Surface(modifier = Modifier.fillMaxSize()) {
@@ -60,6 +62,20 @@ fun rosterComposeViewController(): UIViewController = ComposeUIViewController {
                         color = MaterialTheme.colorScheme.error
                     )
                 }
+                Text("Roster pattern", style = MaterialTheme.typography.labelLarge)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    for (pattern in RosterPattern.entries) {
+                        TextButton(onClick = { selectedPattern = pattern }) {
+                            Text(
+                                if (selectedPattern == pattern) "[${pattern.label}]"
+                                else pattern.label
+                            )
+                        }
+                    }
+                }
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween
@@ -78,7 +94,7 @@ fun rosterComposeViewController(): UIViewController = ComposeUIViewController {
                     firstDayOffset = displayedMonth.daysFrom(
                         rosterStart.year, rosterStart.month, rosterStart.day
                     ),
-                    pattern = RosterPattern.TWO_ONE
+                    pattern = selectedPattern
                 )
             }
         }
