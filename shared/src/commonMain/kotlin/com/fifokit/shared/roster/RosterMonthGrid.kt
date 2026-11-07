@@ -1,6 +1,7 @@
 package com.fifokit.shared.roster
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -53,7 +54,9 @@ fun RosterMonthGrid(
                     if (day !in 1..daysInMonth) {
                         Spacer(modifier = Modifier.weight(1f).aspectRatio(1f))
                     } else {
-                        val isWork = RosterCalculator.isWorkDay(firstDayOffset + day - 1, pattern)
+                        val dayOffset = firstDayOffset + day - 1
+                        val isWork = RosterCalculator.isWorkDay(dayOffset, pattern)
+                        val isStartDate = dayOffset == 0L
                         val background = if (isWork) MaterialTheme.colorScheme.primaryContainer
                                          else MaterialTheme.colorScheme.surfaceVariant
                         Box(
@@ -61,6 +64,13 @@ fun RosterMonthGrid(
                                 .weight(1f)
                                 .aspectRatio(1f)
                                 .background(background, RoundedCornerShape(6.dp))
+                                .then(
+                                    if (isStartDate) Modifier.border(
+                                        width = 2.dp,
+                                        color = MaterialTheme.colorScheme.outline,
+                                        shape = RoundedCornerShape(6.dp)
+                                    ) else Modifier
+                                )
                                 .padding(2.dp),
                             contentAlignment = Alignment.Center
                         ) {
@@ -71,7 +81,7 @@ fun RosterMonthGrid(
             }
         }
         Text(
-            "Work: highlighted   Off: neutral",
+            "Work: highlighted   Off: neutral   Start: outlined",
             style = MaterialTheme.typography.labelSmall
         )
     }
