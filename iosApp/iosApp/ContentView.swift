@@ -13,7 +13,6 @@ struct RosterComposeView: UIViewControllerRepresentable {
 struct ContentView: View {
     var body: some View {
         RosterComposeView()
-            .ignoresSafeArea()
     }
 }
 
