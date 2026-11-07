@@ -139,7 +139,10 @@ fun rosterComposeViewController(): UIViewController {
                         rosterStart.year, rosterStart.month, rosterStart.day
                     ),
                     todayDayOffset = todayOffset,
-                    pattern = selectedPattern
+                    pattern = selectedPattern,
+                    isPublicHoliday = { day ->
+                        WesternAustraliaHolidays.onDate(displayedMonth.year, displayedMonth.month, day) != null
+                    }
                 )
             }
         }
