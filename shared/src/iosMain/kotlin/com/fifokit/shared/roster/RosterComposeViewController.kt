@@ -3,6 +3,7 @@ package com.fifokit.shared.roster
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
 import androidx.compose.ui.Modifier
@@ -12,7 +13,7 @@ import platform.UIKit.UIViewController
 
 fun rosterComposeViewController(): UIViewController = ComposeUIViewController {
     MaterialTheme {
-        Surface {
+        Surface(modifier = Modifier.fillMaxSize()) {
             Column(modifier = Modifier.padding(16.dp)) {
                 Text("FIFOKIT roster", style = MaterialTheme.typography.titleLarge)
                 RosterWeekRow(
