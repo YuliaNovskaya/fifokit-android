@@ -21,4 +21,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "FIFOKIT"
 include(":app")
- 
+include(":shared")
