@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.getValue
@@ -26,14 +27,39 @@ private val monthNames = listOf(
 
 fun rosterComposeViewController(): UIViewController = ComposeUIViewController {
     var displayedMonth by remember { mutableStateOf(CalendarMonth(2026, 11)) }
-    val rosterStartYear = 2026
-    val rosterStartMonth = 11
-    val rosterStartDay = 1
+    var startDateText by remember { mutableStateOf("2026-11-01") }
+    var rosterStart by remember { mutableStateOf(RosterStartDate(2026, 11, 1)) }
+    var dateError by remember { mutableStateOf(false) }
 
     MaterialTheme {
         Surface(modifier = Modifier.fillMaxSize()) {
             Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text("FIFOKIT roster", style = MaterialTheme.typography.titleLarge)
+                OutlinedTextField(
+                    value = startDateText,
+                    onValueChange = { startDateText = it; dateError = false },
+                    label = { Text("Roster start (YYYY-MM-DD)") },
+                    isError = dateError,
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Button(onClick = {
+                    val parsed = RosterStartDate.parseIso(startDateText)
+                    if (parsed == null) {
+                        dateError = true
+                    } else {
+                        rosterStart = parsed
+                        displayedMonth = CalendarMonth(parsed.year, parsed.month)
+                    }
+                }) {
+                    Text("Apply start date")
+                }
+                if (dateError) {
+                    Text(
+                        "Enter a valid date, e.g. 2026-11-01",
+                        color = MaterialTheme.colorScheme.error
+                    )
+                }
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween
@@ -50,7 +76,7 @@ fun rosterComposeViewController(): UIViewController = ComposeUIViewController {
                     daysInMonth = displayedMonth.daysInMonth,
                     firstWeekday = displayedMonth.firstWeekday,
                     firstDayOffset = displayedMonth.daysFrom(
-                        rosterStartYear, rosterStartMonth, rosterStartDay
+                        rosterStart.year, rosterStart.month, rosterStart.day
                     ),
                     pattern = RosterPattern.TWO_ONE
                 )
