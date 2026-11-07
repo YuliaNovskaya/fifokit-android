@@ -33,6 +33,7 @@ fun RosterMonthGrid(
     firstDayOffset: Long,
     todayDayOffset: Long? = null,
     pattern: RosterPattern,
+    isPublicHoliday: (Int) -> Boolean = { false },
     modifier: Modifier = Modifier
 ) {
     require(daysInMonth in 28..31)
@@ -60,6 +61,7 @@ fun RosterMonthGrid(
                         val isWork = isScheduled && RosterCalculator.isWorkDay(dayOffset, pattern)
                         val isStartDate = dayOffset == 0L
                         val isToday = dayOffset == todayDayOffset
+                        val holiday = isPublicHoliday(day)
                         val background = when {
                             !isScheduled -> MaterialTheme.colorScheme.surface
                             isWork -> MaterialTheme.colorScheme.primaryContainer
@@ -88,7 +90,16 @@ fun RosterMonthGrid(
                                 .padding(2.dp),
                             contentAlignment = Alignment.Center
                         ) {
-                            Text(day.toString(), style = MaterialTheme.typography.bodyMedium)
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Text(day.toString(), style = MaterialTheme.typography.bodyMedium)
+                                if (holiday) {
+                                    Text(
+                                        "PH",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.tertiary
+                                    )
+                                }
+                            }
                         }
                     }
                 }
