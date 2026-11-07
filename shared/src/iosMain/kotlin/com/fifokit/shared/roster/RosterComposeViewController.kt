@@ -34,6 +34,7 @@ private val monthNames = listOf(
 
 private const val START_DATE_KEY = "com.fifokit.roster.startDate"
 private const val PATTERN_KEY = "com.fifokit.roster.pattern"
+private const val HOLIDAY_REGION_KEY = "com.fifokit.roster.holidayRegion"
 
 @OptIn(ExperimentalMaterial3Api::class)
 fun rosterComposeViewController(): UIViewController {
@@ -47,11 +48,16 @@ fun rosterComposeViewController(): UIViewController {
         it.name == preferences.stringForKey(PATTERN_KEY)
     } ?: RosterPattern.TWO_ONE
 
+    val initialRegion = HolidayRegion.entries.firstOrNull {
+        it.name == preferences.stringForKey(HOLIDAY_REGION_KEY)
+    } ?: HolidayRegion.WA
+
     return ComposeUIViewController {
     var displayedMonth by remember { mutableStateOf(CalendarMonth(initialStart.year, initialStart.month)) }
     var rosterStart by remember { mutableStateOf(initialStart) }
     var showDatePicker by remember { mutableStateOf(false) }
     var selectedPattern by remember { mutableStateOf(initialPattern) }
+    var holidayRegion by remember { mutableStateOf(initialRegion) }
     val todayOffset = today?.let {
         CalendarMonth(it.year, it.month).daysFrom(
             rosterStart.year, rosterStart.month, rosterStart.day
@@ -120,6 +126,24 @@ fun rosterComposeViewController(): UIViewController {
                         }
                     }
                 }
+                Text("Public holidays", style = MaterialTheme.typography.labelLarge)
+                Row(modifier = Modifier.fillMaxWidth()) {
+                    for (region in HolidayRegion.entries) {
+                        TextButton(onClick = {
+                            holidayRegion = region
+                            preferences.setObject(region.name, forKey = HOLIDAY_REGION_KEY)
+                        }) {
+                            Text(if (holidayRegion == region) "[${region.name}]" else region.name)
+                        }
+                    }
+                }
+                if (!holidayRegion.hasCoverageFor(displayedMonth.year)) {
+                    Text(
+                        "Holiday dates not available for ${holidayRegion.name} ${displayedMonth.year}",
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.labelSmall
+                    )
+                }
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween
@@ -141,7 +165,7 @@ fun rosterComposeViewController(): UIViewController {
                     todayDayOffset = todayOffset,
                     pattern = selectedPattern,
                     isPublicHoliday = { day ->
-                        WesternAustraliaHolidays.onDate(displayedMonth.year, displayedMonth.month, day) != null
+                        holidayRegion.holidayOn(displayedMonth.year, displayedMonth.month, day) != null
                     }
                 )
             }
