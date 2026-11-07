@@ -25,15 +25,13 @@ class CalendarMonthTest {
         assertEquals(29, CalendarMonth(2028, 2).daysInMonth)
         assertEquals(28, CalendarMonth(2100, 2).daysInMonth)
         assertEquals(29, CalendarMonth(2000, 2).daysInMonth)
-        assertEquals(0, CalendarMonth(2026, 11).previous().next().let {
-            if (it == CalendarMonth(2026, 11)) 0 else 1
-        })
+        assertEquals(CalendarMonth(2026, 11), CalendarMonth(2026, 11).previous().next())
     }
 
     @Test
     fun dayOffsetAcrossLeapFebruary() {
         assertEquals(29L, CalendarMonth(2028, 3).daysFrom(2028, 2, 1))
         assertEquals(28L, CalendarMonth(2027, 3).daysFrom(2027, 2, 1))
-        assertEquals(0, CalendarMonth(1970, 1).firstWeekday - 3)
+        assertEquals(3, CalendarMonth(1970, 1).firstWeekday)
     }
 }
