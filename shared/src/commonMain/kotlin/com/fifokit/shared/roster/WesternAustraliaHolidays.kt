@@ -8,7 +8,7 @@ data class RosterPublicHoliday(
 )
 
 /**
- * State-wide Western Australian public holidays for 2026 and 2027.
+ * State-wide Western Australian public holidays for 2026 to 2029. Show Day dates for 2028–2029 are pending proclamation.
  * Source: WA Government public holiday calendar.
  * Regional substitutions (such as alternate King's Birthday dates) are excluded.
  */
@@ -47,6 +47,35 @@ object WesternAustraliaHolidays {
             h(2027, 12, 26, "Boxing Day"),
             h(2027, 12, 27, "Christmas Day holiday"),
             h(2027, 12, 28, "Boxing Day holiday")
+        )
+        2028 -> listOf(
+            h(2028, 1, 1, "New Year's Day"),
+            h(2028, 1, 3, "New Year's Day holiday"),
+            h(2028, 1, 26, "Australia Day"),
+            h(2028, 3, 13, "Labour Day"),
+            h(2028, 4, 14, "Good Friday"),
+            h(2028, 4, 15, "Easter Saturday"),
+            h(2028, 4, 16, "Easter Sunday"),
+            h(2028, 4, 17, "Easter Monday"),
+            h(2028, 4, 25, "Anzac Day"),
+            h(2028, 6, 12, "King's Birthday"),
+            h(2028, 11, 13, "Western Australia Day"),
+            h(2028, 12, 25, "Christmas Day"),
+            h(2028, 12, 26, "Boxing Day")
+        )
+        2029 -> listOf(
+            h(2029, 1, 1, "New Year's Day"),
+            h(2029, 1, 26, "Australia Day"),
+            h(2029, 3, 19, "Labour Day"),
+            h(2029, 3, 30, "Good Friday"),
+            h(2029, 3, 31, "Easter Saturday"),
+            h(2029, 4, 1, "Easter Sunday"),
+            h(2029, 4, 2, "Easter Monday"),
+            h(2029, 4, 25, "Anzac Day"),
+            h(2029, 6, 11, "King's Birthday"),
+            h(2029, 11, 12, "Western Australia Day"),
+            h(2029, 12, 25, "Christmas Day"),
+            h(2029, 12, 26, "Boxing Day")
         )
         else -> emptyList()
     }
