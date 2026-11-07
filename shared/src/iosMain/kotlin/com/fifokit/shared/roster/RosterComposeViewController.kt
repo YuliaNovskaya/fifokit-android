@@ -16,8 +16,11 @@ fun rosterComposeViewController(): UIViewController = ComposeUIViewController {
         Surface(modifier = Modifier.fillMaxSize()) {
             Column(modifier = Modifier.padding(16.dp)) {
                 Text("FIFOKIT roster", style = MaterialTheme.typography.titleLarge)
-                RosterWeekRow(
-                    startDayOffset = 12,
+                RosterMonthGrid(
+                    monthTitle = "November 2026",
+                    daysInMonth = 30,
+                    firstWeekday = 6,
+                    firstDayOffset = 0L,
                     pattern = RosterPattern.TWO_ONE
                 )
             }
