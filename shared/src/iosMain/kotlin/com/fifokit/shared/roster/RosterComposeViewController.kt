@@ -6,6 +6,8 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.DatePicker
@@ -58,6 +60,7 @@ fun rosterComposeViewController(): UIViewController {
     var showDatePicker by remember { mutableStateOf(false) }
     var selectedPattern by remember { mutableStateOf(initialPattern) }
     var holidayRegion by remember { mutableStateOf(initialRegion) }
+    var regionMenuExpanded by remember { mutableStateOf(false) }
     val todayOffset = today?.let {
         CalendarMonth(it.year, it.month).daysFrom(
             rosterStart.year, rosterStart.month, rosterStart.day
@@ -127,13 +130,23 @@ fun rosterComposeViewController(): UIViewController {
                     }
                 }
                 Text("Public holidays", style = MaterialTheme.typography.labelLarge)
-                Row(modifier = Modifier.fillMaxWidth()) {
-                    for (region in HolidayRegion.entries) {
-                        TextButton(onClick = {
-                            holidayRegion = region
-                            preferences.setObject(region.name, forKey = HOLIDAY_REGION_KEY)
-                        }) {
-                            Text(if (holidayRegion == region) "[${region.name}]" else region.name)
+                Column {
+                    TextButton(onClick = { regionMenuExpanded = true }) {
+                        Text("${holidayRegion.displayName} (${holidayRegion.name})")
+                    }
+                    DropdownMenu(
+                        expanded = regionMenuExpanded,
+                        onDismissRequest = { regionMenuExpanded = false }
+                    ) {
+                        for (region in HolidayRegion.entries) {
+                            DropdownMenuItem(
+                                text = { Text("${region.displayName} (${region.name})") },
+                                onClick = {
+                                    holidayRegion = region
+                                    preferences.setObject(region.name, forKey = HOLIDAY_REGION_KEY)
+                                    regionMenuExpanded = false
+                                }
+                            )
                         }
                     }
                 }
