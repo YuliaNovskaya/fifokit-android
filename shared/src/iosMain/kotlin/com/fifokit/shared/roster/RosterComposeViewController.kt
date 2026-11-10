@@ -12,6 +12,7 @@ import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -37,6 +38,7 @@ private val monthNames = listOf(
 )
 
 private const val START_DATE_KEY = "com.fifokit.roster.startDate"
+private const val ROSTER_NAME_KEY = "com.fifokit.roster.name"
 private const val PATTERN_KEY = "com.fifokit.roster.pattern"
 private const val HOLIDAY_REGION_KEY = "com.fifokit.roster.holidayRegion"
 
@@ -59,6 +61,8 @@ fun rosterComposeViewController(): UIViewController {
     return ComposeUIViewController {
     var displayedMonth by remember { mutableStateOf(CalendarMonth(initialStart.year, initialStart.month)) }
     var rosterStart by remember { mutableStateOf(initialStart) }
+    var rosterName by remember { mutableStateOf(preferences.stringForKey(ROSTER_NAME_KEY) ?: "My Roster") }
+    var selectedDay by remember(displayedMonth) { mutableStateOf<Int?>(null) }
     var showDatePicker by remember { mutableStateOf(false) }
     var selectedPattern by remember { mutableStateOf(initialPattern) }
     var holidayRegion by remember { mutableStateOf(initialRegion) }
@@ -77,6 +81,16 @@ fun rosterComposeViewController(): UIViewController {
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 Text("FIFOKIT roster", style = MaterialTheme.typography.titleLarge)
+                OutlinedTextField(
+                    value = rosterName,
+                    onValueChange = { value ->
+                        rosterName = value
+                        preferences.setObject(value, forKey = ROSTER_NAME_KEY)
+                    },
+                    label = { Text("Roster name") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
                 Button(onClick = { showDatePicker = true }) {
                     Text("Start date: ${rosterStart.toIsoString()}")
                 }
@@ -190,10 +204,45 @@ fun rosterComposeViewController(): UIViewController {
                     ),
                     todayDayOffset = todayOffset,
                     pattern = selectedPattern,
+                    selectedDay = selectedDay,
+                    onDaySelected = { selectedDay = it },
                     isPublicHoliday = { day ->
                         holidayRegion.holidayOn(displayedMonth.year, displayedMonth.month, day) != null
                     }
                 )
+                selectedDay?.let { day ->
+                    val details = rosterDayDetails(
+                        date = RosterStartDate(displayedMonth.year, displayedMonth.month, day),
+                        rosterStart = rosterStart,
+                        pattern = selectedPattern,
+                        region = holidayRegion,
+                        today = today
+                    )
+                    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        Text("Selected: ${monthNames[displayedMonth.month - 1]} $day",
+                            style = MaterialTheme.typography.titleMedium)
+                        Text(
+                            when {
+                                details.isBeforeStart -> "Before roster starts"
+                                details.isWorkDay -> "Work day"
+                                else -> "Day off"
+                            }
+                        )
+                        details.holidayName?.let { Text("Public holiday: $it") }
+                    }
+                }
+                val monthHolidays = (1..displayedMonth.daysInMonth).mapNotNull { day ->
+                    holidayRegion.holidayOn(displayedMonth.year, displayedMonth.month, day)
+                }
+                if (monthHolidays.isNotEmpty()) {
+                    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        Text("Public holidays this month", style = MaterialTheme.typography.titleMedium)
+                        for (holiday in monthHolidays) {
+                            Text("${holiday.day} ${monthNames[holiday.month - 1]}: ${holiday.name}",
+                                style = MaterialTheme.typography.bodySmall)
+                        }
+                    }
+                }
             }
         }
     }
