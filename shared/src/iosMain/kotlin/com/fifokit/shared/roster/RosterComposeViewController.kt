@@ -76,6 +76,12 @@ fun rosterComposeViewController(): UIViewController {
 
     MaterialTheme {
         Surface(modifier = Modifier.fillMaxSize()) {
+            IosAppShell(
+                rosterName = rosterName,
+                rosterStart = rosterStart,
+                pattern = selectedPattern,
+                holidayRegion = holidayRegion
+            ) {
             Column(
                 modifier = Modifier.verticalScroll(rememberScrollState()).padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
@@ -243,6 +249,7 @@ fun rosterComposeViewController(): UIViewController {
                         }
                     }
                 }
+            }
             }
         }
     }
