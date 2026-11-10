@@ -1,5 +1,7 @@
 package com.fifokit.shared.roster
 
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -70,7 +72,10 @@ fun rosterComposeViewController(): UIViewController {
 
     MaterialTheme {
         Surface(modifier = Modifier.fillMaxSize()) {
-            Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Column(
+                modifier = Modifier.verticalScroll(rememberScrollState()).padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
                 Text("FIFOKIT roster", style = MaterialTheme.typography.titleLarge)
                 Button(onClick = { showDatePicker = true }) {
                     Text("Start date: ${rosterStart.toIsoString()}")
