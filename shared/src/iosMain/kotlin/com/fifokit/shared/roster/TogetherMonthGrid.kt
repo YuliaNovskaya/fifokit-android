@@ -51,9 +51,9 @@ internal fun TogetherMonthGrid(
                         val partner = RosterOverlapCalculator.isWorkDay(date, partnerStart, partnerPattern)
                         val color = when {
                             mine == null || partner == null -> MaterialTheme.colorScheme.surface
-                            !mine && !partner -> MaterialTheme.colorScheme.primaryContainer
-                            !mine -> MaterialTheme.colorScheme.secondaryContainer
-                            !partner -> MaterialTheme.colorScheme.tertiaryContainer
+                            mine == false && partner == false -> MaterialTheme.colorScheme.primaryContainer
+                            mine == false -> MaterialTheme.colorScheme.secondaryContainer
+                            partner == false -> MaterialTheme.colorScheme.tertiaryContainer
                             else -> MaterialTheme.colorScheme.surfaceVariant
                         }
                         Box(
