@@ -1,6 +1,7 @@
 package com.fifokit.shared.roster
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -52,7 +53,7 @@ internal fun IosAppShell(
     ) { padding ->
         when (tab) {
             IosTab.ROSTER -> {
-                Column(modifier = Modifier.fillMaxSize().padding(padding)) {
+                Box(modifier = Modifier.fillMaxSize().padding(padding)) {
                     rosterContent()
                 }
             }
