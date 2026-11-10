@@ -23,7 +23,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 
 private enum class IosTab(val label: String) {
-    ROSTER("Roster"), TOOLS("Tools"), SETTINGS("Settings")
+    ROSTER("Roster"), TOGETHER("Together"), TOOLS("Tools"), SETTINGS("Settings")
 }
 
 /** iOS navigation shell. Individual Android tools will be migrated in later batches. */
@@ -56,6 +56,9 @@ internal fun IosAppShell(
                 Box(modifier = Modifier.fillMaxSize().padding(padding)) {
                     rosterContent()
                 }
+            }
+            IosTab.TOGETHER -> {
+                TogetherScreen(myName = rosterName, myStart = rosterStart, myPattern = pattern)
             }
             IosTab.TOOLS -> {
                 Column(
