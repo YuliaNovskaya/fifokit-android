@@ -27,10 +27,12 @@ import androidx.compose.ui.unit.dp
 import platform.Foundation.NSDate
 import platform.Foundation.NSDateFormatter
 import platform.Foundation.NSUserDefaults
+import platform.UIKit.UIPasteboard
 
 private const val PARTNER_NAME_KEY = "com.fifokit.together.partnerName"
 private const val PARTNER_START_KEY = "com.fifokit.together.partnerStart"
 private const val PARTNER_PATTERN_KEY = "com.fifokit.together.partnerPattern"
+private const val PARTNER_REGION_KEY = "com.fifokit.together.partnerRegion"
 private val togetherMonths = listOf(
     "January", "February", "March", "April", "May", "June",
     "July", "August", "September", "October", "November", "December"
@@ -58,6 +60,12 @@ internal fun TogetherScreen(
             it.name == prefs.stringForKey(PARTNER_PATTERN_KEY)
         } ?: RosterPattern.TWO_ONE)
     }
+    var partnerRegion by remember {
+        mutableStateOf(HolidayRegion.entries.firstOrNull {
+            it.name == prefs.stringForKey(PARTNER_REGION_KEY)
+        } ?: HolidayRegion.WA)
+    }
+    var importMessage by remember { mutableStateOf<String?>(null) }
     var showPartnerDatePicker by remember { mutableStateOf(false) }
     var month by remember { mutableStateOf(CalendarMonth(today?.year ?: myStart.year, today?.month ?: myStart.month)) }
     var selectedDay by remember(month) { mutableStateOf<Int?>(null) }
@@ -78,6 +86,26 @@ internal fun TogetherScreen(
     ) {
         Text("Together", style = MaterialTheme.typography.headlineMedium)
         Text("$myName + $partnerName")
+        Button(onClick = {
+            val code = UIPasteboard.generalPasteboard.string
+            val imported = code?.let(RosterShareCode::decode)
+            if (imported == null) {
+                importMessage = "Clipboard does not contain a valid FIFOKIT roster code"
+            } else {
+                partnerName = imported.name
+                partnerStart = imported.startDate
+                partnerPattern = imported.pattern
+                partnerRegion = imported.region
+                prefs.setObject(partnerName, forKey = PARTNER_NAME_KEY)
+                prefs.setObject(partnerStart.toIsoString(), forKey = PARTNER_START_KEY)
+                prefs.setObject(partnerPattern.name, forKey = PARTNER_PATTERN_KEY)
+                prefs.setObject(partnerRegion.name, forKey = PARTNER_REGION_KEY)
+                importMessage = "Imported roster: ${imported.name}"
+            }
+        }, modifier = Modifier.fillMaxWidth()) {
+            Text("Paste partner roster code")
+        }
+        importMessage?.let { Text(it, style = MaterialTheme.typography.bodySmall) }
         OutlinedTextField(
             value = partnerName,
             onValueChange = {
@@ -121,6 +149,8 @@ internal fun TogetherScreen(
             }
         }
 
+        Text("Partner holiday region: ${partnerRegion.displayName}",
+            style = MaterialTheme.typography.bodySmall)
         Text("${summary.sharedOffDays} shared days off in the next 90 days",
             style = MaterialTheme.typography.titleMedium)
         summary.nextSharedOffPeriod?.let {
@@ -159,7 +189,7 @@ internal fun TogetherScreen(
                 "$partnerName ${status(RosterOverlapCalculator.isWorkDay(date, partnerStart, partnerPattern))}")
         }
         Text(
-            "This is a local partner overlay. Cross-device invitations and cloud sharing are not yet connected.",
+            "Partner roster codes are static snapshots. Cloud invitations and live syncing are not yet connected.",
             style = MaterialTheme.typography.bodySmall
         )
     }
