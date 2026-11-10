@@ -24,6 +24,7 @@ import androidx.compose.ui.unit.dp
 import com.fifokit.shared.finance.IosPayCalculatorScreen
 import com.fifokit.shared.finance.IosAnnualEarningsScreen
 import com.fifokit.shared.finance.IosFinancialGoalScreen
+import platform.UIKit.UIPasteboard
 
 private enum class IosToolsPage { MENU, PAY, ANNUAL, GOAL }
 
@@ -43,6 +44,7 @@ internal fun IosAppShell(
 ) {
     var tab by remember { mutableStateOf(IosTab.ROSTER) }
     var toolsPage by remember { mutableStateOf(IosToolsPage.MENU) }
+    var rosterCodeCopied by remember { mutableStateOf(false) }
 
     Scaffold(
         bottomBar = {
@@ -119,6 +121,23 @@ internal fun IosAppShell(
                     Text("Start date: ${rosterStart.toIsoString()}")
                     Text("Pattern: ${pattern.label}")
                     Text("Holiday region: ${holidayRegion.displayName}")
+                    Button(
+                        modifier = Modifier.fillMaxWidth(),
+                        onClick = {
+                            val code = RosterShareCode.encode(
+                                RosterShareData(rosterName, rosterStart, pattern, holidayRegion)
+                            )
+                            UIPasteboard.generalPasteboard.string = code
+                            rosterCodeCopied = true
+                        }
+                    ) {
+                        Text("Copy roster sharing code")
+                    }
+                    if (rosterCodeCopied) {
+                        Text("Code copied. Paste it into a message for your partner.")
+                    }
+                    Text("Sharing codes are snapshots; later edits do not update the recipient's roster.",
+                        style = MaterialTheme.typography.bodySmall)
                     Button(
                         modifier = Modifier.fillMaxWidth(),
                         onClick = { tab = IosTab.ROSTER }
