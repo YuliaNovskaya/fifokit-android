@@ -47,26 +47,34 @@ fun rosterComposeViewController(): UIViewController {
     val preferences = NSUserDefaults.standardUserDefaults
     val dateFormatter = NSDateFormatter().apply { dateFormat = "yyyy-MM-dd" }
     val today = RosterStartDate.parseIso(dateFormatter.stringFromDate(NSDate()))
-    val savedDate = preferences.stringForKey(START_DATE_KEY)
-    val initialStart = RosterStartDate.parseIso(savedDate ?: "")
-        ?: RosterStartDate(2026, 11, 1)
-    val initialPattern = RosterPattern.entries.firstOrNull {
-        it.name == preferences.stringForKey(PATTERN_KEY)
-    } ?: RosterPattern.TWO_ONE
-
-    val initialRegion = HolidayRegion.entries.firstOrNull {
-        it.name == preferences.stringForKey(HOLIDAY_REGION_KEY)
-    } ?: HolidayRegion.WA
+    val defaultStart = today ?: RosterStartDate(2026, 11, 1)
+    val rosterStore = IosRosterStore(preferences).apply { ensureMigrated(defaultStart) }
+    val initialRoster = rosterStore.load(rosterStore.activeId())
+        ?: error("No active roster after migration")
 
     return ComposeUIViewController {
-    var displayedMonth by remember { mutableStateOf(CalendarMonth(initialStart.year, initialStart.month)) }
-    var rosterStart by remember { mutableStateOf(initialStart) }
-    var rosterName by remember { mutableStateOf(preferences.stringForKey(ROSTER_NAME_KEY) ?: "My Roster") }
-    var selectedDay by remember(displayedMonth) { mutableStateOf<Int?>(null) }
+    var displayedMonth by remember { mutableStateOf(CalendarMonth(initialRoster.startDate.year, initialRoster.startDate.month)) }
+    var rosterStart by remember { mutableStateOf(initialRoster.startDate) }
+    var rosterName by remember { mutableStateOf(initialRoster.name) }
+    var activeRosterId by remember { mutableStateOf(initialRoster.id) }
+    var rosterIds by remember { mutableStateOf(rosterStore.ids()) }
+    var rosterMenuExpanded by remember { mutableStateOf(false) }
+    var selectedDay by remember(displayedMonth, activeRosterId) { mutableStateOf<Int?>(null) }
     var showDatePicker by remember { mutableStateOf(false) }
-    var selectedPattern by remember { mutableStateOf(initialPattern) }
-    var holidayRegion by remember { mutableStateOf(initialRegion) }
+    var selectedPattern by remember { mutableStateOf(initialRoster.pattern) }
+    var holidayRegion by remember { mutableStateOf(initialRoster.holidayRegion) }
     var regionMenuExpanded by remember { mutableStateOf(false) }
+
+    fun useRoster(roster: IosRosterSnapshot) {
+        rosterStore.activate(roster.id)
+        activeRosterId = roster.id
+        rosterName = roster.name
+        rosterStart = roster.startDate
+        selectedPattern = roster.pattern
+        holidayRegion = roster.holidayRegion
+        displayedMonth = CalendarMonth(roster.startDate.year, roster.startDate.month)
+        showDatePicker = false
+    }
     val todayOffset = today?.let {
         CalendarMonth(it.year, it.month).daysFrom(
             rosterStart.year, rosterStart.month, rosterStart.day
@@ -88,11 +96,42 @@ fun rosterComposeViewController(): UIViewController {
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 Text("FIFOKIT roster", style = MaterialTheme.typography.titleLarge)
+                Column {
+                    TextButton(onClick = { rosterMenuExpanded = true }) {
+                        Text("Roster: $rosterName")
+                    }
+                    DropdownMenu(
+                        expanded = rosterMenuExpanded,
+                        onDismissRequest = { rosterMenuExpanded = false }
+                    ) {
+                        for (id in rosterIds) {
+                            val saved = rosterStore.load(id)
+                            if (saved != null) {
+                                DropdownMenuItem(
+                                    text = { Text(if (id == activeRosterId) "[${saved.name}]" else saved.name) },
+                                    onClick = {
+                                        rosterMenuExpanded = false
+                                        useRoster(saved)
+                                    }
+                                )
+                            }
+                        }
+                        DropdownMenuItem(
+                            text = { Text("+ New roster") },
+                            onClick = {
+                                rosterMenuExpanded = false
+                                val created = rosterStore.create(today ?: rosterStart)
+                                rosterIds = rosterStore.ids()
+                                useRoster(created)
+                            }
+                        )
+                    }
+                }
                 OutlinedTextField(
                     value = rosterName,
                     onValueChange = { value ->
                         rosterName = value
-                        preferences.setObject(value, forKey = ROSTER_NAME_KEY)
+                        rosterStore.update(activeRosterId, name = value)
                     },
                     label = { Text("Roster name") },
                     singleLine = true,
@@ -113,7 +152,7 @@ fun rosterComposeViewController(): UIViewController {
                                     val parsed = RosterStartDate.fromEpochMillis(millis)
                                     rosterStart = parsed
                                     displayedMonth = CalendarMonth(parsed.year, parsed.month)
-                                    preferences.setObject(parsed.toIsoString(), forKey = START_DATE_KEY)
+                                    rosterStore.update(activeRosterId, startDate = parsed)
                                 }
                                 showDatePicker = false
                             }) { Text("OK") }
@@ -146,7 +185,7 @@ fun rosterComposeViewController(): UIViewController {
                     for (pattern in RosterPattern.entries) {
                         TextButton(onClick = {
                             selectedPattern = pattern
-                            preferences.setObject(pattern.name, forKey = PATTERN_KEY)
+                            rosterStore.update(activeRosterId, pattern = pattern)
                         }) {
                             Text(
                                 if (selectedPattern == pattern) "[${pattern.label}]"
@@ -169,7 +208,7 @@ fun rosterComposeViewController(): UIViewController {
                                 text = { Text("${region.displayName} (${region.name})") },
                                 onClick = {
                                     holidayRegion = region
-                                    preferences.setObject(region.name, forKey = HOLIDAY_REGION_KEY)
+                                    rosterStore.update(activeRosterId, holidayRegion = region)
                                     regionMenuExpanded = false
                                 }
                             )
