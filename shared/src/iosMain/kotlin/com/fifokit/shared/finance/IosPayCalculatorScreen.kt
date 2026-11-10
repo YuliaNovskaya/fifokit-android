@@ -113,7 +113,7 @@ internal fun IosPayCalculatorScreen(
         Button(modifier = Modifier.fillMaxWidth(), onClick = {
             val rateValue = rate.toDoubleOrNull()
             val hoursValue = hours.toDoubleOrNull()
-            val allowanceValue = allowance.toDoubleOrNull()
+            val allowanceValue = allowance.toDoubleOrNull() ?: if (allowance.isBlank()) 0.0 else null
             error = when {
                 rateValue == null || !rateValue.isFinite() || rateValue <= 0 -> "Enter a valid pay rate"
                 hoursValue == null || !hoursValue.isFinite() || hoursValue <= 0 -> "Enter valid work hours"
