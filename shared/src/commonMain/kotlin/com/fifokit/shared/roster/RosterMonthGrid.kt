@@ -2,6 +2,7 @@ package com.fifokit.shared.roster
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -34,6 +35,8 @@ fun RosterMonthGrid(
     todayDayOffset: Long? = null,
     pattern: RosterPattern,
     isPublicHoliday: (Int) -> Boolean = { false },
+    selectedDay: Int? = null,
+    onDaySelected: (Int) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     require(daysInMonth in 28..31)
@@ -72,8 +75,14 @@ fun RosterMonthGrid(
                                 .weight(1f)
                                 .aspectRatio(1f)
                                 .background(background, RoundedCornerShape(6.dp))
+                                .clickable { onDaySelected(day) }
                                 .then(
                                     when {
+                                        selectedDay == day -> Modifier.border(
+                                            width = 3.dp,
+                                            color = MaterialTheme.colorScheme.tertiary,
+                                            shape = RoundedCornerShape(6.dp)
+                                        )
                                         isToday -> Modifier.border(
                                             width = 3.dp,
                                             color = MaterialTheme.colorScheme.primary,
