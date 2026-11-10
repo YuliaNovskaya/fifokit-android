@@ -80,7 +80,8 @@ fun rosterComposeViewController(): UIViewController {
                 rosterName = rosterName,
                 rosterStart = rosterStart,
                 pattern = selectedPattern,
-                holidayRegion = holidayRegion
+                holidayRegion = holidayRegion,
+                currentYear = today?.year ?: rosterStart.year
             ) {
             Column(
                 modifier = Modifier.verticalScroll(rememberScrollState()).padding(16.dp),
