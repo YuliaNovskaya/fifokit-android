@@ -22,6 +22,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.fifokit.shared.finance.IosPayCalculatorScreen
+import com.fifokit.shared.finance.IosAnnualEarningsScreen
+import com.fifokit.shared.finance.IosFinancialGoalScreen
+
+private enum class IosToolsPage { MENU, PAY, ANNUAL, GOAL }
 
 private enum class IosTab(val label: String) {
     ROSTER("Roster"), TOGETHER("Together"), TOOLS("Tools"), SETTINGS("Settings")
@@ -38,7 +42,7 @@ internal fun IosAppShell(
     rosterContent: @Composable () -> Unit
 ) {
     var tab by remember { mutableStateOf(IosTab.ROSTER) }
-    var showPayCalculator by remember { mutableStateOf(false) }
+    var toolsPage by remember { mutableStateOf(IosToolsPage.MENU) }
 
     Scaffold(
         bottomBar = {
@@ -67,27 +71,39 @@ internal fun IosAppShell(
             }
             IosTab.TOOLS -> {
                 Box(modifier = Modifier.fillMaxSize().padding(padding)) {
-                    if (showPayCalculator) {
-                        IosPayCalculatorScreen(
+                    when (toolsPage) {
+                        IosToolsPage.PAY -> IosPayCalculatorScreen(
                             pattern = pattern,
                             rosterStart = rosterStart,
                             year = currentYear,
-                            onBack = { showPayCalculator = false }
+                            onBack = { toolsPage = IosToolsPage.MENU }
                         )
-                    } else {
-                        Column(
+                        IosToolsPage.ANNUAL -> IosAnnualEarningsScreen(
+                            pattern = pattern,
+                            rosterStart = rosterStart,
+                            initialYear = currentYear,
+                            onBack = { toolsPage = IosToolsPage.MENU }
+                        )
+                        IosToolsPage.GOAL -> IosFinancialGoalScreen(
+                            onBack = { toolsPage = IosToolsPage.MENU }
+                        )
+                        IosToolsPage.MENU -> Column(
                             modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
                             verticalArrangement = Arrangement.spacedBy(16.dp)
                         ) {
                             Text("Tools", style = MaterialTheme.typography.headlineMedium)
                             Button(
                                 modifier = Modifier.fillMaxWidth(),
-                                onClick = { showPayCalculator = true }
+                                onClick = { toolsPage = IosToolsPage.PAY }
                             ) { Text("Pay calculator") }
-                            Text("Annual earnings", style = MaterialTheme.typography.titleMedium)
-                            Text("Migration pending")
-                            Text("Financial goals", style = MaterialTheme.typography.titleMedium)
-                            Text("Migration pending")
+                            Button(
+                                modifier = Modifier.fillMaxWidth(),
+                                onClick = { toolsPage = IosToolsPage.ANNUAL }
+                            ) { Text("Annual earnings") }
+                            Button(
+                                modifier = Modifier.fillMaxWidth(),
+                                onClick = { toolsPage = IosToolsPage.GOAL }
+                            ) { Text("Financial goals") }
                         }
                     }
                 }
