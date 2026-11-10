@@ -164,6 +164,14 @@ fun rosterComposeViewController(): UIViewController {
                     Button(onClick = { displayedMonth = displayedMonth.previous() }) {
                         Text("Previous")
                     }
+                    TextButton(
+                        enabled = today != null,
+                        onClick = {
+                            today?.let { displayedMonth = CalendarMonth(it.year, it.month) }
+                        }
+                    ) {
+                        Text("Today")
+                    }
                     Button(onClick = { displayedMonth = displayedMonth.next() }) {
                         Text("Next")
                     }
