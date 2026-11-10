@@ -21,6 +21,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.fifokit.shared.finance.IosPayCalculatorScreen
 
 private enum class IosTab(val label: String) {
     ROSTER("Roster"), TOGETHER("Together"), TOOLS("Tools"), SETTINGS("Settings")
@@ -33,9 +34,11 @@ internal fun IosAppShell(
     rosterStart: RosterStartDate,
     pattern: RosterPattern,
     holidayRegion: HolidayRegion,
+    currentYear: Int,
     rosterContent: @Composable () -> Unit
 ) {
     var tab by remember { mutableStateOf(IosTab.ROSTER) }
+    var showPayCalculator by remember { mutableStateOf(false) }
 
     Scaffold(
         bottomBar = {
@@ -58,21 +61,35 @@ internal fun IosAppShell(
                 }
             }
             IosTab.TOGETHER -> {
-                TogetherScreen(myName = rosterName, myStart = rosterStart, myPattern = pattern)
+                Box(modifier = Modifier.fillMaxSize().padding(padding)) {
+                    TogetherScreen(myName = rosterName, myStart = rosterStart, myPattern = pattern)
+                }
             }
             IosTab.TOOLS -> {
-                Column(
-                    modifier = Modifier.fillMaxSize().padding(padding)
-                        .verticalScroll(rememberScrollState()).padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    Text("Tools", style = MaterialTheme.typography.headlineMedium)
-                    Text("Pay calculator", style = MaterialTheme.typography.titleMedium)
-                    Text("Migration pending")
-                    Text("Annual earnings", style = MaterialTheme.typography.titleMedium)
-                    Text("Migration pending")
-                    Text("Financial goals", style = MaterialTheme.typography.titleMedium)
-                    Text("Migration pending")
+                Box(modifier = Modifier.fillMaxSize().padding(padding)) {
+                    if (showPayCalculator) {
+                        IosPayCalculatorScreen(
+                            pattern = pattern,
+                            rosterStart = rosterStart,
+                            year = currentYear,
+                            onBack = { showPayCalculator = false }
+                        )
+                    } else {
+                        Column(
+                            modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
+                            verticalArrangement = Arrangement.spacedBy(16.dp)
+                        ) {
+                            Text("Tools", style = MaterialTheme.typography.headlineMedium)
+                            Button(
+                                modifier = Modifier.fillMaxWidth(),
+                                onClick = { showPayCalculator = true }
+                            ) { Text("Pay calculator") }
+                            Text("Annual earnings", style = MaterialTheme.typography.titleMedium)
+                            Text("Migration pending")
+                            Text("Financial goals", style = MaterialTheme.typography.titleMedium)
+                            Text("Migration pending")
+                        }
+                    }
                 }
             }
             IosTab.SETTINGS -> {
